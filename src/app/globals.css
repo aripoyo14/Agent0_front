@@ -1,0 +1,412 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter), var(--font-noto-sans-jp), sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas,
+    "Liberation Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), var(--font-noto-sans-jp), sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+@layer components {
+  .profile-card {
+    background: var(--brand-white);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(229, 231, 235, 0.8);
+    @apply rounded-xl;
+    height: 100%;
+    backdrop-filter: blur(10px);
+  }
+
+  .profile-card--contact {
+    background: linear-gradient(135deg, var(--brand-lighter-blue) 0%, rgba(230, 240, 255, 0.8) 100%);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    @apply rounded-xl;
+    height: 100%;
+    backdrop-filter: blur(10px);
+  }
+
+  .card-header-padding {
+    @apply pb-0 px-3 pt-0.5 lg:pb-0.5 lg:px-4 lg:pt-1;
+  }
+
+  .card-title-base {
+    color: var(--brand-dark);
+    @apply text-xs font-medium flex items-center gap-1;
+    -webkit-text-size-adjust: none;
+    -moz-text-size-adjust: none;
+    -ms-text-size-adjust: none;
+    text-size-adjust: none;
+  }
+
+  .card-title-icon-small {
+    font-family: "Material Symbols Outlined", sans-serif;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-size: 13px;
+    line-height: 1;
+    display: inline-block;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+  }
+
+  .card-title-icon-normal {
+    font-family: "Material Symbols Outlined", sans-serif;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-size: 14px;
+    line-height: 1;
+    display: inline-block;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+  }
+
+
+
+  .icon-base {
+    color: var(--brand-primary);
+    @apply w-5 h-5;
+  }
+
+  .icon-small {
+    color: var(--brand-medium-gray);
+    @apply w-4 h-4;
+  }
+
+  .icon-contact {
+    font-family: "Material Symbols Outlined", sans-serif;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    color: var(--brand-primary);
+    font-size: 12px;
+    width: 20px;
+    height: 20px;
+    background: var(--brand-white);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-style: normal;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+  }
+
+  .card-content-padding {
+    @apply px-3 pb-0 lg:px-4 lg:pb-0.5;
+  }
+
+  .text-secondary {
+    color: var(--brand-medium-gray);
+    @apply text-xs;
+    -webkit-text-size-adjust: none;
+    -moz-text-size-adjust: none;
+    -ms-text-size-adjust: none;
+    text-size-adjust: none;
+  }
+
+  .text-meta {
+    color: var(--brand-medium-gray);
+    @apply text-xs;
+    -webkit-text-size-adjust: none;
+    -moz-text-size-adjust: none;
+    -ms-text-size-adjust: none;
+    text-size-adjust: none;
+  }
+
+  .status-dot {
+    background: var(--brand-primary);
+    @apply w-2 h-2 rounded-full;
+  }
+
+  .list-item-base {
+    background: var(--brand-bg);
+    @apply flex items-start gap-1 p-1 lg:gap-1.5 lg:p-1.5 rounded-lg;
+  }
+
+  .list-item--hoverable {
+    background: var(--brand-bg);
+    @apply flex items-start gap-1 p-1 lg:gap-1.5 lg:p-1.5 rounded-lg transition-colors;
+  }
+
+  .list-item--hoverable:hover {
+    background: var(--brand-lighter-blue);
+  }
+
+  .list-item--interactive {
+    background: var(--brand-bg);
+    border: 1px solid transparent;
+    @apply flex items-start gap-1 p-1 lg:gap-1.5 lg:p-1.5 rounded-lg transition-colors cursor-pointer;
+  }
+
+  .list-item--interactive:hover {
+    background: var(--brand-light-blue);
+    border-color: var(--brand-primary);
+  }
+
+  .list-item--staff {
+    background: var(--brand-bg);
+    border: 1px solid transparent;
+    @apply flex items-start gap-1 p-1 lg:gap-1.5 lg:p-1.5 rounded-lg cursor-pointer;
+  }
+
+  .company-title {
+    color: var(--brand-dark);
+    @apply font-semibold;
+  }
+
+  .job-title {
+    color: var(--brand-primary);
+    @apply text-sm font-medium;
+  }
+
+  .department-name {
+    color: var(--brand-medium-gray);
+  }
+
+  /* カスタムスクロールバー */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+
+
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 2px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+
+  .custom-scrollbar:hover {
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+
+  .person-name {
+    color: var(--brand-dark);
+    @apply font-medium text-xs;
+  }
+
+  .career-section {
+    @apply border-l-4 pl-4 py-2;
+  }
+
+  .career-section--current {
+    border-left-color: #007aff;
+    background: #e6f0ff;
+    @apply border-l-4 pl-4 py-2 rounded-r-lg;
+  }
+
+  .career-section--past {
+    border-left-color: var(--brand-medium-gray);
+    @apply border-l-4 pl-4 py-2;
+  }
+
+  .career-info-container {
+    @apply flex flex-col space-y-1;
+  }
+
+  .profile-header-gradient {
+    background: linear-gradient(135deg, #007aff 0%, #0056cc 100%);
+    @apply text-white px-6 py-4 lg:px-12 lg:py-8;
+    box-shadow: 0 10px 25px rgba(0, 122, 255, 0.3);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Brand Color Variables */
+  :root {
+    --brand-primary: #007aff;
+    --brand-light-blue: #d2e4ff;
+    --brand-lighter-blue: #e6f0ff;
+    --brand-bg: #fafafa;
+    --brand-dark: #333333;
+    --brand-medium-gray: #8c8c8c;
+    --brand-light-gray: #d9d9d9;
+    --brand-white: #ffffff;
+  }
+
+  .activity-category--news {
+    background-color: #eaf4ff;
+  }
+
+  .activity-category--news .activity-badge {
+    background-color: white;
+    color: #155b8e;
+    border-color: #155b8e;
+  }
+
+  .activity-category--event {
+    background-color: #fff1e6;
+  }
+
+  .activity-category--event .activity-badge {
+    background-color: white;
+    color: #c25300;
+    border-color: #c25300;
+  }
+
+  .activity-category--book {
+    background-color: #f5f5f0;
+  }
+
+  .activity-category--book .activity-badge {
+    background-color: white;
+    color: #c25300;
+    border-color: #c25300;
+  }
+
+  .activity-category--paper {
+    background-color: #f3f0ff;
+  }
+
+  .activity-category--paper .activity-badge {
+    background-color: white;
+    color: #6041a6;
+    border-color: #6041a6;
+  }
+
+  .activity-category--other {
+    background-color: #ecfdf3;
+  }
+
+  .activity-category--other .activity-badge {
+    background-color: white;
+    color: #2b7a4b;
+    border-color: #2b7a4b;
+  }
+
+  .activity-badge {
+    /* ActivityBadgeコンポーネントで個別に制御されるため、このクラスは不要 */
+  }
+
+  .material-symbols-outlined {
+    font-family: "Material Symbols Outlined" !important;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    font-style: normal;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+    -webkit-font-feature-settings: "liga";
+    -moz-font-feature-settings: "liga=1";
+    user-select: none;
+  }
+
+  .material-icon {
+    font-family: "Material Symbols Outlined" !important;
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+    color: #007aff;
+    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    background: #e6f0ff;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-style: normal;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "liga";
+  }
+}
