@@ -1,6 +1,6 @@
 import { RelatedPerson } from "@/types";
 import { ListCard } from "@/components/ui/list-card";
-import { CardTitleIcon } from "@/components/ui/card-title-icon";
+// import { CardTitleIcon } from "@/components/ui/card-title-icon";
 import { PersonListItem } from "@/components/ui/person-list-item";
 
 interface RelatedPeopleProps {
