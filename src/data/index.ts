@@ -524,8 +524,4 @@ export const sampleExpertProfile: ExpertProfile = {
       company: "スマートシティ・デベロップメント",
     },
   ],
-  contactInfo: {
-    email: "suzuki@gx-ventures.co.jp",
-    phone: "03-6234-5678",
-  },
 };
