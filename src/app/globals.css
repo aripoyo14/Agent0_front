@@ -57,12 +57,12 @@ body {
   }
 
   .card-header-padding {
-    @apply pb-0 px-3 pt-0.5 lg:pb-0.5 lg:px-4 lg:pt-1;
+    @apply pb-0 px-2 pt-0.5 lg:pb-0.5 lg:px-3 lg:pt-0.5;
   }
 
   .card-title-base {
     color: var(--brand-dark);
-    @apply text-xs font-medium flex items-center gap-1;
+    @apply text-[11px] font-medium flex items-center gap-1;
     -webkit-text-size-adjust: none;
     -moz-text-size-adjust: none;
     -ms-text-size-adjust: none;

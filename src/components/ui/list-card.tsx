@@ -43,8 +43,8 @@ export function ListCard({
           <div
             className={
               fullHeight
-                ? "absolute inset-x-3 top-0 bottom-1.5 overflow-y-auto space-y-1.5 pr-1.5 custom-scrollbar"
-                : "max-h-[400px] overflow-y-auto space-y-1.5 pr-1.5 custom-scrollbar"
+                ? "absolute inset-x-2 top-0 bottom-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar"
+                : "max-h-[400px] overflow-y-auto space-y-1 pr-1 custom-scrollbar"
             }
           >
             {items.map(renderItem)}

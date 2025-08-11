@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { NetworkNode, SearchFilters } from "@/types";
 import { sampleNetworkNodes } from "@/data/search-data";
 
@@ -28,25 +29,26 @@ function ConnectionLine({ from, to }: ConnectionLineProps) {
 
 interface NodeCircleProps {
   node: NetworkNode;
-  isHighlighted: boolean;
   onClick: (node: NetworkNode) => void;
+  onDoubleClick: (node: NetworkNode) => void;
 }
 
-function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
+function NodeCircle({ node, onClick, onDoubleClick }: NodeCircleProps) {
   return (
     <g
       className="cursor-pointer transition-all hover:opacity-80"
       onClick={() => onClick(node)}
+      onDoubleClick={() => onDoubleClick(node)}
     >
       {/* 背景円 */}
       <circle
         cx={node.x}
         cy={node.y}
-        r={isHighlighted ? "28" : "24"}
-        fill={isHighlighted ? "#007aff" : "#ffffff"}
-        stroke={isHighlighted ? "#005bb5" : "#007aff"}
+        r="24"
+        fill="#ffffff"
+        stroke="#007aff"
         strokeWidth="2"
-        className="transition-all"
+        className="transition-all hover:fill-blue-50"
       />
       
       {/* アイコン */}
@@ -57,11 +59,7 @@ function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
         height="24"
       >
         <div className="flex items-center justify-center w-6 h-6">
-          <span 
-            className={`material-symbols-outlined text-lg ${
-              isHighlighted ? "text-white" : "text-blue-600"
-            }`}
-          >
+          <span className="material-symbols-outlined text-lg text-blue-600">
             person
           </span>
         </div>
@@ -91,7 +89,7 @@ function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
 }
 
 export function NetworkMap({ filters, className }: NetworkMapProps) {
-  const [selectedNode, setSelectedNode] = React.useState<NetworkNode | null>(null);
+  const router = useRouter();
   const [filteredNodes, setFilteredNodes] = React.useState<NetworkNode[]>([]);
 
   // フィルターに基づいてノードをフィルタリング
@@ -111,7 +109,13 @@ export function NetworkMap({ filters, className }: NetworkMapProps) {
   }, [filters]);
 
   const handleNodeClick = (node: NetworkNode) => {
-    setSelectedNode(selectedNode?.id === node.id ? null : node);
+    // ノードをクリックで直接プロフィールページに遷移
+    router.push(`/profile/${node.id}`);
+  };
+
+  const handleNodeDoubleClick = (node: NetworkNode) => {
+    // ダブルクリックも同じ動作
+    router.push(`/profile/${node.id}`);
   };
 
   const getConnectedNodes = (nodeId: string): NetworkNode[] => {
@@ -167,49 +171,19 @@ export function NetworkMap({ filters, className }: NetworkMapProps) {
           <NodeCircle
             key={node.id}
             node={node}
-            isHighlighted={selectedNode?.id === node.id}
             onClick={handleNodeClick}
+            onDoubleClick={handleNodeDoubleClick}
           />
         ))}
       </svg>
       
-      {/* 選択されたノードの詳細情報 */}
-      {selectedNode && (
-        <div className="absolute top-2 right-2 bg-white p-3 rounded shadow-lg border max-w-[200px] z-10">
-          <div className="flex items-start justify-between mb-1">
-            <h4 className="font-medium text-gray-800 text-xs leading-tight">{selectedNode.name}</h4>
-            <button
-              onClick={() => setSelectedNode(null)}
-              className="text-gray-400 hover:text-gray-600 ml-1"
-            >
-              <span className="material-symbols-outlined text-sm">close</span>
-            </button>
-          </div>
-          <p className="text-[10px] text-gray-600 mb-0.5 leading-tight">{selectedNode.company}</p>
-          <p className="text-[10px] text-gray-500 mb-2 leading-tight">{selectedNode.position}</p>
-          
-          {selectedNode.connections.length > 0 && (
-            <div>
-              <p className="text-[9px] text-gray-500 mb-1">
-                接続: {selectedNode.connections.length}名
-              </p>
-              <button className="text-[9px] text-blue-600 hover:text-blue-800">
-                詳細を見る →
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+
       
       {/* 凡例 */}
       <div className="absolute bottom-2 left-2 bg-white p-2 rounded shadow-sm border text-[10px]">
-        <div className="flex items-center gap-1 mb-0.5">
-          <div className="w-2 h-2 bg-white border border-blue-600 rounded-full"></div>
-          <span className="text-gray-600">人物</span>
-        </div>
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 bg-blue-600 border border-blue-800 rounded-full"></div>
-          <span className="text-gray-600">選択中</span>
+          <div className="w-2 h-2 bg-white border border-blue-600 rounded-full"></div>
+          <span className="text-gray-600">クリックでプロフィール表示</span>
         </div>
       </div>
     </div>
