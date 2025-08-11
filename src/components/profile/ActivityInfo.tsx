@@ -50,11 +50,11 @@ export function ActivityInfo({ activities }: ActivityInfoProps) {
           </div>
         ) : (
           // ↓↓↓ スクロール対応ラッパー追加 ↓↓↓
-          <div className="absolute inset-3 top-0 overflow-y-auto space-y-2 pr-1.5 custom-scrollbar">
+          <div className="absolute inset-2 top-0 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {displayActivities.map((activity, index) => (
               <div
                 key={index}
-                className={`p-2.5 rounded-lg ${getCategoryClass(
+                className={`p-2 rounded-lg ${getCategoryClass(
                   activity.category
                 )}`}
               >
