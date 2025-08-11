@@ -19,6 +19,7 @@ const imgBackground = "http://localhost:3845/assets/5f80ec7391fa506958e021a0a123
 export function SearchPage() {
   const router = useRouter();
   const [filters, setFilters] = useState<SearchFilters>({
+    searchQuery: "",
     policyThemes: [],
     industries: [],
     positions: [],
@@ -26,7 +27,7 @@ export function SearchPage() {
     others: []
   });
 
-  const handleFilterChange = (key: keyof SearchFilters, value: any) => {
+  const handleFilterChange = (key: keyof SearchFilters, value: string | string[]) => {
     setFilters(prev => ({
       ...prev,
       [key]: value

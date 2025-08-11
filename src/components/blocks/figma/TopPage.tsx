@@ -140,7 +140,7 @@ export default function TopPage() {
                 所属・専門・関心テーマから横断検索。
               </p>
               <p className="adjustLetterSpacing block">
-                必要なときに、最短で"出会いたい人"にアクセスできます。
+                必要なときに、最短で&ldquo;出会いたい人&rdquo;にアクセスできます。
               </p>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function TopPage() {
                   有識者の知見やコメントが集まり、
                 </p>
                 <p className="adjustLetterSpacing block">
-                  自然と最適な人脈が"集まって"きます。
+                  自然と最適な人脈が&ldquo;集まって&rdquo;きます。
                 </p>
               </div>
             </div>

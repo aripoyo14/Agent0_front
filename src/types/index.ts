@@ -71,3 +71,41 @@ export interface ExpertProfile {
     phone: string
   }
 }
+
+// 検索フィルター型
+export interface SearchFilters {
+  searchQuery: string
+  policyThemes: string[]
+  industries: string[]
+  positions: string[]
+  regions: string[]
+  others: string[]
+}
+
+// ネットワークマップのノード型
+export interface NetworkNode {
+  id: string
+  name: string
+  company?: string
+  position?: string
+  group: number
+  connections: string[]
+  x?: number
+  y?: number
+}
+
+// 政策テーマ型
+export interface PolicyTheme {
+  id: string
+  title: string
+  description: string
+  color: string
+  participants: number
+}
+
+// フィルターオプション型
+export interface FilterOption {
+  value: string
+  label: string
+  count?: number
+}

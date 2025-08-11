@@ -51,8 +51,8 @@ function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
       
       {/* アイコン */}
       <foreignObject
-        x={node.x - 12}
-        y={node.y - 12}
+        x={(node.x || 0) - 12}
+        y={(node.y || 0) - 12}
         width="24"
         height="24"
       >
@@ -69,8 +69,8 @@ function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
       
       {/* 名前ラベル */}
       <text
-        x={node.x}
-        y={node.y + 35}
+        x={node.x || 0}
+        y={(node.y || 0) + 35}
         textAnchor="middle"
         className="text-[9px] font-medium fill-gray-700"
       >
@@ -79,8 +79,8 @@ function NodeCircle({ node, isHighlighted, onClick }: NodeCircleProps) {
       
       {/* 会社名ラベル */}
       <text
-        x={node.x}
-        y={node.y + 45}
+        x={node.x || 0}
+        y={(node.y || 0) + 45}
         textAnchor="middle"
         className="text-[8px] fill-gray-500"
       >
