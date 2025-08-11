@@ -2,6 +2,22 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Environment Setup
+
+For development, you need to set up environment variables for demo authentication:
+
+1. Create a `.env.local` file in the root directory
+2. Add the following environment variables:
+
+```env
+NEXT_PUBLIC_DEMO_EMAIL=your-demo-email@example.com
+NEXT_PUBLIC_DEMO_PASSWORD=your-demo-password
+```
+
+**Important**: Never commit actual credentials to the repository. The `.env.local` file is already included in `.gitignore`.
+
+### Running the Development Server
+
 First, run the development server:
 
 ```bash

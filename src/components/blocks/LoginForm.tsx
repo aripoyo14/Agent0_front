@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 
 type SubmitState = "idle" | "submitting" | "error" | "success";
 
-// 仮ログイン認証情報
-const DEMO_EMAIL = "0@0.com";
-const DEMO_PASSWORD = "0000";
+// 仮ログイン認証情報（本番環境では適切な認証システムに置き換える）
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || "demo@example.com";
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || "demo123";
 
 export default function LoginForm() {
   const router = useRouter();
