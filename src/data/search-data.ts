@@ -142,6 +142,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "田中 太郎",
     company: "株式会社イノベーション",
     position: "代表取締役CEO",
+    group: 1,
     x: 400,
     y: 200,
     connections: ["2", "3", "5"]
@@ -151,6 +152,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "佐藤 花子",
     company: "テクノロジー株式会社",
     position: "CTO",
+    group: 2,
     x: 250,
     y: 120,
     connections: ["1", "4", "6"]
@@ -160,6 +162,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "鈴木 次郎",
     company: "グローバル商事",
     position: "事業開発部長",
+    group: 3,
     x: 550,
     y: 120,
     connections: ["1", "7", "8"]
@@ -169,6 +172,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "高橋 美咲",
     company: "株式会社フューチャー",
     position: "研究開発部長",
+    group: 4,
     x: 150,
     y: 80,
     connections: ["2", "9"]
@@ -178,6 +182,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "山田 健一",
     company: "スマートソリューションズ",
     position: "取締役",
+    group: 5,
     x: 350,
     y: 240,
     connections: ["1", "10"]
@@ -187,6 +192,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "中村 雅子",
     company: "デジタルイノベーション",
     position: "プロダクトマネージャー",
+    group: 6,
     x: 200,
     y: 200,
     connections: ["2", "11"]
@@ -196,6 +202,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "小林 達也",
     company: "アドバンステック",
     position: "営業部長",
+    group: 7,
     x: 650,
     y: 90,
     connections: ["3", "12"]
@@ -205,6 +212,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "森田 恵子",
     company: "コンサルティングファーム",
     position: "パートナー",
+    group: 8,
     x: 600,
     y: 160,
     connections: ["3", "13"]
@@ -214,6 +222,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "井上 康弘",
     company: "東京大学",
     position: "教授",
+    group: 9,
     x: 100,
     y: 60,
     connections: ["4"]
@@ -223,6 +232,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "岡田 純一",
     company: "ベンチャーキャピタル",
     position: "パートナー",
+    group: 10,
     x: 450,
     y: 280,
     connections: ["5"]
@@ -232,6 +242,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "松本 裕子",
     company: "AI研究所",
     position: "主任研究員",
+    group: 11,
     x: 150,
     y: 220,
     connections: ["6"]
@@ -241,6 +252,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "清水 和也",
     company: "製造業協会",
     position: "理事",
+    group: 12,
     x: 700,
     y: 80,
     connections: ["7"]
@@ -250,6 +262,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     name: "吉田 麻衣",
     company: "経済産業省",
     position: "課長",
+    group: 13,
     x: 650,
     y: 220,
     connections: ["8"]

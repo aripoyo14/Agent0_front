@@ -41,7 +41,7 @@ export default function BackgroundEllipses({
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
-  }, []);
+  }, [maxWidthPx, scale, vwRatio]);
 
   const commonStyle: React.CSSProperties = {
     left: "50%",
