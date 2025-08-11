@@ -1,0 +1,454 @@
+
+> agent0_rfp@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.2 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.11.12:3000
+
+ ✓ Starting...
+ ✓ Ready in 908ms
+ ○ Compiling / ...
+ ✓ Compiled / in 4.9s
+ GET / 200 in 5234ms
+ ✓ Compiled /login in 311ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 349ms
+ GET /login 200 in 121ms
+ ✓ Compiled in 500ms
+ ✓ Compiled in 266ms
+ ✓ Compiled /login in 142ms
+ GET /login 200 in 450ms
+ ✓ Compiled in 161ms
+ ○ Compiling /_not-found/page ...
+ ✓ Compiled /_not-found/page in 820ms
+ GET /serch 404 in 886ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 90ms
+ ✓ Compiled in 281ms
+ GET /serch 404 in 111ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 181ms
+ ✓ Compiled in 738ms
+ ✓ Compiled /login in 32ms
+ GET /login 200 in 149ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 283ms
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 752ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 1132ms
+ ✓ Compiled in 232ms
+ ✓ Compiled /login in 44ms
+ GET /login 200 in 250ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 225ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 113ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 327ms
+ ✓ Compiled /login in 49ms
+ GET /login 200 in 177ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 241ms
+ ✓ Compiled in 88ms
+ ✓ Compiled in 96ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 213ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 321ms
+ ✓ Compiled /login in 28ms
+ GET /login 200 in 211ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 227ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 124ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 220ms
+ ✓ Compiled in 300ms
+ ✓ Compiled in 243ms
+ ✓ Compiled in 370ms
+ ⨯ ./src/components/blocks/LoginFormOverlay.tsx:4:1
+Export login doesn't exist in target module
+[0m [90m 2 |[39m[0m
+[0m [90m 3 |[39m [36mimport[39m { useState } [36mfrom[39m [32m"react"[39m[33m;[39m[0m
+[0m[31m[1m>[22m[39m[90m 4 |[39m [36mimport[39m { login } [36mfrom[39m [32m"@/app/login/action"[39m[33m;[39m[0m
+[0m [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[0m
+[0m [90m 5 |[39m[0m
+[0m [90m 6 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mLoginFormOverlay[39m() {[0m
+[0m [90m 7 |[39m   [36mconst[39m [message[33m,[39m setMessage] [33m=[39m useState[33m<[39m[33mstring[39m[33m>[39m([32m""[39m)[33m;[39m[0m
+
+The export login was not found in module [project]/src/app/login/action.ts [app-ssr] (ecmascript).
+The module has no exports at all.
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 918ms
+ GET /login 500 in 1215ms
+ GET /favicon.ico 500 in 45ms
+ ✓ Compiled in 739ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 553ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 724ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 239ms
+ ✓ Compiled in 200ms
+ ✓ Compiled /login in 50ms
+ GET /login 200 in 268ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 296ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 135ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 315ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 1109ms
+ GET /login 200 in 1261ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
+Received `true` for a non-boolean attribute `alt`.
+
+If you want to write it to the DOM, pass a string instead: alt="true" or alt={value.toString()}.
+ GET /login 200 in 123ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 407ms
+ ✓ Compiled in 385ms
+ ✓ Compiled in 192ms
+ GET /.well-known/appspecific/com.chrome.devtools.json 404 in 544ms
+ ✓ Compiled in 497ms
+ ✓ Compiled /login in 115ms
+ GET /login 200 in 424ms
+ GET /login 200 in 422ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 266ms
+ ✓ Compiled in 349ms
+ ✓ Compiled /login in 51ms
+ GET /login 200 in 249ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 234ms
+ GET /login 200 in 187ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 250ms
+ GET /login 200 in 96ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 245ms
+ GET /login 200 in 103ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 245ms
+ GET /login 200 in 91ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
+ ✓ Compiled /login in 29ms
+ GET /login 200 in 208ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 342ms
+ GET /login 200 in 137ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 245ms
+ GET /login 200 in 88ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ ✓ Compiled /login in 30ms
+ GET /login 200 in 206ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 231ms
+ GET /login 200 in 171ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 249ms
+ GET /login 200 in 88ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 259ms
+ GET /login 200 in 125ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 272ms
+ GET /login 200 in 132ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
+ ✓ Compiled /login in 49ms
+ GET /login 200 in 301ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 255ms
+ GET /login 200 in 127ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 239ms
+ GET /login 200 in 156ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 248ms
+ ✓ Compiled in 712ms
+ ✓ Compiled /login in 25ms
+ GET /login 200 in 149ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 223ms
+ GET /login 200 in 171ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 358ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 510ms
+ GET /login 200 in 779ms
+ GET /login 200 in 744ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 249ms
+ GET /login 200 in 116ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 250ms
+ ✓ Compiled in 289ms
+ GET /login 200 in 135ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ GET /login 200 in 177ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 244ms
+ GET /login 200 in 135ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 252ms
+ ✓ Compiled in 313ms
+ ✓ Compiled in 885ms
+ ✓ Compiled /login in 135ms
+ GET /login 200 in 496ms
+ GET /login 200 in 474ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 309ms
+ ✓ Compiled in 159ms
+ ✓ Compiled in 120ms
+ GET /login 200 in 308ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 253ms
+ GET /login 200 in 195ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
+ GET /login 200 in 149ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 249ms
+ ✓ Compiled in 431ms
+ ✓ Compiled in 315ms
+ ✓ Compiled in 270ms
+ ✓ Compiled in 237ms
+ ✓ Compiled in 234ms
+ GET /login 200 in 401ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 255ms
+ ✓ Compiled in 87ms
+ ✓ Compiled in 72ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 180ms
+ GET /login 200 in 239ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 236ms
+ ✓ Compiled in 86ms
+ ✓ Compiled in 92ms
+ ✓ Compiled in 75ms
+ ✓ Compiled in 158ms
+ ✓ Compiled in 88ms
+ ✓ Compiled in 97ms
+ ✓ Compiled in 81ms
+ ✓ Compiled in 188ms
+ ✓ Compiled in 130ms
+ ✓ Compiled in 78ms
+ ✓ Compiled in 230ms
+ ✓ Compiled in 211ms
+ ✓ Compiled in 121ms
+ ✓ Compiled in 124ms
+ ✓ Compiled in 95ms
+ ✓ Compiled in 131ms
+ ✓ Compiled in 312ms
+ GET /login 200 in 440ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 275ms
+ ✓ Compiled in 229ms
+ ✓ Compiled in 94ms
+ ✓ Compiled in 120ms
+ ✓ Compiled in 324ms
+ ✓ Compiled in 224ms
+ ✓ Compiled in 213ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 146ms
+ ⨯ ReferenceError: emailError is not defined
+    at LoginForm (src/components/blocks/LoginForm.tsx:65:11)
+  63 |             className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+  64 |           />
+> 65 |           {emailError && (
+     |           ^
+  66 |             <p className="text-[10px] text-blue-100 bg-blue-500/15 rounded px-2 py-1 text-center mt-1">
+  67 |               {emailError}
+  68 |             </p> {
+  digest: '2528293949'
+}
+ GET /login 500 in 439ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 258ms
+ GET /favicon.ico 200 in 243ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 148ms
+ ⨯ ReferenceError: passwordError is not defined
+    at LoginForm (src/components/blocks/LoginForm.tsx:86:11)
+  84 |             className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+  85 |           />
+> 86 |           {passwordError && (
+     |           ^
+  87 |             <p className="text-[10px] text-blue-100 bg-blue-500/15 rounded px-2 py-1 text-center mt-1">
+  88 |               {passwordError}
+  89 |             </p> {
+  digest: '2283775694'
+}
+ GET /login 500 in 235ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 237ms
+ GET /favicon.ico 200 in 238ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 139ms
+ GET /login 200 in 181ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 233ms
+ ✓ Compiled in 490ms
+ ✓ Compiled in 216ms
+ GET /login 200 in 255ms
+ GET /login 200 in 138ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 298ms
+ ✓ Compiled in 249ms
+ ✓ Compiled in 315ms
+ ✓ Compiled in 110ms
+ ✓ Compiled in 140ms
+ ⨯ ReferenceError: k is not defined
+    at [project]/src/components/blocks/LoginForm.tsx [app-ssr] (ecmascript) (src/components/blocks/LoginForm.tsx:11:0)
+   9 | const DEMO_EMAIL = "admin@meti.go.jp";
+  10 | const DEMO_PASSWORD = "meti2024";
+> 11 | k
+  12 | export default function LoginForm() {
+  13 |   const router = useRouter();
+  14 |   const [email, setEmail] = useState(""); {
+  digest: '2702337914'
+}
+ ⨯ ReferenceError: k is not defined
+    at [project]/src/components/blocks/LoginForm.tsx [app-ssr] (ecmascript) (src/components/blocks/LoginForm.tsx:11:0)
+   9 | const DEMO_EMAIL = "admin@meti.go.jp";
+  10 | const DEMO_PASSWORD = "meti2024";
+> 11 | k
+  12 | export default function LoginForm() {
+  13 |   const router = useRouter();
+  14 |   const [email, setEmail] = useState(""); {
+  digest: '2702337914'
+}
+ GET /login 500 in 912ms
+ GET /favicon.ico 200 in 285ms
+ ⨯ ReferenceError: k is not defined
+    at [project]/src/components/blocks/LoginForm.tsx [app-ssr] (ecmascript) (src/components/blocks/LoginForm.tsx:11:0)
+   9 | const DEMO_EMAIL = "admin@meti.go.jp";
+  10 | const DEMO_PASSWORD = "meti2024";
+> 11 | k
+  12 | export default function LoginForm() {
+  13 |   const router = useRouter();
+  14 |   const [email, setEmail] = useState(""); {
+  digest: '2702337914'
+}
+ GET /login 500 in 303ms
+ GET /favicon.ico 200 in 233ms
+ ⨯ ReferenceError: k is not defined
+    at [project]/src/components/blocks/LoginForm.tsx [app-ssr] (ecmascript) (src/components/blocks/LoginForm.tsx:11:0)
+   9 | const DEMO_EMAIL = "admin@meti.go.jp";
+  10 | const DEMO_PASSWORD = "meti2024";
+> 11 | k
+  12 | export default function LoginForm() {
+  13 |   const router = useRouter();
+  14 |   const [email, setEmail] = useState(""); {
+  digest: '2702337914'
+}
+ GET /login 500 in 321ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload when ./src/components/blocks/LoginForm.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled in 403ms
+ GET /login 200 in 341ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1190ms
+ GET /dashboard 200 in 1237ms
+ GET /dashboard 200 in 206ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 266ms
+ GET /dashboard 200 in 131ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 251ms
+ GET /dashboard 200 in 138ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 308ms
+ GET /dashboard 200 in 116ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 245ms
+ GET /dashboard 200 in 110ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 243ms
+ GET /dashboard 200 in 120ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 243ms
+ GET /dashboard 200 in 120ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 244ms
+ GET /dashboard 200 in 119ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 253ms
+ GET /dashboard 200 in 113ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 266ms
+ GET /dashboard 200 in 104ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 249ms
+ GET /dashboard 200 in 136ms
+ ✓ Compiled in 172ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 414ms
+ GET /dashboard 200 in 232ms
+ GET /dashboard 200 in 106ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 250ms
+ GET /dashboard 200 in 117ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 267ms
+ ✓ Compiled in 128ms
+ ✓ Compiled in 131ms
+ ✓ Compiled in 164ms
+ GET /dashboard 200 in 283ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 280ms
+ GET /dashboard 200 in 105ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 252ms
+ GET /dashboard 200 in 104ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 241ms
+ GET /dashboard 200 in 91ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 242ms
+ ✓ Compiled in 197ms
+ ✓ Compiled in 623ms
+ ✓ Compiled in 308ms
+ GET /login 200 in 969ms
+ ✓ Compiled in 108ms
+ ✓ Compiled in 118ms
+ ✓ Compiled in 92ms
+ ✓ Compiled in 90ms
+ ✓ Compiled in 97ms
+ ✓ Compiled in 97ms
+ GET /dashboard 200 in 216ms
+ GET /login 200 in 150ms
+ GET /dashboard 200 in 71ms
+ GET /login 200 in 89ms
+ GET /dashboard 200 in 89ms
+ GET /login 200 in 134ms
+ GET /dashboard 200 in 105ms
+ ✓ Compiled in 1742ms
+ ✓ Compiled in 375ms
+ ✓ Compiled in 146ms
+ ✓ Compiled in 101ms
+ ✓ Compiled in 201ms
+ ✓ Compiled in 185ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ GET /dashboard 200 in 482ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 285ms
+ GET /dashboard 200 in 172ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 309ms
+ ✓ Compiled /_not-found/page in 67ms
+ GET /check 404 in 118ms
+ GET /check 404 in 76ms
+ GET /dashboard 200 in 152ms
+ GET /dashboard 200 in 165ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 283ms
+ GET /login 200 in 69ms
+ GET /dashboard 200 in 169ms
+ ✓ Compiled in 244ms
+ ✓ Compiled in 120ms
+ ✓ Compiled in 188ms
+ ✓ Compiled in 74ms
+ GET /search 404 in 102ms
+ GET /search 404 in 74ms
+ GET /search 404 in 99ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 240ms
+ GET /dashboard 200 in 275ms
+ ✓ Compiled in 496ms
+ ✓ Compiled in 103ms
+ ✓ Compiled in 132ms
+ ✓ Compiled in 197ms
+ ✓ Compiled in 166ms
+ ✓ Compiled in 229ms
+ ✓ Compiled in 151ms
+ ✓ Compiled in 108ms
+ ✓ Compiled in 104ms
+ ✓ Compiled in 161ms
+ ✓ Compiled in 107ms
+ ✓ Compiled in 209ms
+ ✓ Compiled in 95ms
+ ✓ Compiled in 183ms
+ GET /search 404 in 99ms
+ GET /search 404 in 72ms
+ GET /dashboard 200 in 277ms
+ GET /post 404 in 54ms
+ GET /post 404 in 103ms
+ GET /dashboard 200 in 137ms
+ GET /check 404 in 45ms
+ GET /check 404 in 60ms
+ GET /dashboard 200 in 112ms
+ GET /search 404 in 56ms
+ GET /search 404 in 77ms
+ GET /dashboard 200 in 93ms
+ GET /post 404 in 53ms
+ GET /post 404 in 56ms
+ GET /dashboard 200 in 106ms
+ GET /check 404 in 50ms
+ GET /check 404 in 60ms
+ GET /dashboard 200 in 106ms
