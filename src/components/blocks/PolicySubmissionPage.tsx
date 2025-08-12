@@ -38,11 +38,6 @@ const RichTextEditor = ({ value, onChange }: {
     onChange(plainText);
   };
 
-  // フォーマット機能（削除済み、項目のみ残す）
-  const applyFormat = (_format: string) => {
-    // 機能は削除済み
-  };
-
   const handleKeyDown = (_e: React.KeyboardEvent) => {
     // 機能は削除済み
   };
