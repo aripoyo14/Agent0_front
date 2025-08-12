@@ -25,6 +25,24 @@ export function FilterSelect({
   className,
 }: FilterSelectProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // 外側クリック検知でドロップダウンを閉じる
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleOptionToggle = (value: string) => {
     const newValues = selectedValues.includes(value)
@@ -34,8 +52,8 @@ export function FilterSelect({
   };
 
   return (
-    <div className={cn("relative", className)}>
-      <label className="block text-xs font-medium text-gray-700 mb-1">
+    <div className={cn("relative", className)} ref={containerRef}>
+      <label className="block text-xs font-medium text-gray-700 mb-2">
         {title}
       </label>
       <div
@@ -47,7 +65,7 @@ export function FilterSelect({
             {selectedValues.length === 0 ? (
               <span className="text-gray-500 text-xs">{placeholder}</span>
             ) : (
-              <div className="flex flex-wrap gap-1">
+              <div className="flex flex-wrap gap-2">
                 {selectedValues.map((value) => {
                   const option = options.find((opt) => opt.value === value);
                   return (
@@ -71,7 +89,10 @@ export function FilterSelect({
               </div>
             )}
           </div>
-          <span className="material-symbols-outlined text-gray-400 text-sm">
+          <span 
+            className="material-symbols-outlined text-gray-400"
+            style={{ fontSize: '12px' }}
+          >
             {isOpen ? "expand_less" : "expand_more"}
           </span>
         </div>

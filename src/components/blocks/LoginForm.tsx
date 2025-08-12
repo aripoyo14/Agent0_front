@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 
 type SubmitState = "idle" | "submitting" | "error" | "success";
 
-// 仮ログイン認証情報（本番環境では適切な認証システムに置き換える）
-const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || "demo@example.com";
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || "demo123";
+// 🚨 セキュリティ警告: 本番環境では絶対に使用しない
+// デモ用の認証情報は環境変数で管理し、適切な認証システムに置き換える
+const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || "";
+const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || "";
+
+// デモ環境チェック
+const isDemoMode = process.env.NODE_ENV === "development";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -29,7 +33,16 @@ export default function LoginForm() {
         throw new Error("メールアドレスとパスワードを入力してください");
       }
       
-      // 仮ログイン認証
+      // デモモード認証チェック
+      if (!isDemoMode) {
+        throw new Error("本番環境では適切な認証システムを実装してください");
+      }
+      
+      if (!DEMO_EMAIL || !DEMO_PASSWORD) {
+        throw new Error("環境変数 NEXT_PUBLIC_DEMO_EMAIL と NEXT_PUBLIC_DEMO_PASSWORD を設定してください");
+      }
+      
+      // デモ認証
       if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
         setState("success");
         // ダッシュボードに遷移

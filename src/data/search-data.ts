@@ -3,7 +3,7 @@ import { PolicyTheme, FilterOption, NetworkNode } from "@/types";
 export const policyThemes: PolicyTheme[] = [
   {
     id: "digital-transformation",
-    title: "DX（デジタル変革）",
+    title: "DX",
     description: "",
     color: "#007aff",
     participants: 0
@@ -38,7 +38,7 @@ export const policyThemes: PolicyTheme[] = [
   },
   {
     id: "adx-new-business",
-    title: "ADX（アジア新事業共創）",
+    title: "ADX",
     description: "",
     color: "#ff6b35",
     participants: 0
@@ -59,7 +59,7 @@ export const policyThemes: PolicyTheme[] = [
   },
   {
     id: "green-growth",
-    title: "グリーン成長戦略",
+    title: "GX",
     description: "",
     color: "#059669",
     participants: 0
@@ -145,7 +145,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 1,
     x: 400,
     y: 200,
-    connections: ["2", "3", "5"]
+    connections: ["2", "3", "5"],
+    relevanceScore: 0.9
   },
   {
     id: "2", 
@@ -155,7 +156,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 2,
     x: 250,
     y: 120,
-    connections: ["1", "4", "6"]
+    connections: ["1", "4", "6"],
+    relevanceScore: 0.8
   },
   {
     id: "3",
@@ -165,7 +167,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 3,
     x: 550,
     y: 120,
-    connections: ["1", "7", "8"]
+    connections: ["1", "7", "8"],
+    relevanceScore: 0.7
   },
   {
     id: "4",
@@ -175,7 +178,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 4,
     x: 150,
     y: 80,
-    connections: ["2", "9"]
+    connections: ["2", "9"],
+    relevanceScore: 0.6
   },
   {
     id: "5",
@@ -185,7 +189,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 5,
     x: 350,
     y: 240,
-    connections: ["1", "10"]
+    connections: ["1", "10"],
+    relevanceScore: 0.75
   },
   {
     id: "6",
@@ -195,7 +200,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 6,
     x: 200,
     y: 200,
-    connections: ["2", "11"]
+    connections: ["2", "11"],
+    relevanceScore: 0.5
   },
   {
     id: "7",
@@ -205,7 +211,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 7,
     x: 650,
     y: 90,
-    connections: ["3", "12"]
+    connections: ["3", "12"],
+    relevanceScore: 0.4
   },
   {
     id: "8",
@@ -215,7 +222,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 8,
     x: 600,
     y: 160,
-    connections: ["3", "13"]
+    connections: ["3", "13"],
+    relevanceScore: 0.65
   },
   {
     id: "9",
@@ -225,7 +233,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 9,
     x: 100,
     y: 60,
-    connections: ["4"]
+    connections: ["4"],
+    relevanceScore: 0.45
   },
   {
     id: "10",
@@ -235,7 +244,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 10,
     x: 450,
     y: 280,
-    connections: ["5"]
+    connections: ["5"],
+    relevanceScore: 0.55
   },
   {
     id: "11",
@@ -245,7 +255,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 11,
     x: 150,
     y: 220,
-    connections: ["6"]
+    connections: ["6"],
+    relevanceScore: 0.3
   },
   {
     id: "12",
@@ -255,7 +266,8 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 12,
     x: 700,
     y: 80,
-    connections: ["7"]
+    connections: ["7"],
+    relevanceScore: 0.25
   },
   {
     id: "13",
@@ -265,6 +277,7 @@ export const sampleNetworkNodes: NetworkNode[] = [
     group: 13,
     x: 650,
     y: 220,
-    connections: ["8"]
+    connections: ["8"],
+    relevanceScore: 0.85
   }
 ];
