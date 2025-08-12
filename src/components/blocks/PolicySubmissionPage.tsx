@@ -3,7 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
 // import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
-import { policyThemes } from "@/data/search-data";
 
 interface PolicyFormData {
   selectedThemes: string[];
@@ -13,7 +12,7 @@ interface PolicyFormData {
 }
 
 // リッチテキストエディタコンポーネント
-const RichTextEditor = ({ value, onChange, placeholder }: { 
+const RichTextEditor = ({ value, onChange }: { 
   value: string; 
   onChange: (value: string) => void; 
   placeholder: string;
@@ -40,11 +39,11 @@ const RichTextEditor = ({ value, onChange, placeholder }: {
   };
 
   // フォーマット機能（削除済み、項目のみ残す）
-  const applyFormat = (format: string) => {
+  const applyFormat = (_format: string) => {
     // 機能は削除済み
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (_e: React.KeyboardEvent) => {
     // 機能は削除済み
   };
 
@@ -172,13 +171,9 @@ export function PolicySubmissionPage() {
   const COLOR_PRIMARY = "#007aff"; // Miscellaneous/Floating Tab - Text Selected
   const IMG_OCTICON_FILE_16 = "http://localhost:3845/assets/9a27fe684e7b1aadda6d6518a47a5b5e09f7c55f.svg";
 
-  const handleThemeToggle = (themeId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedThemes: prev.selectedThemes.includes(themeId)
-        ? prev.selectedThemes.filter(id => id !== themeId)
-        : [...prev.selectedThemes, themeId]
-    }));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleThemeToggle = (_themeId: string) => {
+    // 機能は削除済み
   };
 
   const handleInputChange = (field: keyof PolicyFormData, value: string) => {
