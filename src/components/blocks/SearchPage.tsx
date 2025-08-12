@@ -71,20 +71,30 @@ export function SearchPage() {
         {/* 小さなヘッダー */}
         <div className="mb-4">
           <h1 
-            className="font-['Noto_Sans_JP'] font-semibold text-white text-xl tracking-[2px] cursor-pointer hover:opacity-80 transition-opacity"
+            className="font-['Montserrat',_sans-serif] font-semibold text-white text-[18px] tracking-[2.16px] cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleGoToDashboard}
           >
             METI Picks
           </h1>
         </div>
 
-        {/* サブタイトル */}
-        <div className="w-1/4">
-          <div className="bg-white/20 border border-white rounded-lg px-6 py-3">
-            <h2 className="font-['Noto_Sans_JP'] font-bold text-white text-sm tracking-[2px]">
-              人流の見える化・つながる
-            </h2>
+        {/* レクタングル1と政策テーマ（同じ高さで横並び、背景カード無し） */}
+        <div className="flex items-start gap-10">
+          {/* キャッチコピー枠（1）- 白タブ＋外枠レクタングル */}
+          <div className="w-[250.7px] h-[70.36px] relative shrink-0">
+            {/* 白いPolicyタブ（上側） */}
+            <div className="absolute top-0 left-0 w-[50px] h-[25px] bg-white rounded-tl-[8.414px] rounded-tr-[8.414px] flex items-center justify-center z-10">
+              <span className="font-['Montserrat',_sans-serif] font-semibold text-[7px] tracking-[0.42px]" style={{ color: "#007aff" }}>Search</span>
+            </div>
+            {/* 外枠レクタングル（下側）- 左上角のみラウンドなし */}
+            <div className="absolute top-[25px] left-0 right-0 bottom-0 rounded-tr-[8.414px] rounded-br-[8.414px] rounded-bl-[8.414px] border border-white" />
+            {/* テキスト（外枠レクタングル内） */}
+            <div className="absolute left-[40px] top-[35px]">
+              <span className="font-['Noto_Sans_JP'] font-bold text-white text-[10.62px] tracking-[1.893px]">人流の可視化でつながる</span>
+            </div>
           </div>
+
+
         </div>
       </div>
 
