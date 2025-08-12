@@ -8,9 +8,7 @@ import { NetworkMap } from "@/components/ui/network-map";
 import { 
   policyThemes, 
   industryOptions, 
-  positionOptions, 
-  regionOptions, 
-  otherOptions 
+  positionOptions 
 } from "@/data/search-data";
 import { SearchFilters } from "@/types";
 
@@ -22,9 +20,7 @@ export function SearchPage() {
     searchQuery: "",
     policyThemes: [],
     industries: [],
-    positions: [],
-    regions: [],
-    others: []
+    positions: []
   });
 
   const handleFilterChange = (key: keyof SearchFilters, value: string | string[]) => {
@@ -41,6 +37,11 @@ export function SearchPage() {
         ? prev.policyThemes.filter(id => id !== themeId)
         : [...prev.policyThemes, themeId]
     }));
+  };
+
+  const handleSearch = () => {
+    // 検索実行ロジック（現在は状態更新のみ）
+    console.log("検索実行:", filters);
   };
 
   const handleGoToDashboard = () => {
@@ -99,7 +100,7 @@ export function SearchPage() {
             
             <div className="bg-white rounded-lg p-3 h-full overflow-y-auto">
               {/* 政策テーマセレクター */}
-              <div className="mb-3">
+              <div className="mb-5">
                 <PolicyThemeSelector
                   themes={policyThemes}
                   selectedThemes={filters.policyThemes}
@@ -108,7 +109,7 @@ export function SearchPage() {
               </div>
               
               {/* その他のフィルターオプション */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <FilterSelect
                   title="業界・分野"
                   options={industryOptions}
@@ -125,21 +126,42 @@ export function SearchPage() {
                   placeholder="役職を選択してください"
                 />
                 
-                <FilterSelect
-                  title="地域"
-                  options={regionOptions}
-                  selectedValues={filters.regions}
-                  onSelectionChange={(values) => handleFilterChange("regions", values)}
-                  placeholder="地域を選択してください"
-                />
-                
-                <FilterSelect
-                  title="その他"
-                  options={otherOptions}
-                  selectedValues={filters.others}
-                  onSelectionChange={(values) => handleFilterChange("others", values)}
-                  placeholder="その他の条件を選択してください"
-                />
+                {/* フリーワード検索 */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-2">
+                    フリーワード検索
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <span 
+                        className="material-symbols-outlined text-gray-400"
+                        style={{ fontSize: '15px' }}
+                      >
+                        search
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      value={filters.searchQuery}
+                      onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                      placeholder="キーワードを入力してください"
+                      className="w-full pl-8 pr-12 py-2 bg-gray-100 rounded border border-gray-200 text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58aadb] focus:border-transparent transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearch}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 hover:bg-gray-200 rounded-r transition-colors"
+                    >
+                      <span 
+                        className="material-symbols-outlined text-gray-500 hover:text-[#58aadb] transition-colors"
+                        style={{ fontSize: '12px' }}
+                      >
+                        keyboard_return
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

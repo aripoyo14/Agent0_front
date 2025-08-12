@@ -78,8 +78,6 @@ export interface SearchFilters {
   policyThemes: string[]
   industries: string[]
   positions: string[]
-  regions: string[]
-  others: string[]
 }
 
 // ネットワークマップのノード型
@@ -92,6 +90,7 @@ export interface NetworkNode {
   connections: string[]
   x?: number
   y?: number
+  relevanceScore?: number // 0-1の関連度スコア
 }
 
 // 政策テーマ型
