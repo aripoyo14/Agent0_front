@@ -2,16 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth";
 
 type SubmitState = "idle" | "submitting" | "error" | "success";
-
-// 🚨 セキュリティ警告: 本番環境では絶対に使用しない
-// デモ用の認証情報は環境変数で管理し、適切な認証システムに置き換える
-const DEMO_EMAIL = process.env.NEXT_PUBLIC_DEMO_EMAIL || "";
-const DEMO_PASSWORD = process.env.NEXT_PUBLIC_DEMO_PASSWORD || "";
-
-// デモ環境チェック
-const isDemoMode = process.env.NODE_ENV === "development";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -26,30 +19,13 @@ export default function LoginForm() {
     setState("submitting");
 
     try {
-      // 仮ログイン認証チェック
-      await new Promise((r) => setTimeout(r, 600));
-      
       if (!email || !password) {
         throw new Error("メールアドレスとパスワードを入力してください");
       }
-      
-      // デモモード認証チェック
-      if (!isDemoMode) {
-        throw new Error("本番環境では適切な認証システムを実装してください");
-      }
-      
-      if (!DEMO_EMAIL || !DEMO_PASSWORD) {
-        throw new Error("環境変数 NEXT_PUBLIC_DEMO_EMAIL と NEXT_PUBLIC_DEMO_PASSWORD を設定してください");
-      }
-      
-      // デモ認証
-      if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
-        setState("success");
-        // ダッシュボードに遷移
-        router.push("/dashboard");
-      } else {
-        throw new Error("メールアドレスまたはパスワードが正しくありません");
-      }
+      // 実APIログイン
+      await login(email, password);
+      setState("success");
+      router.push("/dashboard");
     } catch (err) {
       setState("error");
       setError(err instanceof Error ? err.message : "ログインに失敗しました");
