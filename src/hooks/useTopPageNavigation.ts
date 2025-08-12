@@ -27,7 +27,7 @@ export const useTopPageNavigation = () => {
    * 政策案投稿ページへ遷移
    */
   const handleSubmitPolicy = () => {
-    router.push("/post");
+    router.push("/policy");
   };
 
   /**
