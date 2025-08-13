@@ -108,3 +108,40 @@ export interface FilterOption {
   label: string
   count?: number
 }
+
+// 政策投稿型
+export interface PolicySubmission {
+  id: string
+  title: string
+  content: string
+  policyThemes: string[]
+  submittedAt: string
+  status: 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected'
+  attachedFiles?: string[]
+  commentCount: number
+}
+
+// 政策コメント型
+export interface PolicyComment {
+  id: string
+  policyId: string
+  author: string
+  authorRole: string
+  content: string
+  createdAt: string
+  isOfficial: boolean // 公式コメントかどうか
+  attachments?: string[]
+  aiAnalysis?: CommentAnalysis // AI分析結果
+}
+
+// AI分析結果型
+export interface CommentAnalysis {
+  score: number // 0-100のスコア
+  category: 'positive' | 'neutral' | 'negative' | 'constructive' | 'critical'
+  summary: string // コメントの要約
+  keyPoints: string[] // 重要なポイント
+  suggestions: string[] // 改善提案
+  relevanceScore: number // 政策との関連性スコア (0-100)
+  expertiseLevel: 'high' | 'medium' | 'low' // 専門性レベル
+  actionableInsights: string[] // 実行可能な洞察
+}
