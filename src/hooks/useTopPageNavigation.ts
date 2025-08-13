@@ -34,7 +34,7 @@ export const useTopPageNavigation = () => {
    * 意見確認ページへ遷移
    */
   const handleCheckOpinions = () => {
-    router.push("/check");
+    router.push("/comments");
   };
 
   return {
