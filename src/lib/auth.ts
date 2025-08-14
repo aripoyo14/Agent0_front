@@ -22,7 +22,12 @@ export function getUserFromToken(): { userId: string; userType: string; role: st
   if (typeof tokenData === 'string') {
     token = tokenData;
   } else if (tokenData && typeof tokenData === 'object' && 'accessToken' in tokenData) {
-    token = tokenData.accessToken;
+    // accessTokenが存在し、文字列であることを確認
+    if (typeof tokenData.accessToken === 'string' && tokenData.accessToken) {
+      token = tokenData.accessToken;
+    } else {
+      return null;
+    };
   } else {
     // console.log("トークンの形式が不正です:", tokenData);
     return null;
