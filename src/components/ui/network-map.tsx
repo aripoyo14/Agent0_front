@@ -13,9 +13,9 @@ type NodeObj = GraphNode & { x?: number; y?: number; id?: string | number; fx?: 
 type LinkObj = { source: string; target: string; value?: number };
 interface ForceGraphMethods {
 	zoomToFit: (ms?: number, padding?: number, nodeFilter?: (node: NodeObj) => boolean) => void;
-	// 以下はランタイム側で存在するため any で防御的に扱う
+	// 以下はランタイム側で存在するため unknown で防御的に扱う
 	// 型の厳密性よりも互換性を優先
-	d3Force?: (name: string, force?: any) => any;
+	d3Force?: (name: string, force?: unknown) => unknown;
 	d3ReheatSimulation?: () => void;
 }
 
@@ -29,17 +29,21 @@ type GraphNode = NetworkNode & { color?: string };
 
 type GraphLink = { source: string; target: string; value?: number };
 
+// ForceGraph のリンク型（ランタイムでは source/target が id かノードオブジェクトになる）
+type ForceGraphLink = {
+	source: string | number | { id?: string | number };
+	target: string | number | { id?: string | number };
+	value?: number;
+};
+
 interface GraphData {
 	nodes: GraphNode[];
 	links: GraphLink[];
 }
 
-export function NetworkMap({ filters, className, backendData }: NetworkMapProps) {
+export function NetworkMap({ filters: _filters, className, backendData }: NetworkMapProps) {
 	const router = useRouter();
 	const fgRef = useRef<ForceGraphMethods | null>(null);
-
-  const hasAnyFilters = filters.policyThemes.length > 0 || 
-    filters.searchQuery.trim() !== '';
 
   // バックエンドデータからグラフ化（唯一のデータソースとする）
   const backendGraphData = useMemo<GraphData | null>(() => {
@@ -172,20 +176,22 @@ export function NetworkMap({ filters, className, backendData }: NetworkMapProps)
 	React.useEffect(() => {
 		if (!fgRef.current) return;
 		try {
-			const linkForce = fgRef.current.d3Force?.('link');
+			const linkForceUnknown = fgRef.current.d3Force?.('link');
+			const linkForce = linkForceUnknown as unknown as { distance?: (fn: (link: ForceGraphLink) => number) => void } | undefined;
 			if (linkForce && typeof linkForce.distance === 'function') {
-				linkForce.distance((link: any) => {
-					const sid = String((link.source && link.source.id) ?? link.source ?? '');
-					const tid = String((link.target && link.target.id) ?? link.target ?? '');
+				linkForce.distance((link: ForceGraphLink) => {
+					const sid = String(((link.source as { id?: string | number })?.id) ?? link.source ?? '');
+					const tid = String(((link.target as { id?: string | number })?.id) ?? link.target ?? '');
 					const involvesPolicy = sid.startsWith('policy:') || tid.startsWith('policy:');
 					const v = typeof link.value === 'number' ? link.value : 0.4;
 					return involvesPolicy ? 140 + (1 - v) * 60 : 90;
 				});
 			}
 
-			const chargeForce = fgRef.current.d3Force?.('charge');
+			const chargeForceUnknown = fgRef.current.d3Force?.('charge');
+			const chargeForce = chargeForceUnknown as unknown as { strength?: (fn: (node: NodeObj) => number) => void } | undefined;
 			if (chargeForce && typeof chargeForce.strength === 'function') {
-				chargeForce.strength((node: any) => {
+				chargeForce.strength((node: NodeObj) => {
 					const isPolicy = String(node.id ?? '').startsWith('policy:');
 					return isPolicy ? -420 : -140;
 				});
@@ -218,13 +224,13 @@ export function NetworkMap({ filters, className, backendData }: NetworkMapProps)
 				nodeRelSize={6}
 				nodeLabel={nodeLabel}
 				nodeCanvasObject={nodeCanvasObject}
-				linkColor={(link: any) => {
+				linkColor={(link: ForceGraphLink) => {
 					const value = typeof link.value === 'number' ? link.value : 0.4;
 					const alpha = 0.2 + Math.min(0.8, value * 0.8);
 					return `rgba(88,170,219,${alpha.toFixed(3)})`;
 				}}
 				linkDirectionalParticles={0}
-				linkWidth={(link: any) => {
+				linkWidth={(link: ForceGraphLink) => {
 					const value = typeof link.value === 'number' ? link.value : 0.4;
 					return 0.5 + value * 3;
 				}}
@@ -260,9 +266,3 @@ export function NetworkMap({ filters, className, backendData }: NetworkMapProps)
 	);
 }
 
-function groupToColor(group: number): string {
-	const palette = [
-		'#58aadb', '#b4d9d6', '#7db0e3', '#a3e1dc', '#9fb8d1', '#6fbfca', '#90d1f0', '#7ec8e3'
-	];
-	return palette[(Math.abs(group) || 0) % palette.length];
-}
