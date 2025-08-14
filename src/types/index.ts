@@ -108,3 +108,29 @@ export interface FilterOption {
   label: string
   count?: number
 }
+
+// ========== Network Map DTOs (from backend) ==========
+export interface PolicyThemeDTO {
+  id: string
+  title: string
+  color?: string
+}
+
+export interface ExpertDTO {
+  id: string
+  name: string
+  department?: string
+  title?: string
+}
+
+export interface RelationDTO {
+  policy_id: string
+  expert_id: string
+  relation_score: number
+}
+
+export interface NetworkMapResponseDTO {
+  policy_themes: PolicyThemeDTO[]
+  experts: ExpertDTO[]
+  relations: RelationDTO[]
+}

@@ -2,15 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FilterSelect } from "@/components/ui/filter-select";
 import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 import { NetworkMap } from "@/components/ui/network-map";
-import { 
-  policyThemes, 
-  industryOptions, 
-  positionOptions 
-} from "@/data/search-data";
-import { SearchFilters } from "@/types";
+import { policyThemes } from "@/data/search-data";
+import { SearchFilters, NetworkMapResponseDTO } from "@/types";
 
 const imgBackground = "http://localhost:3845/assets/5f80ec7391fa506958e021a0a123f517aa20c66f.svg";
 
@@ -22,6 +17,11 @@ export function SearchPage() {
     industries: [],
     positions: []
   });
+  const [networkData, setNetworkData] = useState<NetworkMapResponseDTO | null>(null);
+
+	// 環境変数はベースURL（例: http://localhost:8000）を想定。未設定時はローカルを既定
+	const API_BASE = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://127.0.0.1:8000";
+	const API_ENDPOINT = `${API_BASE.replace(/\/$/, "")}/api/search_network_map/match`;
 
   const handleFilterChange = (key: keyof SearchFilters, value: string | string[]) => {
     setFilters(prev => ({
@@ -39,9 +39,36 @@ export function SearchPage() {
     }));
   };
 
-  const handleSearch = () => {
-    // 検索実行ロジック（現在は状態更新のみ）
-    console.log("検索実行:", filters);
+  const handleSearch = async () => {
+    // バックエンドへ政策テーマ（文字ID）と自由記述をPOST
+    const selectedTitles = policyThemes
+      .filter(t => filters.policyThemes.includes(t.id))
+      .map(t => t.title);
+
+    const payload = {
+      // バックエンド要件: 表示名（日本語）を送る
+      policy_tag: selectedTitles,
+      free_text: filters.searchQuery,
+    } as const;
+
+    try {
+      const res = await fetch(API_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      // バックエンドが未対応の場合でもUIが壊れないよう防御
+      if (!res.ok) {
+        const text = await res.text();
+        console.warn('network_map/match error:', res.status, text);
+        return;
+      }
+      const data = await res.json();
+      console.log('network_map response:', data);
+      setNetworkData(data as NetworkMapResponseDTO);
+    } catch (err) {
+      console.warn('network_map/match request failed:', err);
+    }
   };
 
   const handleGoToDashboard = () => {
@@ -108,7 +135,7 @@ export function SearchPage() {
               絞り込む
             </h3>
             
-            <div className="bg-white rounded-lg p-3 h-full overflow-y-auto">
+            <div className="bg-white rounded-lg p-3 h-full overflow-y-auto flex flex-col">
               {/* 政策テーマセレクター */}
               <div className="mb-5">
                 <PolicyThemeSelector
@@ -117,61 +144,28 @@ export function SearchPage() {
                   onThemeToggle={handlePolicyThemeToggle}
                 />
               </div>
-              
-              {/* その他のフィルターオプション */}
-              <div className="space-y-4">
-                <FilterSelect
-                  title="業界・分野"
-                  options={industryOptions}
-                  selectedValues={filters.industries}
-                  onSelectionChange={(values) => handleFilterChange("industries", values)}
-                  placeholder="業界を選択してください"
-                />
-                
-                <FilterSelect
-                  title="役職・立場"
-                  options={positionOptions}
-                  selectedValues={filters.positions}
-                  onSelectionChange={(values) => handleFilterChange("positions", values)}
-                  placeholder="役職を選択してください"
-                />
-                
-                {/* フリーワード検索 */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-2">
-                    フリーワード検索
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span 
-                        className="material-symbols-outlined text-gray-400"
-                        style={{ fontSize: '15px' }}
-                      >
-                        search
-                      </span>
-                    </div>
-                    <input
-                      type="text"
-                      value={filters.searchQuery}
-                      onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                      placeholder="キーワードを入力してください"
-                      className="w-full pl-8 pr-12 py-2 bg-gray-100 rounded border border-gray-200 text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58aadb] focus:border-transparent transition-colors"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleSearch}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 hover:bg-gray-200 rounded-r transition-colors"
-                    >
-                      <span 
-                        className="material-symbols-outlined text-gray-500 hover:text-[#58aadb] transition-colors"
-                        style={{ fontSize: '12px' }}
-                      >
-                        keyboard_return
-                      </span>
-                    </button>
+              {/* フリーワード検索（下部に検索ボタンを配置） */}
+              <div className="flex flex-col">
+                <label className="block text-xs font-medium text-gray-700 mb-2">フリーワード検索</label>
+                <div className="relative">
+                  <div className="absolute left-0 top-0 flex items-start pl-3 pt-2">
+                    <span className="material-symbols-outlined text-gray-400" style={{ fontSize: '15px' }}>search</span>
                   </div>
+                  <textarea
+                    value={filters.searchQuery}
+                    onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
+                    onKeyDown={(e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) && handleSearch()}
+                    placeholder="キーワードを入力してください"
+                    className="w-full h-32 pl-8 pr-3 py-2 bg-gray-100 rounded border border-gray-200 text-xs placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58aadb] focus:border-transparent transition-colors resize-none"
+                  />
                 </div>
+                <button
+                  type="button"
+                  onClick={handleSearch}
+                  className="mt-2 inline-flex items-center justify-center px-3 py-2 bg-[#58aadb] text-white rounded text-xs hover:opacity-90"
+                >
+                  検索
+                </button>
               </div>
             </div>
           </div>
@@ -186,7 +180,7 @@ export function SearchPage() {
             <div className="bg-white rounded-lg p-2 h-full">
               {/* 人脈マップの表示エリア */}
               <div className="w-full h-full">
-                <NetworkMap filters={filters} />
+                <NetworkMap filters={filters} backendData={networkData} />
               </div>
             </div>
           </div>

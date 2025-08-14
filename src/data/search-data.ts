@@ -2,59 +2,52 @@ import { PolicyTheme, FilterOption, NetworkNode } from "@/types";
 
 export const policyThemes: PolicyTheme[] = [
   {
+    id: "economy-industry",
+    title: "経済産業",
+    description: "",
+    color: "#0ea5e9",
+    participants: 0
+  },
+  {
+    id: "external-economy",
+    title: "対外経済",
+    description: "",
+    color: "#10b981",
+    participants: 0
+  },
+  {
+    id: "manufacturing-it-distribution-services",
+    title: "ものづくり／情報／流通・サービス",
+    description: "",
+    color: "#f59e0b",
+    participants: 0
+  },
+  {
+    id: "sme-regional-economy",
+    title: "中小企業・地域経済産業",
+    description: "",
+    color: "#8b5cf6",
+    participants: 0
+  },
+  {
+    id: "energy-environment",
+    title: "エネルギー・環境",
+    description: "",
+    color: "#16a34a",
+    participants: 0
+  },
+  {
+    id: "safety-security",
+    title: "安全・安心",
+    description: "",
+    color: "#ef4444",
+    participants: 0
+  },
+  {
     id: "digital-transformation",
     title: "DX",
     description: "",
     color: "#007aff",
-    participants: 0
-  },
-  {
-    id: "startup-support",
-    title: "スタートアップ・中小企業支援",
-    description: "",
-    color: "#34c759",
-    participants: 0
-  },
-  {
-    id: "industrial-transformation",
-    title: "産業構造転換",
-    description: "",
-    color: "#ff9500",
-    participants: 0
-  },
-  {
-    id: "communication-strategy",
-    title: "通信戦略",
-    description: "",
-    color: "#af52de",
-    participants: 0
-  },
-  {
-    id: "economic-cooperation",
-    title: "経済連携",
-    description: "",
-    color: "#ff2d92",
-    participants: 0
-  },
-  {
-    id: "adx-new-business",
-    title: "ADX",
-    description: "",
-    color: "#ff6b35",
-    participants: 0
-  },
-  {
-    id: "renewable-energy",
-    title: "再生可能エネルギー",
-    description: "",
-    color: "#1e40af",
-    participants: 0
-  },
-  {
-    id: "hydrogen-society",
-    title: "水素社会",
-    description: "",
-    color: "#7c3aed",
     participants: 0
   },
   {
@@ -65,24 +58,52 @@ export const policyThemes: PolicyTheme[] = [
     participants: 0
   },
   {
-    id: "digital-policy",
-    title: "デジタル政策",
+    id: "startup-support",
+    title: "スタートアップ支援",
+    description: "",
+    color: "#34c759",
+    participants: 0
+  },
+  {
+    id: "diversity-management",
+    title: "ダイバーシティ経営",
+    description: "",
+    color: "#ec4899",
+    participants: 0
+  },
+  {
+    id: "economic-security",
+    title: "経済安全保障",
+    description: "",
+    color: "#1d4ed8",
+    participants: 0
+  },
+  {
+    id: "regional-co-creation",
+    title: "地域共創",
+    description: "",
+    color: "#f97316",
+    participants: 0
+  },
+  {
+    id: "femtech",
+    title: "フェムテック",
+    description: "",
+    color: "#a855f7",
+    participants: 0
+  },
+  {
+    id: "data-ai-utilization",
+    title: "データ・AI活用",
     description: "",
     color: "#0369a1",
     participants: 0
   },
   {
-    id: "human-resources",
-    title: "人材政策",
+    id: "cashless",
+    title: "キャッシュレス",
     description: "",
-    color: "#dc2626",
-    participants: 0
-  },
-  {
-    id: "regional-policy",
-    title: "地域政策",
-    description: "",
-    color: "#ea580c",
+    color: "#14b8a6",
     participants: 0
   }
 ];
@@ -281,3 +302,81 @@ export const sampleNetworkNodes: NetworkNode[] = [
     relevanceScore: 0.85
   }
 ];
+
+// 政策テーマごとの有識者ネットワーク（ハードコーディング）
+// key: policyThemes[].id に一致
+export const policyExpertNetworks: Record<string, {
+  policyTag: { id: string; name: string };
+  experts: Array<{ id: string; name: string; department: string; title: string; relation_score: number }>;
+}> = {
+  // DX（デジタル変革）
+  "digital-transformation": {
+    policyTag: { id: "digital-transformation", name: "DX" },
+    experts: [
+      { id: "exp1", name: "山田太郎", department: "技術部", title: "部長", relation_score: 0.9 },
+      { id: "exp2", name: "佐藤花子", department: "営業部", title: "課長", relation_score: 0.6 },
+      { id: "exp3", name: "鈴木一郎", department: "DX推進室", title: "室長", relation_score: 0.82 },
+      { id: "exp4", name: "高橋美咲", department: "情報システム部", title: "主任", relation_score: 0.47 },
+      { id: "exp5", name: "伊藤健", department: "データ戦略部", title: "マネージャー", relation_score: 0.71 },
+    ]
+  },
+  // GX（グリーン成長）
+  "green-growth": {
+    policyTag: { id: "green-growth", name: "GX" },
+    experts: [
+      { id: "exp6", name: "小林蓮", department: "環境技術研究所", title: "上席研究員", relation_score: 0.88 },
+      { id: "exp7", name: "中村葵", department: "再エネ事業部", title: "部長", relation_score: 0.63 },
+      { id: "exp8", name: "大野悠", department: "サステナ政策室", title: "参事官付", relation_score: 0.52 },
+      { id: "exp9", name: "西村彩", department: "脱炭素推進部", title: "課長", relation_score: 0.74 },
+    ]
+  },
+  // スタートアップ・中小企業支援
+  "startup-support": {
+    policyTag: { id: "startup-support", name: "スタートアップ支援" },
+    experts: [
+      { id: "exp10", name: "松本駿", department: "ベンチャー投資部", title: "プリンシパル", relation_score: 0.86 },
+      { id: "exp11", name: "田辺優", department: "産業金融課", title: "係長", relation_score: 0.58 },
+      { id: "exp12", name: "山口萌", department: "起業支援センター", title: "マネージャー", relation_score: 0.66 },
+    ]
+  }
+};
+
+// 有識者カタログ（IDに紐づく基本情報）
+export type ExpertCatalogItem = {
+  id: string;
+  name: string;
+  department: string;
+  title: string;
+};
+
+export const expertsCatalog: ExpertCatalogItem[] = [
+  { id: "exp1", name: "山田太郎", department: "技術部", title: "部長" },
+  { id: "exp2", name: "佐藤花子", department: "営業部", title: "課長" },
+  { id: "exp3", name: "鈴木一郎", department: "DX推進室", title: "室長" },
+  { id: "exp4", name: "高橋美咲", department: "情報システム部", title: "主任" },
+  { id: "exp5", name: "伊藤健", department: "データ戦略部", title: "マネージャー" },
+  { id: "exp6", name: "小林蓮", department: "環境技術研究所", title: "上席研究員" },
+  { id: "exp7", name: "中村葵", department: "再エネ事業部", title: "部長" },
+  { id: "exp8", name: "大野悠", department: "サステナ政策室", title: "参事官付" },
+  { id: "exp9", name: "西村彩", department: "脱炭素推進部", title: "課長" },
+  { id: "exp10", name: "松本駿", department: "ベンチャー投資部", title: "プリンシパル" },
+  { id: "exp11", name: "田辺優", department: "産業金融課", title: "係長" },
+  { id: "exp12", name: "山口萌", department: "起業支援センター", title: "マネージャー" },
+];
+
+// expertId -> policyId -> relation_score（0..1）
+// 同一expertが複数の政策テーマに異なるスコアで関連付く
+export const expertPolicyScores: Record<string, Record<string, number>> = {
+  exp1: { "digital-transformation": 0.9, "startup-support": 0.42 },
+  exp2: { "digital-transformation": 0.6 },
+  exp3: { "digital-transformation": 0.82, "green-growth": 0.35 },
+  exp4: { "digital-transformation": 0.47 },
+  exp5: { "digital-transformation": 0.71, "startup-support": 0.51 },
+  exp6: { "green-growth": 0.88, "digital-transformation": 0.3 },
+  exp7: { "green-growth": 0.63 },
+  exp8: { "green-growth": 0.52 },
+  exp9: { "green-growth": 0.74 },
+  exp10: { "startup-support": 0.86, "digital-transformation": 0.28 },
+  exp11: { "startup-support": 0.58 },
+  exp12: { "startup-support": 0.66, "green-growth": 0.33 },
+};
