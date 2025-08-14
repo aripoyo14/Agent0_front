@@ -145,3 +145,29 @@ export interface CommentAnalysis {
   expertiseLevel: 'high' | 'medium' | 'low' // 専門性レベル
   actionableInsights: string[] // 実行可能な洞察
 }
+
+// ========== Network Map DTOs (from backend) ==========
+export interface PolicyThemeDTO {
+  id: string
+  title: string
+  color?: string
+}
+
+export interface ExpertDTO {
+  id: string
+  name: string
+  department?: string
+  title?: string
+}
+
+export interface RelationDTO {
+  policy_id: string
+  expert_id: string
+  relation_score: number
+}
+
+export interface NetworkMapResponseDTO {
+  policy_themes: PolicyThemeDTO[]
+  experts: ExpertDTO[]
+  relations: RelationDTO[]
+}
