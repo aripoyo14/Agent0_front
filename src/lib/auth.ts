@@ -36,7 +36,7 @@ export function getUserFromToken(): { userId: string; userType: string; role: st
       userType: payload.user_type, // "user" または "expert"
       role: payload.role // "admin"/"staff" または "contributor"/"viewer"
     };
-  } catch (error) {
+  } catch {
     // console.error('Token decode error:', error);
     return null;
   }
