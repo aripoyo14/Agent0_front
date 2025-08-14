@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/auth";
+import { login, getUserFromToken } from "@/lib/auth";
 
 type SubmitState = "idle" | "submitting" | "error" | "success";
 
@@ -22,10 +22,26 @@ export default function LoginForm() {
       if (!email || !password) {
         throw new Error("メールアドレスとパスワードを入力してください");
       }
+
+      // console.log("ログイン開始:", { email });
+
       // 実APIログイン
       await login(email, password);
       setState("success");
-      router.push("/dashboard");
+
+      // 少し待ってからユーザー情報を取得（トークンの保存完了を待つ）
+      setTimeout(() => {
+        const userInfo = getUserFromToken();
+        // console.log("ログイン後のユーザー情報:", userInfo);
+        
+        if (userInfo?.userType === 'expert') {
+          // console.log("エキスパートとして認識、/policyに遷移");
+          router.push("/policy");
+        } else {
+          // console.log("一般ユーザーとして認識、/dashboardに遷移");
+          router.push("/dashboard");
+        }
+      }, 100);
     } catch (err) {
       setState("error");
       setError(err instanceof Error ? err.message : "ログインに失敗しました");
