@@ -592,7 +592,7 @@ export default function ExpertArticleListPage() {
                     <p className="text-gray-500">記事が見つかりませんでした</p>
                   </div>
                 ) : (
-                  filteredArticles.map((article, index) => (
+                  filteredArticles.map((article, _index) => (
                     <div key={article.id} className="relative mb-2 flex justify-center">
                       <ArticleCard 
                         article={article} 
