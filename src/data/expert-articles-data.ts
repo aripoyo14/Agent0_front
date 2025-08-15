@@ -253,7 +253,7 @@ const commentAuthors: CommentAuthor[] = [
 ];
 
 // 記事別のコメントサンプルデータ
-export const getArticleComments = (articleId: string): ExpertComment[] => {
+export const getArticleComments = (_articleId: string): ExpertComment[] => {
   const baseComments: ExpertComment[] = [
     {
       id: "comment-001",

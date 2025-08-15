@@ -7,10 +7,8 @@ import { policyThemes, getArticlesByTheme, searchArticles, getArticleComments, s
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 
 // 画像アセット
-const imgCommentIcon = "http://localhost:3845/assets/d1c765998284524140adcf6982832d6b75a552ae.svg";
 const imgSubTitleIcon = "http://localhost:3845/assets/97cd832355f773e22c5e4fede61842ffbe828a02.svg";
 const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
-const imgSearchIcon = "http://localhost:3845/assets/b76db5bb17d1d1fc2ded986248ca8e860ddab2b2.svg";
 
 // 政策テーマ選択コンポーネント
 const PolicyThemeSelector = ({ 
@@ -236,7 +234,7 @@ const CommentCard = ({ comment }: { comment: ExpertComment }) => {
 const ArticleOverlay = ({ 
   overlay, 
   onClose, 
-  onViewDetail,
+  onViewDetail: _onViewDetail,
   isAnimating
 }: { 
   overlay: ExpertOverlayState;
@@ -244,10 +242,11 @@ const ArticleOverlay = ({
   onViewDetail: (article: ExpertArticle) => void;
   isAnimating: boolean;
 }) => {
+  const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
+  
   if (!overlay.isOpen || !overlay.selectedArticle) return null;
 
   const article = overlay.selectedArticle;
-  const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
   const allComments = getArticleComments(article.id);
   const sortedComments = sortComments(allComments, sortOption);
 
@@ -334,9 +333,9 @@ const ArticleOverlay = ({
             <div className="px-6 pb-6">
               {/* コメント一覧 */}
               <div className="space-y-6">
-                {sortedComments.map((comment) => (
-                  <CommentCard key={comment.id} comment={comment} />
-                ))}
+                                  {sortedComments.map((comment, _index) => (
+                    <CommentCard key={comment.id} comment={comment} />
+                  ))}
               </div>
             </div>
           </div>
@@ -355,7 +354,7 @@ export default function ExpertArticleListPage() {
     selectedTheme: "startup",
     searchQuery: ""
   });
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [_isSearchFocused, setIsSearchFocused] = useState(false);
   const [overlayState, setOverlayState] = useState<ExpertOverlayState>({
     isOpen: false,
     selectedArticle: null
