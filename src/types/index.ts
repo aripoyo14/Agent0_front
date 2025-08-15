@@ -171,3 +171,71 @@ export interface NetworkMapResponseDTO {
   experts: ExpertDTO[]
   relations: RelationDTO[]
 }
+
+// ========== Expert Articles Types ==========
+// 政策テーマの型定義（外部有識者向け）
+export interface ExpertPolicyTheme {
+  id: string;
+  name: string;
+  color: string;
+  isSelected: boolean;
+}
+
+// 記事の型定義（外部有識者向け）
+export interface ExpertArticle {
+  id: string;
+  title: string;
+  content: string;
+  department: string;
+  publishedAt: string;
+  commentCount: number;
+  themeId: string;
+}
+
+// ページの状態管理（外部有識者向け）
+export type ExpertPageState = "idle" | "loading" | "error" | "success";
+
+// フィルター状態（外部有識者向け）
+export interface ExpertFilterState {
+  selectedTheme: string | null;
+  searchQuery: string;
+}
+
+// コメント投稿者の属性（外部有識者向け）
+export interface CommentAuthor {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  badges: CommentBadge[];
+  expertiseLevel: 'expert' | 'pro' | 'verified' | 'regular';
+}
+
+// コメントバッジ（外部有識者向け）
+export interface CommentBadge {
+  type: 'pro' | 'expert' | 'verified' | 'official' | 'influencer';
+  label: string;
+  color: string;
+  description: string;
+}
+
+// コメント（外部有識者向け）
+export interface ExpertComment {
+  id: string;
+  author: CommentAuthor;
+  content: string;
+  createdAt: string;
+  likeCount: number;
+  viewCount: number;
+  isLiked: boolean;
+  aiAnalysis?: CommentAnalysis;
+}
+
+// コメント並び替えオプション
+export type CommentSortOption = 'likes' | 'views' | 'date' | 'relevance';
+
+// オーバーレイ状態（外部有識者向け）
+export interface ExpertOverlayState {
+  isOpen: boolean;
+  selectedArticle: ExpertArticle | null;
+}

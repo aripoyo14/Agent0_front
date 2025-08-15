@@ -26,6 +26,7 @@ export function MFASetup({ userId, onComplete }: MFASetupProps) {
     }
   }, [step]);
 
+  // モックデータを使用してフロントエンドのみで動作
   const setupMFA = async () => {
     try {
       setLoading(true);
