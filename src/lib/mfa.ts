@@ -16,6 +16,11 @@ export interface MFASetupRequest {
   backup_codes: string[];
 }
 
+// QRコード生成のレスポンス型を定義
+export interface QRCodeResponse {
+  qr_code: string;
+}
+
 // MFA設定完了
 export async function completeMFASetup(data: MFASetupRequest): Promise<void> {
   return apiFetch("/api/mfa/setup-complete", {
@@ -26,6 +31,6 @@ export async function completeMFASetup(data: MFASetupRequest): Promise<void> {
 
 // QRコード生成
 export async function generateQRCode(userId: string): Promise<string> {
-  const response = await apiFetch(`/api/mfa/generate-qr/${userId}`);
+  const response = await apiFetch<QRCodeResponse>(`/api/mfa/generate-qr/${userId}`);
   return response.qr_code;
 }
