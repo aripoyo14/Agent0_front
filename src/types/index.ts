@@ -185,7 +185,8 @@ export interface ExpertPolicyTheme {
 export interface ExpertArticle {
   id: string;
   title: string;
-  content: string;
+  summary: string; // 概要（記事一覧とオーバーレイ用）
+  content: string; // 全体（詳細ページ用）
   department: string;
   publishedAt: string;
   commentCount: number;

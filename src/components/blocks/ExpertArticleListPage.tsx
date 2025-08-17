@@ -110,7 +110,7 @@ const ArticleCard = ({
       </div>
       
       <div className="font-['Noto_Sans_JP:DemiLight',_sans-serif] font-[350] h-[39.826px] leading-[20px] text-[13px] text-[rgba(34,34,34,0.7)] text-left tracking-[0.4779px] w-[600px] absolute top-[11.95px] left-[430.92px]">
-        <p className="adjustLetterSpacing block mb-0">{article.content}</p>
+        <p className="adjustLetterSpacing block mb-0">{article.summary}</p>
       </div>
       
       <div className="h-[52.272px] w-[450px] absolute top-0 left-0">
@@ -293,17 +293,14 @@ const ArticleOverlay = ({
             {/* 記事本文 */}
             <div className="prose max-w-none mb-4">
               <p className="text-gray-700 leading-relaxed text-sm">
-                {article.content}
+                {article.summary}
               </p>
             </div>
             
             {/* 詳細を見るボタン */}
             <div className="flex justify-center mb-2">
               <button
-                onClick={() => {
-                  // 現時点では遷移先なし
-                  console.log('詳細ページへの遷移は現在実装中です');
-                }}
+                onClick={() => _onViewDetail(article)}
                 className="bg-[#4AA0E9] text-white px-5 py-2 rounded-full hover:bg-[#3a8fd9] transition-colors text-sm font-medium shadow-md hover:shadow-lg"
               >
                 詳細を見る
