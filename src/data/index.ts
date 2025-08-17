@@ -2,14 +2,7 @@ import { ExpertProfile } from "@/types";
 
 export const sampleExpertProfile: ExpertProfile = {
   name: "鈴木一郎",
-  skillTags: [
-    "GX投資",
-    "スタートアップエコシステム",
-    "脱炭素技術",
-    "技術経営",
-    "ESG投資",
-    "グリーンテック",
-  ],
+  skillTags: [],
   currentInfo: {
     exchange_date: "2025/07/26",
     company_name: "GXベンチャーズ株式会社",
