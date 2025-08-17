@@ -16,6 +16,7 @@
     "clsx": "^2.1.1",
     "force-graph": "^1.50.1",
     "jerrypick": "^1.1.2",
+    "lucide-react": "^0.539.0",
     "next": "15.3.2",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

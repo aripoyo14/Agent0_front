@@ -16,9 +16,14 @@ export async function apiFetch<T>(
   const { method = "GET", body, headers = {}, auth = false } = options;
 
   const finalHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
     ...headers,
   };
+
+  // FormDataの場合はContent-Typeを自動設定（ブラウザがboundaryを設定）
+  // JSONの場合はContent-Typeをapplication/jsonに設定
+  if (!(body instanceof FormData)) {
+    finalHeaders["Content-Type"] = "application/json";
+  }
 
   if (auth) {
     const { accessToken, tokenType } = getToken();
@@ -30,7 +35,7 @@ export async function apiFetch<T>(
   const res = await fetch(`${API_BASE_URL}${path}`, {
     method,
     headers: finalHeaders,
-    body: body != null ? JSON.stringify(body) : undefined,
+    body: body instanceof FormData ? body : (body != null ? JSON.stringify(body) : undefined),
     credentials: "include",
   });
 

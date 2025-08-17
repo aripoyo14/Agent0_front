@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { registerExpert, type ExpertRegistrationFormData } from "@/lib/expert_registration";
 import { completeMFASetup, generateQRCode, type MFAResponse } from "@/lib/mfa";
+import { BusinessCardUpload } from "@/components/ui/business-card-upload";
+import { uploadBusinessCard } from "@/lib/business-card-upload";
 import Image from "next/image";
 
 type SubmitState = "idle" | "submitting" | "error" | "success";
@@ -21,6 +23,7 @@ export default function ExpertRegistrationForm() {
     password: "",
     password_confirm: "",
   });
+  const [businessCardImage, setBusinessCardImage] = useState<File | null>(null);
   const [mfaData, setMfaData] = useState<MFAResponse | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>(""); // ← 1箇所のみ
   const [state, setState] = useState<SubmitState>("idle");
@@ -54,8 +57,18 @@ export default function ExpertRegistrationForm() {
     }));
   };
 
+  const handleBusinessCardImageSelected = (file: File) => {
+    setBusinessCardImage(file);
+    console.log("名刺画像が選択されました:", file.name);
+  };
+
+  const handleBusinessCardImageRemoved = () => {
+    setBusinessCardImage(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("=== フォーム送信開始 ===");
     setError(null);
     
     if (formData.password !== formData.password_confirm) {
@@ -66,8 +79,26 @@ export default function ExpertRegistrationForm() {
     setIsSubmitting(true);
   
     try {
-      // password_confirmを除外してAPIに送信
-      const { password_confirm: _password_confirm, ...apiData } = formData;
+      // 名刺画像がある場合は、まず画像をアップロード
+      let businessCardUrl = null;
+      if (businessCardImage) {
+        try {
+          const uploadResult = await uploadBusinessCard(businessCardImage);
+          businessCardUrl = uploadResult.image_url; // ここでURLを取得
+          console.log("名刺画像のアップロード完了:", uploadResult.image_url);
+        } catch (uploadError) {
+          console.error("名刺画像のアップロードに失敗:", uploadError);
+        }
+      }
+
+      // フォームデータを作成
+      const apiData = {
+        ...formData,
+        business_card_image_url: businessCardUrl, // ここでURLを設定
+      };
+
+      console.log("送信するフォームデータ:", apiData); // この行を追加
+
       const result = await registerExpert(apiData);
       console.log("登録成功:", result);
       setMfaData(result);
@@ -78,7 +109,7 @@ export default function ExpertRegistrationForm() {
       setState("error");
       setError(err instanceof Error ? err.message : "登録に失敗しました");
     } finally {
-      setIsSubmitting(false); // ← 使用
+      setIsSubmitting(false);
     }
   };
 
@@ -258,6 +289,13 @@ export default function ExpertRegistrationForm() {
               className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
             />
           </div>
+
+          {/* 名刺画像アップロード - 一番下に配置 */}
+          <BusinessCardUpload
+            onImageSelected={handleBusinessCardImageSelected}
+            onImageRemoved={handleBusinessCardImageRemoved}
+            selectedImage={businessCardImage}
+          />
 
           {error && (
             <p id="form-error" className="text-[10px] text-blue-100 bg-blue-500/15 rounded px-2 py-1 text-center">
