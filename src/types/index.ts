@@ -239,3 +239,69 @@ export interface ExpertOverlayState {
   isOpen: boolean;
   selectedArticle: ExpertArticle | null;
 }
+
+// ========== Expert Insights DTOs (from backend) ==========
+export interface MeetingParticipantDepartmentOut {
+  department_name?: string | null
+  department_section?: string | null
+}
+
+export interface MeetingParticipantOut {
+  user_id: string
+  last_name: string
+  first_name: string
+  department?: MeetingParticipantDepartmentOut | null
+}
+
+export interface MeetingOverviewOut {
+  meeting_id: string
+  meeting_date: string
+  title: string
+  summary?: string | null
+  minutes_url?: string | null
+  evaluation?: number | null
+  stance?: number | null
+  participants: MeetingParticipantOut[]
+  expert_company_name?: string | null
+  expert_department_name?: string | null
+  expert_title?: string | null
+}
+
+export interface PolicyProposalCommentOut {
+  policy_proposal_id: string
+  policy_title: string
+  comment_text: string
+  posted_at: string
+  like_count: number
+  evaluation?: number | null
+  stance?: number | null
+  expert_company_name?: string | null
+  expert_department_name?: string | null
+  expert_title?: string | null
+}
+
+export interface ExpertInsightsOut {
+  expert_id: string
+  experts_name?: string
+  company_id?: string | null
+  company_name?: string | null
+  department?: string | null
+  email?: string | null
+  mobile?: string | null
+  title?: string | null
+  meetings: MeetingOverviewOut[]
+  policy_comments: PolicyProposalCommentOut[]
+  evaluation_average?: number | null
+  stance_average?: number | null
+}
+
+export function stanceToLabel(value?: number | null): string {
+  switch (value) {
+    case 1: return "否定的";
+    case 2: return "やや否定的";
+    case 3: return "中立";
+    case 4: return "やや肯定的";
+    case 5: return "肯定的";
+    default: return "-";
+  }
+}
