@@ -19,7 +19,7 @@ export async function uploadBusinessCard(
   
   console.log("FormData作成完了");
   console.log("FormData内容:");
-  for (let [key, value] of formData.entries()) {
+  for (const [key, value] of formData.entries()) {
     console.log(key, value);
   }
 
