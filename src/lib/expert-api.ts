@@ -145,3 +145,52 @@ export async function getPolicyProposalComments(id: string, limit = 50, offset =
     auth: true,
   });
 }
+
+// ユーザー情報取得API
+export async function getUserInfo(userId: string): Promise<{
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  department?: string;
+  title?: string;
+  badges: Array<{
+    type: string;
+    label: string;
+    color: string;
+    description: string;
+  }>;
+  expertiseLevel: string;
+}> {
+  return apiFetch(`/api/users/${userId}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+// 複数ユーザーの情報を一括取得するAPI
+export async function getUsersInfo(userIds: string[]): Promise<{
+  [userId: string]: {
+    id: string;
+    name: string;
+    role: string;
+    company: string;
+    department?: string;
+    title?: string;
+    badges: Array<{
+      type: string;
+      label: string;
+      color: string;
+      description: string;
+    }>;
+    expertiseLevel: string;
+  };
+}> {
+  const queryParams = new URLSearchParams();
+  userIds.forEach(id => queryParams.append('user_ids', id));
+  
+  return apiFetch(`/api/users/batch?${queryParams}`, {
+    method: "GET",
+    auth: true,
+  });
+}

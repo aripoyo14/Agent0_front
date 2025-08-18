@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, PolicyProposalComment } from "@/types";
 import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
-import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
+import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments, getUserInfo, getUsersInfo } from "@/lib/expert-api";
 import { getUserFromToken } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
 
@@ -57,33 +57,7 @@ const formatDate = (dateString: string): string => {
   }
 };
 
-const convertPolicyCommentToExpertComment = (comment: PolicyProposalComment): ExpertComment => ({
-  id: comment.id,
-  author: {
-    id: comment.author_id,
-    name: comment.author_name || `ユーザー${comment.author_id.slice(-4)}`, // バックエンドから取得した名前を使用、フォールバックとして仮の名前
-    role: comment.author_type === "contributor" ? "エキスパート" : comment.author_type,
-    company: "会社名", // 仮の値
-    badges: [
-      {
-        type: "expert",
-        label: "認定エキスパート",
-        color: "#4AA0E9",
-        description: "認定されたエキスパート"
-      }
-    ],
-    expertiseLevel: "expert"
-  },
-  content: comment.comment_text,
-  createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  }),
-  likeCount: 0,
-  viewCount: 0,
-  isLiked: false
-});
+
 
 // コメントバッジコンポーネント
 const CommentBadge = ({ badge }: { badge: { label: string; color: string; description: string } }) => {
@@ -493,7 +467,57 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
         
         // バックエンドからコメントデータを取得
         const policyComments = await getPolicyProposalComments(articleId);
-        const convertedComments = policyComments.map(convertPolicyCommentToExpertComment);
+        
+        // ユーザーIDの一覧を取得
+        const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
+        
+        // ユーザー情報を一括取得
+        let usersInfo: { [userId: string]: any } = {};
+        if (userIds.length > 0) {
+          try {
+            usersInfo = await getUsersInfo(userIds);
+          } catch (error) {
+            console.error("ユーザー情報の一括取得に失敗しました:", error);
+          }
+        }
+        
+        // コメントを変換（ユーザー情報を使用）
+        const convertedComments = policyComments.map(comment => {
+          const userInfo = usersInfo[comment.author_id];
+          return {
+            id: comment.id,
+            author: {
+              id: comment.author_id,
+              name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+              role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+              company: userInfo?.company || "会社名",
+              badges: userInfo?.badges?.map((badge: any) => ({
+                type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+                label: badge.label,
+                color: badge.color,
+                description: badge.description
+              })) || [
+                {
+                  type: "expert" as const,
+                  label: "認定エキスパート",
+                  color: "#4AA0E9",
+                  description: "認定されたエキスパート"
+                }
+              ],
+              expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+            },
+            content: comment.comment_text,
+            createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            likeCount: 0,
+            viewCount: 0,
+            isLiked: false
+          } as ExpertComment;
+        });
+        
         setComments(convertedComments);
         
       } catch (error) {
@@ -529,36 +553,78 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
       });
 
       if (response.success) {
-        // 新しいコメントを追加
-        const newComment: ExpertComment = {
-          id: response.comment_id,
-          author: {
-            id: "current-user",
-            name: "テックゼロ太郎",
-            role: "エキスパート",
-            company: "株式会社テックゼロ",
-            badges: [
-              {
-                type: "expert",
-                label: "認定エキスパート",
-                color: "#4AA0E9",
-                description: "認定されたエキスパート"
-              }
-            ],
-            expertiseLevel: "expert"
-          },
-          content,
-          createdAt: new Date().toLocaleDateString('ja-JP', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          }),
-          likeCount: 0,
-          viewCount: 0,
-          isLiked: false
-        };
-        setComments(prev => [newComment, ...prev]);
-        alert("意見の投稿が完了しました");
+        try {
+          // 現在のユーザー情報を取得
+          const currentUserInfo = await getUserInfo(userInfo.userId);
+          
+          // 新しいコメントを追加
+          const newComment: ExpertComment = {
+            id: response.comment_id,
+            author: {
+              id: userInfo.userId,
+              name: currentUserInfo?.name || "ユーザー",
+              role: currentUserInfo?.role || (userInfo.role === "contributor" ? "エキスパート" : userInfo.role),
+              company: currentUserInfo?.company || "会社名",
+              badges: currentUserInfo?.badges?.map(badge => ({
+                type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+                label: badge.label,
+                color: badge.color,
+                description: badge.description
+              })) || [
+                {
+                  type: "expert" as const,
+                  label: "認定エキスパート",
+                  color: "#4AA0E9",
+                  description: "認定されたエキスパート"
+                }
+              ],
+              expertiseLevel: (currentUserInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+            },
+            content,
+            createdAt: new Date().toLocaleDateString('ja-JP', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            likeCount: 0,
+            viewCount: 0,
+            isLiked: false
+          };
+          setComments(prev => [newComment, ...prev]);
+          alert("意見の投稿が完了しました");
+        } catch (error) {
+          console.error("ユーザー情報の取得に失敗しました:", error);
+          // エラー時はフォールバック情報を使用
+          const newComment: ExpertComment = {
+            id: response.comment_id,
+            author: {
+              id: userInfo.userId,
+              name: "ユーザー",
+              role: userInfo.role === "contributor" ? "エキスパート" : userInfo.role,
+              company: "会社名",
+              badges: [
+                {
+                  type: "expert" as const,
+                  label: "認定エキスパート",
+                  color: "#4AA0E9",
+                  description: "認定されたエキスパート"
+                }
+              ],
+              expertiseLevel: "expert" as const
+            },
+            content,
+            createdAt: new Date().toLocaleDateString('ja-JP', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            likeCount: 0,
+            viewCount: 0,
+            isLiked: false
+          };
+          setComments(prev => [newComment, ...prev]);
+          alert("意見の投稿が完了しました");
+        }
       }
     } catch (error) {
       console.error("意見投稿エラー:", error);
