@@ -51,7 +51,7 @@ const formatDate = (dateString: string): string => {
         minute: '2-digit'
       });
     }
-  } catch (error) {
+  } catch {
     // パースに失敗した場合は元の文字列を返す
     return dateString;
   }
