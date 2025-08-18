@@ -240,3 +240,53 @@ export interface ExpertOverlayState {
   isOpen: boolean;
   selectedArticle: ExpertArticle | null;
 }
+
+// ========== Policy Proposal Types (Backend Integration) ==========
+// 政策タグの型定義
+export interface PolicyTag {
+  id: number;
+  name: string;
+  description: string | null;
+  keywords: string | null;
+  created_at: string;
+}
+
+// 政策提案の型定義（バックエンド連携）
+export interface PolicyProposal {
+  id: string;
+  title: string;
+  body: string;
+  status: "draft" | "published" | "archived";
+  published_by_user_id: string;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  attachments: PolicyProposalAttachment[];
+  policy_tags: PolicyTag[] | null; // 新規追加
+}
+
+// 政策提案の添付ファイル型定義
+export interface PolicyProposalAttachment {
+  id: string;
+  policy_proposal_id: string;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  uploaded_by_user_id: string;
+  uploaded_at: string;
+}
+
+// 政策提案コメントの型定義（バックエンド連携）
+export interface PolicyProposalComment {
+  id: string;
+  policy_proposal_id: string;
+  author_type: "admin" | "staff" | "contributor" | "viewer";
+  author_id: string;
+  comment_text: string;
+  parent_comment_id: string | null;
+  evaluation: number | null; // 1-5
+  stance: number | null; // 1-5
+  posted_at: string;
+  updated_at: string;
+}
