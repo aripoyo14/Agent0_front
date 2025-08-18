@@ -24,49 +24,7 @@ const CompactCard = ({ title, children }: {
   </div>
 );
 
-const ActivityItem = ({ category, title, date, description }: {
-  category: string;
-  title: string;
-  date: string;
-  description: string;
-}) => (
-  <div 
-    className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-200 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
-    onClick={() => {
-      // 詳細表示のロジックをここに追加
-      console.log('Activity clicked:', { category, title, date, description });
-      // 例: モーダル表示、詳細ページ遷移など
-    }}
-  >
-    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></div>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-1.5 mb-0.5">
-        <span className="bg-blue-500 text-white px-1 py-0.5 rounded text-xs font-medium text-[10px]">
-          {category}
-        </span>
-        <span className="text-gray-600 text-[10px]">{date}</span>
-      </div>
-      <h4 className="text-gray-900 text-xs font-semibold mb-0.5">{title}</h4>
-      <p className="text-gray-700 text-[10px] leading-tight">{description}</p>
-    </div>
-  </div>
-);
-
-const PersonItem = ({ name, role, company }: {
-  name: string;
-  role: string;
-  company?: string;
-}) => (
-  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded border border-gray-200">
-    <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-[10px] font-bold">
-      {name.charAt(0)}
-    </div>
-    <div className="flex-1 min-w-0">
-      <h4 className="text-gray-900 text-xs font-semibold">{name}</h4>
-      <p className="text-gray-600 text-[10px]">{company ? `${role} at ${company}` : role}</p>
-    </div>
-  </div>
-);
+// 使われていないコンポーネントは削除
 
 function formatDate(d: string | Date): string {
   const dt = typeof d === 'string' ? new Date(d) : d;
@@ -91,13 +49,7 @@ export default function ProfileDetailPage() {
   // サンプルはフォールバック用途のみ
   const profile = sampleExpertProfile;
 
-  if (!profile) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-gradient-to-t from-[#b4d9d6] to-[#58aadb]">
-        <div className="text-white text-sm">プロフィールが見つかりません</div>
-      </div>
-    );
-  }
+  // early return は Hooks の評価順序を乱すため使用しない
 
   const handleBackToSearch = () => {
     router.push('/search');
