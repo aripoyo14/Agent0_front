@@ -6,6 +6,7 @@ import { PolicySubmission, PolicyComment } from '@/types';
 import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { CommentCount } from '@/components/ui/comment-count';
 
 // ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
 const _getStatusInfo = (status: PolicySubmission['status']) => {
@@ -313,7 +314,13 @@ const PolicySubmissionCard = ({
       </div>
       
       <div className="flex justify-between items-center mt-2 text-sm text-gray-500">
-        <span>コメント: {policy.commentCount}件</span>
+        <span>
+          コメント: <CommentCount 
+            policyProposalId={policy.id}
+            className="text-gray-500"
+            showIcon={false}
+          />
+        </span>
         {policy.attachedFiles && policy.attachedFiles.length > 0 && (
           <span>添付ファイル: {policy.attachedFiles.length}件</span>
         )}
