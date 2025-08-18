@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal } from "@/types";
-import { policyThemes, getArticlesByTheme, searchArticles, getArticleComments, sortComments } from "@/data/expert-articles-data";
+import { policyThemes, getArticlesByTheme, searchArticles, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { CommentCount } from "@/components/ui/comment-count";
-import { getPolicyProposals } from "@/lib/expert-api";
+import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 
 // 画像アセット
 const imgSubTitleIcon = "http://localhost:3845/assets/97cd832355f773e22c5e4fede61842ffbe828a02.svg";
@@ -288,12 +288,87 @@ const ArticleOverlay = ({
   isAnimating: boolean;
 }) => {
   const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
+  const [comments, setComments] = useState<ExpertComment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  
+  // コメントを取得する関数
+  const fetchComments = useCallback(async (articleId: string) => {
+    try {
+      setIsLoadingComments(true);
+      
+      // バックエンドからコメントデータを取得
+      const policyComments = await getPolicyProposalComments(articleId);
+      
+      // ユーザーIDの一覧を取得
+      const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
+      
+      // ユーザー情報を一括取得
+      let usersInfo: { [userId: string]: any } = {};
+      if (userIds.length > 0) {
+        try {
+          usersInfo = await getUsersInfo(userIds);
+        } catch (error) {
+          console.error("ユーザー情報の一括取得に失敗しました:", error);
+        }
+      }
+      
+      // コメントを変換（ユーザー情報を使用）
+      const convertedComments = policyComments.map(comment => {
+        const userInfo = usersInfo[comment.author_id];
+        return {
+          id: comment.id,
+          author: {
+            id: comment.author_id,
+            name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+            role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+            company: userInfo?.company || "会社名",
+            badges: userInfo?.badges?.map((badge: any) => ({
+              type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+              label: badge.label,
+              color: badge.color,
+              description: badge.description
+            })) || [
+              {
+                type: "expert" as const,
+                label: "認定エキスパート",
+                color: "#4AA0E9",
+                description: "認定されたエキスパート"
+              }
+            ],
+            expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+          },
+          content: comment.comment_text,
+          createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          likeCount: 0,
+          viewCount: 0,
+          isLiked: false
+        } as ExpertComment;
+      });
+      
+      setComments(convertedComments);
+    } catch (error) {
+      console.error("コメントの取得エラー:", error);
+      setComments([]);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  }, []);
+  
+  // 記事が変更されたときにコメントを取得
+  useEffect(() => {
+    if (overlay.selectedArticle) {
+      fetchComments(overlay.selectedArticle.id);
+    }
+  }, [overlay.selectedArticle, fetchComments]);
   
   if (!overlay.isOpen || !overlay.selectedArticle) return null;
 
   const article = overlay.selectedArticle;
-  const allComments = getArticleComments(article.id);
-  const sortedComments = sortComments(allComments, sortOption);
+  const sortedComments = sortComments(comments, sortOption);
 
   return (
     <>
@@ -381,9 +456,19 @@ const ArticleOverlay = ({
             <div className="px-6 pb-6">
               {/* コメント一覧 */}
               <div className="space-y-6">
-                                  {sortedComments.map((comment, _index) => (
+                {isLoadingComments ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">コメントを読み込み中...</p>
+                  </div>
+                ) : sortedComments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">まだ意見が投稿されていません</p>
+                  </div>
+                ) : (
+                  sortedComments.map((comment, _index) => (
                     <CommentCard key={comment.id} comment={comment} />
-                  ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
