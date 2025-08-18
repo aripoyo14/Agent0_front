@@ -17,6 +17,12 @@ export interface PolicyCommentResponse {
   message: string;
 }
 
+// コメント数取得のレスポンス型
+export interface CommentCountResponse {
+  policy_proposal_id: string;
+  comment_count: number;
+}
+
 // 政策提案作成（添付ファイル付き）のリクエスト型
 export interface PolicyProposalWithAttachmentsRequest {
   title: string;
@@ -92,6 +98,14 @@ export async function likeComment(commentId: string): Promise<{ success: boolean
 export async function unlikeComment(commentId: string): Promise<{ success: boolean; likeCount: number }> {
   return apiFetch(`/api/policy-proposal-comments/${commentId}/unlike`, {
     method: "DELETE",
+    auth: true,
+  });
+}
+
+// コメント数取得API
+export async function getCommentCount(policyProposalId: string): Promise<CommentCountResponse> {
+  return apiFetch(`/api/policy-proposal-comments/policy-proposals/${policyProposalId}/comment-count`, {
+    method: "GET",
     auth: true,
   });
 }

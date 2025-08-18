@@ -7,6 +7,7 @@ import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
 import { getUserFromToken } from "@/lib/auth";
+import { CommentCount } from "@/components/ui/comment-count";
 
 // 画像アセット（現在未使用）
 // const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
@@ -18,10 +19,43 @@ const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertA
   summary: proposal.body.substring(0, 100) + "...", // 最初の100文字をサマリーとして使用
   content: proposal.body,
   department: "中小企業庁 地域産業支援課", // 仮の値
-  publishedAt: proposal.published_at || proposal.created_at,
+  publishedAt: formatDate(proposal.published_at || proposal.created_at),
   commentCount: 0, // 後で計算
   themeId: "theme-1" // 仮の値
 });
+
+// 日付フォーマット関数
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      return "昨日";
+    } else if (diffDays <= 7) {
+      return `${diffDays}日前`;
+    } else if (diffDays <= 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks}週間前`;
+    } else if (diffDays <= 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months}ヶ月前`;
+    } else {
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  } catch (error) {
+    // パースに失敗した場合は元の文字列を返す
+    return dateString;
+  }
+};
 
 const convertPolicyCommentToExpertComment = (comment: PolicyProposalComment): ExpertComment => ({
   id: comment.id,
@@ -741,7 +775,13 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
               <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
                 <span>{article.department}</span>
                 <span>{article.publishedAt}</span>
-                <span>コメント: {article.commentCount}件</span>
+                <span>
+                  コメント: <CommentCount 
+                    policyProposalId={article.id}
+                    className="text-gray-600"
+                    showIcon={false}
+                  />
+                </span>
               </div>
               
               <div className="prose max-w-none mb-6">
