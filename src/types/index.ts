@@ -283,6 +283,7 @@ export interface PolicyProposalComment {
   policy_proposal_id: string;
   author_type: "admin" | "staff" | "contributor" | "viewer";
   author_id: string;
+  author_name: string | null; // 投稿者の実際の名前（姓 + 名）
   comment_text: string;
   parent_comment_id: string | null;
   evaluation: number | null; // 1-5

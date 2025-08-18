@@ -61,7 +61,7 @@ const convertPolicyCommentToExpertComment = (comment: PolicyProposalComment): Ex
   id: comment.id,
   author: {
     id: comment.author_id,
-    name: `ユーザー${comment.author_id.slice(-4)}`, // 仮の名前
+    name: comment.author_name || `ユーザー${comment.author_id.slice(-4)}`, // バックエンドから取得した名前を使用、フォールバックとして仮の名前
     role: comment.author_type === "contributor" ? "エキスパート" : comment.author_type,
     company: "会社名", // 仮の値
     badges: [
