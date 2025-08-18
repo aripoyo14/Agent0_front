@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,14 +20,8 @@ export function MFASetup({ userId, onComplete }: MFASetupProps) {
   // バックエンドのFastAPIサーバーにリクエスト
   const API_BASE = 'http://localhost:8000/api';
 
-  useEffect(() => {
-    if (step === 'setup') {
-      setupMFA();
-    }
-  }, [step]);
-
   // モックデータを使用してフロントエンドのみで動作
-  const setupMFA = async () => {
+  const setupMFA = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -68,7 +62,13 @@ export function MFASetup({ userId, onComplete }: MFASetupProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE, userId]);
+
+  useEffect(() => {
+    if (step === 'setup') {
+      void setupMFA();
+    }
+  }, [step, setupMFA]);
 
   const verifyTOTP = async () => {
     try {
@@ -121,6 +121,7 @@ export function MFASetup({ userId, onComplete }: MFASetupProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={qrCode} alt="QR Code" className="mx-auto mb-4" />
             <p className="text-sm text-gray-600 mb-2">
               上記のQRコードをGoogle Authenticatorなどのアプリでスキャンしてください

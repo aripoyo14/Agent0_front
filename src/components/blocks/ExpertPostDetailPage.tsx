@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, PolicyProposalComment } from "@/types";
-import { getArticleById, getArticleComments, sortComments } from "@/data/expert-articles-data";
+import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
 import { getUserFromToken } from "@/lib/auth";

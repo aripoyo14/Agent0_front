@@ -73,7 +73,7 @@ export async function createPolicyProposalWithAttachments(
 }
 
 // 政策提案コメント一覧取得API
-export async function getPolicyComments(policyProposalId: string): Promise<any[]> {
+export async function getPolicyComments(policyProposalId: string): Promise<PolicyProposalComment[]> {
   return apiFetch(`/api/policy-proposal-comments/?policy_proposal_id=${policyProposalId}`, {
     method: "GET",
     auth: true,

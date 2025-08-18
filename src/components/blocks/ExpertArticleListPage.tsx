@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal, PolicyTag } from "@/types";
+import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal } from "@/types";
 import { policyThemes, getArticlesByTheme, searchArticles, getArticleComments, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { getPolicyProposals } from "@/lib/expert-api";
