@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PolicySubmission, PolicyComment, CommentAnalysis } from '@/types';
+import { PolicySubmission, PolicyComment } from '@/types';
 import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -138,7 +138,7 @@ const CommentFeedbackForm = ({
   const [aiResponse, setAiResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [evaluationSaved, setEvaluationSaved] = useState(false);
-  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [_feedbackSaved, setFeedbackSaved] = useState(false);
 
   const handleGenerateAIResponse = async () => {
     setIsGenerating(true);
@@ -166,7 +166,7 @@ const CommentFeedbackForm = ({
     }
   };
 
-  const handleSaveFeedback = () => {
+  const _handleSaveFeedback = () => {
     if (aiResponse.trim()) {
       // TODO: AI返信をコメントとして投稿
       console.log('フィードバック保存:', { aiResponse });
