@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal } from "@/types";
+import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal, UsersInfoResponse } from "@/types";
 import { policyThemes, getArticlesByTheme, searchArticles, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { CommentCount } from "@/components/ui/comment-count";
@@ -302,8 +302,8 @@ const ArticleOverlay = ({
       // ユーザーIDの一覧を取得
       const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
       
-      // ユーザー情報を一括取得
-      let usersInfo: { [userId: string]: any } = {};
+              // ユーザー情報を一括取得
+        let usersInfo: UsersInfoResponse = {};
       if (userIds.length > 0) {
         try {
           usersInfo = await getUsersInfo(userIds);
@@ -322,7 +322,12 @@ const ArticleOverlay = ({
             name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
             role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
             company: userInfo?.company || "会社名",
-            badges: userInfo?.badges?.map((badge: any) => ({
+            badges: userInfo?.badges?.map((badge: {
+              type: string;
+              label: string;
+              color: string;
+              description: string;
+            }) => ({
               type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
               label: badge.label,
               color: badge.color,

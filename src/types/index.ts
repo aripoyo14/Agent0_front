@@ -347,6 +347,27 @@ export interface ExpertInsightsOut {
   stance_average?: number | null
 }
 
+// ========== User Info Types (for API responses) ==========
+export interface UserInfo {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  department?: string;
+  title?: string;
+  badges: Array<{
+    type: string;
+    label: string;
+    color: string;
+    description: string;
+  }>;
+  expertiseLevel: string;
+}
+
+export interface UsersInfoResponse {
+  [userId: string]: UserInfo;
+}
+
 export function stanceToLabel(value?: number | null): string {
   switch (value) {
     case 1: return "否定的";
