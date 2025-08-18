@@ -20,8 +20,8 @@ export function SearchPage() {
   const [networkData, setNetworkData] = useState<NetworkMapResponseDTO | null>(null);
 
 	// 環境変数はベースURL（例: http://localhost:8000）を想定。未設定時はローカルを既定
-	const API_BASE = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://127.0.0.1:8000";
-	const API_ENDPOINT = `${API_BASE.replace(/\/$/, "")}/api/search_network_map/match`;
+	const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+	const API_BASE_URL = `${API_BASE.replace(/\/$/, "")}/api/search_network_map/match`;
 
   const handleFilterChange = (key: keyof SearchFilters, value: string | string[]) => {
     setFilters(prev => ({
@@ -52,7 +52,7 @@ export function SearchPage() {
     } as const;
 
     try {
-      const res = await fetch(API_ENDPOINT, {
+      const res = await fetch(API_BASE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

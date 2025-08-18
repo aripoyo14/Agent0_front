@@ -15,7 +15,7 @@ export default function ExpertProfilePage() {
   return (
     <div className="bg-gray-50 min-h-screen w-full h-screen overflow-hidden">
       <div className="h-16 lg:h-20">
-        <ProfileHeader name={profile.name} skillTags={profile.skillTags} />
+        <ProfileHeader name={profile.name} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-1.5 lg:gap-2 p-2 lg:p-3 h-[calc(100vh-4rem)] lg:h-[calc(100vh-5rem)] overflow-y-auto w-full">
