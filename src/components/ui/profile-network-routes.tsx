@@ -342,16 +342,17 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 						nodeLabel={nodeLabel}
 						linkLabel={linkLabel}
 						linkColor={(link: ForceGraphLink) => {
-							const value = typeof (link as any).value === 'number' ? (link as any).value : 0.4;
+							const value = typeof link.value === 'number' ? link.value : 0.4;
 							const alpha = 0.25 + Math.min(0.75, value * 0.75);
 							return `rgba(88,170,219,${alpha.toFixed(3)})`;
 						}}
-						linkWidth={(link: ForceGraphLink) => scoreToStrokeWidth((link as any).value)}
+						linkWidth={(link: ForceGraphLink) => scoreToStrokeWidth(link.value)}
 						enableZoomInteraction
 						enablePanInteraction
 						cooldownTime={1800}
 						onNodeClick={onNodeClick}
 						backgroundColor={'rgba(255,255,255,1)'}
+						nodeCanvasObject={nodeCanvasObject}
 						// Pin U/Z horizontally by setting fx via nodes; leave fy free
 					/>
 
