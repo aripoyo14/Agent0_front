@@ -2,12 +2,54 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertArticle, ExpertComment, CommentSortOption } from "@/types";
+import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, PolicyProposalComment } from "@/types";
 import { getArticleById, getArticleComments, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
+import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
+import { getUserFromToken } from "@/lib/auth";
 
 // 画像アセット（現在未使用）
 // const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
+
+// データ変換関数
+const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertArticle => ({
+  id: proposal.id,
+  title: proposal.title,
+  summary: proposal.body.substring(0, 100) + "...", // 最初の100文字をサマリーとして使用
+  content: proposal.body,
+  department: "中小企業庁 地域産業支援課", // 仮の値
+  publishedAt: proposal.published_at || proposal.created_at,
+  commentCount: 0, // 後で計算
+  themeId: "theme-1" // 仮の値
+});
+
+const convertPolicyCommentToExpertComment = (comment: PolicyProposalComment): ExpertComment => ({
+  id: comment.id,
+  author: {
+    id: comment.author_id,
+    name: `ユーザー${comment.author_id.slice(-4)}`, // 仮の名前
+    role: comment.author_type === "contributor" ? "エキスパート" : comment.author_type,
+    company: "会社名", // 仮の値
+    badges: [
+      {
+        type: "expert",
+        label: "認定エキスパート",
+        color: "#4AA0E9",
+        description: "認定されたエキスパート"
+      }
+    ],
+    expertiseLevel: "expert"
+  },
+  content: comment.comment_text,
+  createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  }),
+  likeCount: 0,
+  viewCount: 0,
+  isLiked: false
+});
 
 // コメントバッジコンポーネント
 const CommentBadge = ({ badge }: { badge: { label: string; color: string; description: string } }) => {
@@ -408,11 +450,18 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   useEffect(() => {
     const fetchArticle = async () => {
       try {
-        const articleData = getArticleById(articleId);
-        setArticle(articleData);
+        setIsLoading(true);
         
-        const commentsData = getArticleComments(articleId);
-        setComments(commentsData);
+        // バックエンドから政策提案データを取得
+        const policyProposal = await getPolicyProposalById(articleId);
+        const convertedArticle = convertPolicyProposalToExpertArticle(policyProposal);
+        setArticle(convertedArticle);
+        
+        // バックエンドからコメントデータを取得
+        const policyComments = await getPolicyProposalComments(articleId);
+        const convertedComments = policyComments.map(convertPolicyCommentToExpertComment);
+        setComments(convertedComments);
+        
       } catch (error) {
         console.error("記事の取得エラー:", error);
       } finally {
@@ -427,46 +476,90 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   const sortedComments = sortComments(comments, sortOption);
 
   // 意見投稿処理
-  const handleOpinionSubmit = (content: string) => {
-    // TODO: 実際のAPI呼び出しを実装
-    console.log("意見投稿:", content);
-    // 新しいコメントを追加
-    const newComment: ExpertComment = {
-      id: `comment-${Date.now()}`,
-      author: {
-        id: "current-user",
-        name: "テックゼロ太郎",
-        role: "エキスパート",
-        company: "株式会社テックゼロ",
-        badges: [
-          {
-            type: "expert",
-            label: "認定エキスパート",
-            color: "#4AA0E9",
-            description: "認定されたエキスパート"
-          }
-        ],
-        expertiseLevel: "expert"
-      },
-      content,
-      createdAt: new Date().toLocaleDateString('ja-JP', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      }),
-      likeCount: 0,
-      viewCount: 0,
-      isLiked: false
-    };
-    setComments(prev => [newComment, ...prev]);
+  const handleOpinionSubmit = async (content: string) => {
+    try {
+      // 現在のユーザー情報を取得
+      const userInfo = getUserFromToken();
+      if (!userInfo) {
+        alert("認証情報が見つかりません。ログインしてください。");
+        return;
+      }
+
+      // バックエンドAPIを呼び出し
+      const response = await submitPolicyComment({
+        policy_proposal_id: articleId, // 記事IDを政策提案IDとして使用
+        author_type: userInfo.role as "admin" | "staff" | "contributor", // 実際のユーザーロールを使用
+        author_id: userInfo.userId, // 実際のユーザーIDを使用
+        comment_text: content,
+        parent_comment_id: null
+      });
+
+      if (response.success) {
+        // 新しいコメントを追加
+        const newComment: ExpertComment = {
+          id: response.comment_id,
+          author: {
+            id: "current-user",
+            name: "テックゼロ太郎",
+            role: "エキスパート",
+            company: "株式会社テックゼロ",
+            badges: [
+              {
+                type: "expert",
+                label: "認定エキスパート",
+                color: "#4AA0E9",
+                description: "認定されたエキスパート"
+              }
+            ],
+            expertiseLevel: "expert"
+          },
+          content,
+          createdAt: new Date().toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          likeCount: 0,
+          viewCount: 0,
+          isLiked: false
+        };
+        setComments(prev => [newComment, ...prev]);
+        alert("意見の投稿が完了しました");
+      }
+    } catch (error) {
+      console.error("意見投稿エラー:", error);
+      alert("意見の投稿に失敗しました");
+    }
   };
 
   // 資料投稿処理
-  const handleDocumentSubmit = (file: File) => {
-    // TODO: 実際のファイルアップロードAPIを実装
-    console.log("資料投稿:", { file });
-    setAttachedFile(file);
-    alert("資料のアップロードが完了しました");
+  const handleDocumentSubmit = async (file: File) => {
+    try {
+      // 現在のユーザー情報を取得
+      const userInfo = getUserFromToken();
+      if (!userInfo) {
+        alert("認証情報が見つかりません。ログインしてください。");
+        return;
+      }
+
+      // バックエンドAPIを呼び出し
+      const response = await createPolicyProposalWithAttachments({
+        title: `資料: ${file.name}`,
+        body: `添付資料: ${file.name}`,
+        published_by_user_id: userInfo.userId, // 実際のユーザーIDを使用
+        status: "draft",
+        files: [file]
+      });
+
+      if (response.success) {
+        setAttachedFile(file);
+        alert("資料のアップロードが完了しました");
+        console.log("アップロードされたファイル:", response.attachments);
+      }
+    } catch (error) {
+      console.error("資料アップロードエラー:", error);
+      alert("資料のアップロードに失敗しました");
+    }
   };
 
   // ログアウト処理

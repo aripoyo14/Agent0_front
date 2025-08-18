@@ -2,13 +2,28 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption } from "@/types";
+import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal, PolicyTag } from "@/types";
 import { policyThemes, getArticlesByTheme, searchArticles, getArticleComments, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
+import { getPolicyProposals } from "@/lib/expert-api";
 
 // 画像アセット
 const imgSubTitleIcon = "http://localhost:3845/assets/97cd832355f773e22c5e4fede61842ffbe828a02.svg";
 const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
+
+// データ変換関数
+const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertArticle => ({
+  id: proposal.id,
+  title: proposal.title,
+  summary: proposal.body.substring(0, 100) + "...", // 最初の100文字をサマリーとして使用
+  content: proposal.body,
+  department: "中小企業庁 地域産業支援課", // 仮の値
+  publishedAt: proposal.published_at || proposal.created_at,
+  commentCount: 0, // 後で計算
+  themeId: proposal.policy_tags && proposal.policy_tags.length > 0 
+    ? proposal.policy_tags[0].id.toString() 
+    : "startup" // タグがない場合は"startup"に設定（「すべて」で表示される）
+});
 
 // 政策テーマ選択コンポーネント
 const PolicyThemeSelector = ({ 
@@ -348,7 +363,7 @@ export default function ExpertArticleListPage() {
   const [pageState, setPageState] = useState<ExpertPageState>("idle");
   const [themes, setThemes] = useState<ExpertPolicyTheme[]>(policyThemes);
   const [filterState, setFilterState] = useState<ExpertFilterState>({
-    selectedTheme: "startup",
+    selectedTheme: "all", // デフォルトで「すべて」を選択
     searchQuery: ""
   });
   const [_isSearchFocused, setIsSearchFocused] = useState(false);
@@ -360,22 +375,71 @@ export default function ExpertArticleListPage() {
   const [filteredArticles, setFilteredArticles] = useState<ExpertArticle[]>([]);
 
   // 記事のフィルタリング処理
-  const filterArticles = useCallback((selectedTheme: string, searchQuery: string) => {
+  const filterArticles = useCallback(async (selectedTheme: string, searchQuery: string) => {
     setPageState("loading");
     
     try {
-      let articles = getArticlesByTheme(selectedTheme);
-      console.log("フィルタリング結果:", { selectedTheme, searchQuery, articlesCount: articles.length });
+      // バックエンドから政策提案データを取得
+      console.log("バックエンドAPI呼び出し開始...");
+      const policyProposals = await getPolicyProposals({
+        status: "published",
+        q: searchQuery.trim() || undefined,
+        limit: 50
+      });
       
-      if (searchQuery.trim()) {
-        articles = searchArticles(searchQuery);
+      console.log("取得された政策提案データ:", policyProposals);
+      
+      // データ変換
+      let articles = policyProposals.map(convertPolicyProposalToExpertArticle);
+      console.log("変換後の記事データ:", articles);
+      
+      // テーマで絞り込み（「すべて」以外が選択されている場合のみ絞り込み）
+      if (selectedTheme && selectedTheme !== "all") {
+        console.log("テーマ絞り込み前の記事数:", articles.length);
+        articles = articles.filter(article => {
+          const matches = article.themeId === selectedTheme;
+          console.log(`記事 "${article.title}" (themeId: ${article.themeId}) は選択テーマ "${selectedTheme}" と一致: ${matches}`);
+          return matches;
+        });
+        console.log("テーマ絞り込み後の記事数:", articles.length);
+      } else {
+        console.log("「すべて」が選択されているため、絞り込みなし。記事数:", articles.length);
       }
+      
+      console.log("フィルタリング結果:", { 
+        selectedTheme, 
+        searchQuery, 
+        articlesCount: articles.length,
+        totalProposals: policyProposals.length 
+      });
       
       setFilteredArticles(articles);
       setPageState("success");
     } catch (error) {
       console.error("記事のフィルタリングエラー:", error);
-      setPageState("error");
+      
+      // エラーの詳細をログ出力
+      if (error instanceof Error) {
+        console.error("エラー詳細:", error.message);
+      }
+      
+      // バックエンドエラーの場合、サンプルデータを使用
+      console.log("バックエンドエラーのため、サンプルデータを使用します");
+      console.log("バックエンド側でjoinedloadの修正が必要です");
+      
+      try {
+        let articles = getArticlesByTheme(selectedTheme);
+        
+        if (searchQuery.trim()) {
+          articles = searchArticles(searchQuery);
+        }
+        
+        setFilteredArticles(articles);
+        setPageState("success");
+      } catch (fallbackError) {
+        console.error("サンプルデータの読み込みエラー:", fallbackError);
+        setPageState("error");
+      }
     }
   }, []);
 

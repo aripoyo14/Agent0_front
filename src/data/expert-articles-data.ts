@@ -2,7 +2,8 @@ import { ExpertPolicyTheme, ExpertArticle, ExpertComment, CommentAuthor, Comment
 
 // 政策テーマのサンプルデータ
 export const policyThemes: ExpertPolicyTheme[] = [
-  { id: "startup", name: "スタートアップ・\n中小企業支援", color: "#007aff", isSelected: true },
+  { id: "all", name: "すべて", color: "#007aff", isSelected: true },
+  { id: "startup", name: "スタートアップ・\n中小企業支援", color: "#007aff", isSelected: false },
   { id: "renewable", name: "再生可能エネルギー", color: "#00b900", isSelected: false },
   { id: "dx", name: "DX-デジタル変革", color: "#007aff", isSelected: false },
   { id: "hydrogen", name: "水素社会", color: "#00b900", isSelected: false },

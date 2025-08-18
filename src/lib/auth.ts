@@ -36,10 +36,21 @@ export function getUserFromToken(): { userId: string; userType: string; role: st
   try {
     // JWTトークンをデコード（base64でデコード）
     const payload = JSON.parse(atob(token.split('.')[1]));
+    
+    // user_typeからroleを設定
+    let role: string;
+    if (payload.user_type === "expert") {
+      role = "contributor"; // 外部有識者はcontributorとして扱う
+    } else if (payload.user_type === "user") {
+      role = "staff"; // 一般ユーザーはstaffとして扱う
+    } else {
+      role = "contributor"; // デフォルト
+    }
+    
     return {
       userId: payload.sub,
       userType: payload.user_type, // "user" または "expert"
-      role: payload.role // "admin"/"staff" または "contributor"/"viewer"
+      role: role // "admin"/"staff" または "contributor"/"viewer"
     };
   } catch {
     // console.error('Token decode error:', error);
