@@ -11,9 +11,10 @@ export async function apiFetch<T>(
     body?: unknown;
     headers?: Record<string, string>;
     auth?: boolean;
+    signal?: AbortSignal;
   } = {}
 ): Promise<T> {
-  const { method = "GET", body, headers = {}, auth = false } = options;
+  const { method = "GET", body, headers = {}, auth = false, signal } = options;
 
   const finalHeaders: Record<string, string> = {
     ...headers,
@@ -37,6 +38,7 @@ export async function apiFetch<T>(
     headers: finalHeaders,
     body: body instanceof FormData ? body : (body != null ? JSON.stringify(body) : undefined),
     credentials: "include",
+    signal,
   });
 
   const isJson = res.headers.get("content-type")?.includes("application/json");

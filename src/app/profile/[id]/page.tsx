@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { sampleExpertProfile } from "@/data";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
-import { NetworkMap } from "@/components/ui/network-map";
+import { ProfileNetworkRoutes } from "@/components/ui/profile-network-routes";
 import { ExpertInsightsOut, MeetingOverviewOut, PolicyProposalCommentOut, NetworkMapResponseDTO, stanceToLabel } from "@/types";
 import { apiFetch } from "@/lib/apiClient";
 
@@ -35,15 +35,6 @@ function formatDate(d: string | Date): string {
   return `${y}/${m}/${day}`;
 }
 
-function formatDate(d: string | Date): string {
-  const dt = typeof d === 'string' ? new Date(d) : d;
-  if (Number.isNaN(dt.getTime())) return String(d);
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const day = String(dt.getDate()).padStart(2, '0');
-  return `${y}/${m}/${day}`;
-}
-
 export default function ProfileDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -53,7 +44,7 @@ export default function ProfileDetailPage() {
   const [insights, setInsights] = useState<ExpertInsightsOut | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [networkData, setNetworkData] = useState<NetworkMapResponseDTO | null>(null);
+  const [_networkData, setNetworkData] = useState<NetworkMapResponseDTO | null>(null);
 
   // サンプルはフォールバック用途のみ
   const profile = sampleExpertProfile;
@@ -204,7 +195,7 @@ export default function ProfileDetailPage() {
             <div className="lg:col-span-1 h-full">
               <CompactCard title="人脈マップ">
                 <div className="h-full">
-                  <NetworkMap filters={{ searchQuery: "", policyThemes: [], industries: [], positions: [] }} backendData={networkData} />
+                  <ProfileNetworkRoutes expertId={_id} />
                 </div>
               </CompactCard>
             </div>
