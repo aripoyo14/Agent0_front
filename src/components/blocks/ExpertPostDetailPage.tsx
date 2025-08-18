@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, PolicyProposalComment } from "@/types";
+import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, UsersInfoResponse } from "@/types";
 import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments, getUserInfo, getUsersInfo } from "@/lib/expert-api";
@@ -472,7 +472,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
         const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
         
         // ユーザー情報を一括取得
-        let usersInfo: { [userId: string]: any } = {};
+        let usersInfo: UsersInfoResponse = {};
         if (userIds.length > 0) {
           try {
             usersInfo = await getUsersInfo(userIds);
@@ -491,7 +491,12 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
               name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
               role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
               company: userInfo?.company || "会社名",
-              badges: userInfo?.badges?.map((badge: any) => ({
+              badges: userInfo?.badges?.map((badge: {
+                type: string;
+                label: string;
+                color: string;
+                description: string;
+              }) => ({
                 type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
                 label: badge.label,
                 color: badge.color,

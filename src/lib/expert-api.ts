@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiClient";
-import { PolicyProposal, PolicyProposalComment } from "@/types";
+import { PolicyProposal, PolicyProposalComment, UserInfo, UsersInfoResponse } from "@/types";
 
 // 政策提案コメント投稿のリクエスト型
 export interface PolicyCommentRequest {
@@ -147,21 +147,7 @@ export async function getPolicyProposalComments(id: string, limit = 50, offset =
 }
 
 // ユーザー情報取得API
-export async function getUserInfo(userId: string): Promise<{
-  id: string;
-  name: string;
-  role: string;
-  company: string;
-  department?: string;
-  title?: string;
-  badges: Array<{
-    type: string;
-    label: string;
-    color: string;
-    description: string;
-  }>;
-  expertiseLevel: string;
-}> {
+export async function getUserInfo(userId: string): Promise<UserInfo> {
   return apiFetch(`/api/users/${userId}`, {
     method: "GET",
     auth: true,
@@ -169,23 +155,7 @@ export async function getUserInfo(userId: string): Promise<{
 }
 
 // 複数ユーザーの情報を一括取得するAPI
-export async function getUsersInfo(userIds: string[]): Promise<{
-  [userId: string]: {
-    id: string;
-    name: string;
-    role: string;
-    company: string;
-    department?: string;
-    title?: string;
-    badges: Array<{
-      type: string;
-      label: string;
-      color: string;
-      description: string;
-    }>;
-    expertiseLevel: string;
-  };
-}> {
+export async function getUsersInfo(userIds: string[]): Promise<UsersInfoResponse> {
   const queryParams = new URLSearchParams();
   userIds.forEach(id => queryParams.append('user_ids', id));
   
