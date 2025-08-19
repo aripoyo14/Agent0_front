@@ -6,7 +6,6 @@ import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
 import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { CommentCount } from '@/components/ui/comment-count';
 import { CommentSkeletonList } from '@/components/ui/skeleton';
 
