@@ -4,11 +4,17 @@ import { useTopPageNavigation } from "@/hooks/useTopPageNavigation";
 import { getCommentCount } from "@/lib/expert-api";
 import { useState, useEffect } from "react";
 
+// SVGファイルを直接インポート
+import fileSvg from "/public/file.svg";
+import networkSearchBgSvg from "/public/network-search-bg.svg";
+import policySubmitBgSvg from "/public/policy-submit-bg.svg";
+import commentsViewBgSvg from "/public/comments-view-bg.svg";
+
 // SVGファイルのパスを修正
-const imgVector = "/file.svg";
-const imgBackground = "/network-search-bg.svg";
-const imgGroup = "/policy-submit-bg.svg";
-const imgBackground1 = "/comments-view-bg.svg";
+const imgVector = fileSvg;
+const imgBackground = networkSearchBgSvg;
+const imgGroup = policySubmitBgSvg;
+const imgBackground1 = commentsViewBgSvg;
 
 function Component27() {
   return (

@@ -6,6 +6,7 @@ import { PolicySubmission, PolicyComment, CommentAnalysis } from '@/types';
 import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import commentsViewBgSvg from "/public/comments-view-bg.svg";
 
 // ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
 const _getStatusInfo = (status: PolicySubmission['status']) => {
@@ -274,7 +275,7 @@ export const PolicyCommentsPage = () => {
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-[34.085px] h-[32.587px] flex-shrink-0">
                         <img 
-                          src="/comments-view-bg.svg" 
+                          src={commentsViewBgSvg} 
                           alt="policy icon" 
                           className="w-full h-full"
                         />

@@ -164,7 +164,8 @@ export function PolicySubmissionPage() {
 
   // Figma variables and assets
   const COLOR_PRIMARY = "#007aff"; // Miscellaneous/Floating Tab - Text Selected
-  const IMG_OCTICON_FILE_16 = "/file.svg";
+  import fileSvg from "/public/file.svg";
+const IMG_OCTICON_FILE_16 = fileSvg;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleThemeToggle = (_themeId: string) => {
