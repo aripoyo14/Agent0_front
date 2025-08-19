@@ -9,8 +9,8 @@ import { CommentCount } from "@/components/ui/comment-count";
 import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 
 // 画像アセット
-const imgSubTitleIcon = "http://localhost:3845/assets/97cd832355f773e22c5e4fede61842ffbe828a02.svg";
-const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
+const imgSubTitleIcon = "/file.svg";
+const imgUserIcon = "/globe.svg";
 
 // 日付フォーマット関数
 const formatDate = (dateString: string): string => {

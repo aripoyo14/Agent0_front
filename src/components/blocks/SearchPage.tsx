@@ -7,7 +7,7 @@ import { NetworkMap } from "@/components/ui/network-map";
 import { policyThemes } from "@/data/search-data";
 import { SearchFilters, NetworkMapResponseDTO } from "@/types";
 
-const imgBackground = "http://localhost:3845/assets/5f80ec7391fa506958e021a0a123f517aa20c66f.svg";
+const imgBackground = "/network-search-bg.svg";
 
 export function SearchPage() {
   const router = useRouter();
