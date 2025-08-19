@@ -24,7 +24,7 @@ export function PolicyThemeSelector({
 }: PolicyThemeSelectorProps) {
   return (
     <div className={cn("space-y-2", className)}>
-      <h4 className="text-xs font-medium text-gray-700 mb-3">政策テーマを選択</h4>
+      <h4 className="text-sm font-semibold text-gray-700 mb-3">政策テーマを選択</h4>
       
       <div className="flex flex-wrap gap-2">
         {themes.map((theme) => {
@@ -33,7 +33,7 @@ export function PolicyThemeSelector({
             <div
               key={theme.id}
               className={cn(
-                "px-2 py-1 rounded-full text-[9px] font-medium transition-all cursor-pointer text-center flex items-center justify-center min-h-[20px] inline-flex whitespace-nowrap",
+                "px-3 py-2 rounded-full text-xs font-medium transition-all cursor-pointer text-center flex items-center justify-center min-h-[24px] inline-flex whitespace-nowrap",
                 isSelected
                   ? "bg-[#58aadb] text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -50,7 +50,7 @@ export function PolicyThemeSelector({
       {selectedThemes.length > 0 && (
         <button
           onClick={() => selectedThemes.forEach(id => onThemeToggle(id))}
-          className="w-full py-1 text-[9px] text-gray-600 hover:text-gray-800 transition-colors mt-3"
+          className="w-full py-2 text-xs text-gray-600 hover:text-gray-800 transition-colors mt-3 font-medium"
         >
           すべてクリア
         </button>
