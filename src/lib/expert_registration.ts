@@ -5,9 +5,7 @@ import { MFAResponse } from "./mfa";
 export interface ExpertRegistrationFormData {
   last_name: string;
   first_name: string;
-  company_name: string;
-  department: string;
-  email: string;
+  self_pr: string;
   password: string;
   password_confirm: string;
 }
@@ -16,9 +14,7 @@ export interface ExpertRegistrationFormData {
 export interface ExpertRegistrationData {
   last_name: string;
   first_name: string;
-  company_name: string;
-  department: string;
-  email: string;
+  self_pr: string;
   password: string;
 }
 

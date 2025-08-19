@@ -17,9 +17,7 @@ export default function ExpertRegistrationForm() {
   const [formData, setFormData] = useState<ExpertRegistrationFormData>({
     last_name: "",
     first_name: "",
-    company_name: "",
-    department: "",
-    email: "",
+    self_pr: "",
     password: "",
     password_confirm: "",
   });
@@ -49,7 +47,7 @@ export default function ExpertRegistrationForm() {
     }
   }, [mfaData, generateQRCodeForUser]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -138,9 +136,14 @@ export default function ExpertRegistrationForm() {
   if (currentStep === "input") {
     return (
       <div className="w-full max-w-md">
-        <h1 className="text-center text-xl font-bold text-white mb-12 tracking-[0.25em]">
-          外部有識者 新規登録
-        </h1>
+        <div className="text-center mb-12">
+          <h1 className="text-2xl font-bold text-white tracking-[0.25em] mb-2">
+            METI Picks
+          </h1>
+          <h2 className="text-base font-bold text-white/90 tracking-[0.15em]">
+            エントリーフォーム
+          </h2>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* 既存のフォームフィールド（変更なし） */}
@@ -150,7 +153,7 @@ export default function ExpertRegistrationForm() {
             <div>
               <label htmlFor="last_name" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
                 姓
-                <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+                <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
                   必須
                 </span>
               </label>
@@ -170,7 +173,7 @@ export default function ExpertRegistrationForm() {
             <div>
               <label htmlFor="first_name" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
                 名
-                <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+                <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
                   必須
                 </span>
               </label>
@@ -187,64 +190,23 @@ export default function ExpertRegistrationForm() {
             </div>
           </div>
 
-          {/* 会社名 */}
+          {/* 自己PR */}
           <div>
-            <label htmlFor="company_name" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
-              会社名
-              <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+            <label htmlFor="self_pr" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
+              自己PR
+              <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
                 必須
               </span>
             </label>
-            <input
-              id="company_name"
-              name="company_name"
-              type="text"
+            <textarea
+              id="self_pr"
+              name="self_pr"
               required
-              placeholder="会社名を入力してください"
-              value={formData.company_name}
+              placeholder="自己PRを入力してください"
+              value={formData.self_pr}
               onChange={handleInputChange}
-              className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
-            />
-          </div>
-
-          {/* 部署 */}
-          <div>
-            <label htmlFor="department" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
-              部署
-              <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
-                必須
-              </span>
-            </label>
-            <input
-              id="department"
-              name="department"
-              type="text"
-              required
-              placeholder="部署を入力してください"
-              value={formData.department}
-              onChange={handleInputChange}
-              className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
-            />
-          </div>
-
-          {/* メールアドレス */}
-          <div>
-            <label htmlFor="email" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
-              メールアドレス
-              <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
-                必須
-              </span>
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="メールアドレスを入力してください"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+              rows={4}
+              className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999] resize-none"
             />
           </div>
 
@@ -252,7 +214,7 @@ export default function ExpertRegistrationForm() {
           <div>
             <label htmlFor="password" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
               パスワード
-              <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+              <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
                 必須
               </span>
             </label>
@@ -273,7 +235,7 @@ export default function ExpertRegistrationForm() {
           <div>
             <label htmlFor="password_confirm" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
               パスワード確認
-              <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+              <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
                 必須
               </span>
             </label>
@@ -314,11 +276,11 @@ export default function ExpertRegistrationForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-4 py-2 text-[#4AA0E9] text-sm font-medium transition-all hover:bg-white hover:shadow-lg disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-4 py-2 text-[#2d8cd9] text-sm font-medium transition-all hover:bg-white hover:shadow-lg disabled:opacity-60"
               aria-busy={isSubmitting}
             >
               {isSubmitting ? "送信中…" : "登録"}
-              <span aria-hidden className="inline-block select-none text-base text-[#4AA0E9]">→</span>
+              <span aria-hidden className="inline-block select-none text-base text-[#2d8cd9]">→</span>
             </button>
           </div>
 
