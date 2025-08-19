@@ -274,7 +274,7 @@ export const PolicyCommentsPage = () => {
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-[34.085px] h-[32.587px] flex-shrink-0">
                         <img 
-                          src="http://localhost:3845/assets/ee465fb73eb749d6fb926684896020ddb7f7cc2b.svg" 
+                          src="/comments-view-bg.svg" 
                           alt="policy icon" 
                           className="w-full h-full"
                         />

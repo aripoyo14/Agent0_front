@@ -10,7 +10,7 @@ import { getUserFromToken } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
 
 // 画像アセット（現在未使用）
-// const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
+// const imgUserIcon = "/globe.svg";
 
 // データ変換関数
 const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertArticle => ({

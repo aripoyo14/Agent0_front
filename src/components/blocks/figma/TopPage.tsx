@@ -4,10 +4,11 @@ import { useTopPageNavigation } from "@/hooks/useTopPageNavigation";
 import { getCommentCount } from "@/lib/expert-api";
 import { useState, useEffect } from "react";
 
-const imgVector = "http://localhost:3845/assets/53106efe68def3412993b290c8c5de68bee352e7.svg";
-const imgBackground = "http://localhost:3845/assets/083b7eb8e500a0b2b2331d38e424932148783b69.svg";
-const imgGroup = "http://localhost:3845/assets/3dc9d3281b09e84e8f15efc8fe10554644be0d25.svg";
-const imgBackground1 = "http://localhost:3845/assets/f744ceed7b1a27744eb435d05c6344074491bea7.svg";
+// SVGファイルのパスを修正
+const imgVector = "/file.svg";
+const imgBackground = "/network-search-bg.svg";
+const imgGroup = "/policy-submit-bg.svg";
+const imgBackground1 = "/comments-view-bg.svg";
 
 function Component27() {
   return (
