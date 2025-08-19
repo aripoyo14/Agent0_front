@@ -34,8 +34,13 @@ export function getUserFromToken(): { userId: string; userType: string; role: st
   }
   
   try {
-    // JWTトークンをデコード（base64でデコード）
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    // JWT payload を base64url デコードして取得
+    const base64Url = token.split('.')[1];
+    if (!base64Url) return null;
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4 || 0)) % 4, '=');
+    const json = atob(padded);
+    const payload = JSON.parse(json);
     
     // user_typeからroleを設定
     let role: string;
