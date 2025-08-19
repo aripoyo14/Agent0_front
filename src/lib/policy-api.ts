@@ -33,7 +33,7 @@ export async function fetchMyPolicySubmissions(): Promise<PolicySubmission[]> {
 
     // 認証トークンがある場合は認証付きエンドポイント、ない場合はテスト用エンドポイントを使用
     const testUserId = '581c56f8-6885-467d-a113-ffbbe65cd184';
-    const endpoint = tokenData.accessToken 
+    const _endpoint = tokenData.accessToken 
       ? '/api/policy-proposals/my-submissions'
       : `/api/policy-proposals/test-submissions/${testUserId}`;
 
