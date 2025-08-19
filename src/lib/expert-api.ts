@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiClient";
-import { PolicyProposal, PolicyProposalComment } from "@/types";
+import { PolicyProposal, PolicyProposalComment, UserInfo, UsersInfoResponse } from "@/types";
 
 // 政策提案コメント投稿のリクエスト型
 export interface PolicyCommentRequest {
@@ -15,6 +15,12 @@ export interface PolicyCommentResponse {
   success: boolean;
   comment_id: string;
   message: string;
+}
+
+// コメント数取得のレスポンス型
+export interface CommentCountResponse {
+  policy_proposal_id: string;
+  comment_count: number;
 }
 
 // 政策提案作成（添付ファイル付き）のリクエスト型
@@ -96,6 +102,14 @@ export async function unlikeComment(commentId: string): Promise<{ success: boole
   });
 }
 
+// コメント数取得API
+export async function getCommentCount(policyProposalId: string): Promise<CommentCountResponse> {
+  return apiFetch(`/api/policy-proposal-comments/policy-proposals/${policyProposalId}/comment-count`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
 // ========== Policy Proposal APIs (Backend Integration) ==========
 // 政策提案一覧取得API
 export async function getPolicyProposals(params?: {
@@ -127,6 +141,25 @@ export async function getPolicyProposalById(id: string): Promise<PolicyProposal>
 // 政策提案コメント一覧取得API
 export async function getPolicyProposalComments(id: string, limit = 50, offset = 0): Promise<PolicyProposalComment[]> {
   return apiFetch(`/api/policy-proposals/${id}/comments?limit=${limit}&offset=${offset}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+// ユーザー情報取得API
+export async function getUserInfo(userId: string): Promise<UserInfo> {
+  return apiFetch(`/api/users/${userId}`, {
+    method: "GET",
+    auth: true,
+  });
+}
+
+// 複数ユーザーの情報を一括取得するAPI
+export async function getUsersInfo(userIds: string[]): Promise<UsersInfoResponse> {
+  const queryParams = new URLSearchParams();
+  userIds.forEach(id => queryParams.append('user_ids', id));
+  
+  return apiFetch(`/api/users/batch?${queryParams}`, {
     method: "GET",
     auth: true,
   });

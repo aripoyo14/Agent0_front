@@ -111,3 +111,22 @@ export const getPolicySubmissionById = (id: string): PolicySubmission | undefine
 export const getCommentsByPolicyId = (policyId: string): PolicyComment[] => {
   return samplePolicyComments.filter(comment => comment.policyId === policyId);
 };
+
+// コメント数を取得する関数
+export const getTotalCommentCount = (): number => {
+  return samplePolicySubmissions.reduce((total, policy) => total + policy.commentCount, 0);
+};
+
+// 最新のコメント数を取得する関数
+export const getRecentCommentCount = (days: number = 7): number => {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - days);
+  
+  return samplePolicySubmissions.reduce((total, policy) => {
+    const policyDate = new Date(policy.submittedAt.replace('年', '/').replace('月', '/').replace('日', ''));
+    if (policyDate >= cutoffDate) {
+      return total + policy.commentCount;
+    }
+    return total;
+  }, 0);
+};

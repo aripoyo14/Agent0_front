@@ -1,11 +1,20 @@
 "use client";
 
 import { useTopPageNavigation } from "@/hooks/useTopPageNavigation";
+import { getCommentCount } from "@/lib/expert-api";
+import { useState, useEffect } from "react";
 
-const imgVector = "http://localhost:3845/assets/53106efe68def3412993b290c8c5de68bee352e7.svg";
-const imgBackground = "http://localhost:3845/assets/083b7eb8e500a0b2b2331d38e424932148783b69.svg";
-const imgGroup = "http://localhost:3845/assets/3dc9d3281b09e84e8f15efc8fe10554644be0d25.svg";
-const imgBackground1 = "http://localhost:3845/assets/f744ceed7b1a27744eb435d05c6344074491bea7.svg";
+// SVGファイルを直接インポート
+const fileSvg = "/file.svg";
+const networkSearchBgSvg = "/network-search-bg.svg";
+const policySubmitBgSvg = "/policy-submit-bg.svg";
+const commentsViewBgSvg = "/comments-view-bg.svg";
+
+// SVGファイルのパスを修正
+const imgVector = fileSvg;
+const imgBackground = networkSearchBgSvg;
+const imgGroup = policySubmitBgSvg;
+const imgBackground1 = commentsViewBgSvg;
 
 function Component27() {
   return (
@@ -46,6 +55,23 @@ export default function TopPage() {
     handleSubmitPolicy,
     handleCheckOpinions,
   } = useTopPageNavigation();
+
+  const [totalCommentCount, setTotalCommentCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCommentCount = async () => {
+      try {
+        // 仮のpolicy_proposal_idを使用（実際の実装では適切なIDを使用）
+        const data = await getCommentCount("sample-policy-001");
+        setTotalCommentCount(data.comment_count);
+      } catch (error) {
+        console.error("コメント数取得エラー:", error);
+        setTotalCommentCount(0);
+      }
+    };
+
+    fetchCommentCount();
+  }, []);
 
   return (
     <div
@@ -315,9 +341,18 @@ export default function TopPage() {
                 <p className="adjustLetterSpacing block mb-0">
                   有識者のリアルなコメント・提案を一覧で確認。
                 </p>
-                <p className="adjustLetterSpacing block">
+                <p className="adjustLetterSpacing block mb-2">
                   政策案を磨きながら、次に繋がる人脈と出会えます。
                 </p>
+                {/* コメント数表示 */}
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="flex items-center justify-center w-6 h-6">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <span className="text-white text-lg font-bold">コメント ({totalCommentCount})</span>
+                </div>
               </div>
             </div>
           </div>

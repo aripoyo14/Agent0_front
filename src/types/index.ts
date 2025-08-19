@@ -283,6 +283,7 @@ export interface PolicyProposalComment {
   policy_proposal_id: string;
   author_type: "admin" | "staff" | "contributor" | "viewer";
   author_id: string;
+  author_name: string | null; // 投稿者の実際の名前（姓 + 名）
   comment_text: string;
   parent_comment_id: string | null;
   evaluation: number | null; // 1-5
@@ -344,6 +345,27 @@ export interface ExpertInsightsOut {
   policy_comments: PolicyProposalCommentOut[]
   evaluation_average?: number | null
   stance_average?: number | null
+}
+
+// ========== User Info Types (for API responses) ==========
+export interface UserInfo {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  department?: string;
+  title?: string;
+  badges: Array<{
+    type: string;
+    label: string;
+    color: string;
+    description: string;
+  }>;
+  expertiseLevel: string;
+}
+
+export interface UsersInfoResponse {
+  [userId: string]: UserInfo;
 }
 
 export function stanceToLabel(value?: number | null): string {

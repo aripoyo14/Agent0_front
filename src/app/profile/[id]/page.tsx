@@ -35,6 +35,7 @@ function formatDate(d: string | Date): string {
   return `${y}/${m}/${day}`;
 }
 
+
 export default function ProfileDetailPage() {
   const params = useParams();
   const router = useRouter();
