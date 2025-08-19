@@ -149,7 +149,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 					overlap_coef: 0.4,
 					max_results: 5,
 				};
-				const data = await apiFetch<RoutesResponse>("/api/network_meti/routes", { method: "POST", body: payload, headers: { "x-cancel": String(Date.now()) }, signal: c.signal });
+				const data = await apiFetch<RoutesResponse>("/api/network_meti/routes", { method: "POST", body: payload, headers: { "x-cancel": String(Date.now()) }, signal: c.signal, auth: true });
 				setRoutesData(data);
 			} catch (e: unknown) {
 				setError(e instanceof Error ? e.message : "取得に失敗しました");
