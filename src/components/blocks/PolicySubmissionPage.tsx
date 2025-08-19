@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
-import fileSvg from "/public/file.svg";
+const fileSvg = "/file.svg";
 // import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 
 interface PolicyFormData {
