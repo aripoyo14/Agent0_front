@@ -62,7 +62,7 @@ export function BusinessCardUpload({
     <div className={`space-y-3 ${className}`}>
       <label className="flex items-center gap-1 text-white text-xs font-medium mb-1">
         名刺画像
-        <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
+        <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
           任意
         </span>
       </label>
@@ -98,7 +98,7 @@ export function BusinessCardUpload({
             type="button" // 明示的にbuttonタイプを指定
             onClick={openFileDialog}
             variant="outline"
-            className="w-full bg-white/90 backdrop-blur-sm border-white/20 text-[#4AA0E9] hover:bg-white hover:border-white/30"
+            className="w-full bg-white/90 backdrop-blur-sm border-white/20 text-[#2d8cd9] hover:bg-white hover:border-white/30"
           >
             <UploadIcon />
             名刺画像を選択
