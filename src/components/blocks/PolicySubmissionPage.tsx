@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from "next/navigation";
+import fileSvg from "/public/file.svg";
 // import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 
 interface PolicyFormData {
@@ -164,8 +165,7 @@ export function PolicySubmissionPage() {
 
   // Figma variables and assets
   const COLOR_PRIMARY = "#007aff"; // Miscellaneous/Floating Tab - Text Selected
-  import fileSvg from "/public/file.svg";
-const IMG_OCTICON_FILE_16 = fileSvg;
+  const IMG_OCTICON_FILE_16 = fileSvg;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleThemeToggle = (_themeId: string) => {
