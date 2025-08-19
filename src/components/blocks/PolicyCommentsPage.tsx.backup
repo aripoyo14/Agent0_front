@@ -6,7 +6,7 @@ import { PolicySubmission, PolicyComment, CommentAnalysis } from '@/types';
 import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import commentsViewBgSvg from "/public/comments-view-bg.svg";
+const commentsViewBgSvg = "/comments-view-bg.svg";
 
 // ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
 const _getStatusInfo = (status: PolicySubmission['status']) => {

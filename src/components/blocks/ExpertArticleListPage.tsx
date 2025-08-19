@@ -9,8 +9,8 @@ import { CommentCount } from "@/components/ui/comment-count";
 import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 
 // 画像アセット
-import fileSvg from "/public/file.svg";
-import globeSvg from "/public/globe.svg";
+const fileSvg = "/file.svg";
+const globeSvg = "/globe.svg";
 const imgSubTitleIcon = fileSvg;
 const imgUserIcon = globeSvg;
 

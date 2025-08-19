@@ -5,10 +5,10 @@ import { getCommentCount } from "@/lib/expert-api";
 import { useState, useEffect } from "react";
 
 // SVGファイルを直接インポート
-import fileSvg from "/public/file.svg";
-import networkSearchBgSvg from "/public/network-search-bg.svg";
-import policySubmitBgSvg from "/public/policy-submit-bg.svg";
-import commentsViewBgSvg from "/public/comments-view-bg.svg";
+const fileSvg = "/file.svg";
+const networkSearchBgSvg = "/network-search-bg.svg";
+const policySubmitBgSvg = "/policy-submit-bg.svg";
+const commentsViewBgSvg = "/comments-view-bg.svg";
 
 // SVGファイルのパスを修正
 const imgVector = fileSvg;
