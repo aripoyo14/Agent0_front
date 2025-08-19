@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { PolicySubmission, PolicyComment } from '@/types';
-import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
+import { PolicySubmission } from '@/types';
+import { fetchMyPolicySubmissions } from '@/lib/policy-api';
+import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CommentCount } from '@/components/ui/comment-count';
+import { CommentSkeletonList } from '@/components/ui/skeleton';
 
 // ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
 const _getStatusInfo = (status: PolicySubmission['status']) => {
@@ -335,7 +337,7 @@ const CommentItem = ({
   onFeedbackSubmit,
   isFeedbackSubmitted = false
 }: { 
-  comment: PolicyComment; 
+  comment: Comment; 
   onFeedbackSubmit: (feedback: {
     commentId: string;
     overallRating: number;
@@ -347,7 +349,7 @@ const CommentItem = ({
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
 
   return (
-    <div className="bg-white p-4 mb-4 relative">
+    <div className="bg-white p-4 mb-4 relative rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-gray-200">
       {/* ステータス表示 */}
       {isFeedbackSubmitted && (
         <div className="absolute top-3 right-3">
@@ -359,11 +361,11 @@ const CommentItem = ({
       
       <div className="flex justify-between items-start mb-3">
         <div>
-          <div className="font-bold text-base text-gray-900 leading-tight mb-1">{comment.author}</div>
+          <div className="font-bold text-base text-gray-900 leading-tight mb-1">{comment.author_name}</div>
           <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-500 leading-tight">{comment.authorRole}</span>
+            <span className="text-xs text-gray-500 leading-tight">{comment.author_type}</span>
             <span className="text-xs text-gray-400">•</span>
-            <span className="text-xs text-gray-500 leading-tight">{comment.createdAt}</span>
+            <span className="text-xs text-gray-500 leading-tight">{new Date(comment.posted_at).toLocaleDateString('ja-JP')}</span>
           </div>
         </div>
         {!isFeedbackSubmitted && (
@@ -376,17 +378,7 @@ const CommentItem = ({
         )}
       </div>
       
-      <p className="text-sm text-gray-700 mb-4 leading-relaxed">{comment.content}</p>
-      
-      {comment.attachments && comment.attachments.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {comment.attachments.map((file, index) => (
-            <Badge key={index} variant="outline" className="text-[9.611px]">
-              📎 {file}
-            </Badge>
-          ))}
-        </div>
-      )}
+      <p className="text-sm text-gray-700 mb-4 leading-relaxed">{comment.comment_text}</p>
       
 
 
@@ -410,11 +402,36 @@ const CommentItem = ({
 // メインページコンポーネント
 export const PolicyCommentsPage = () => {
   const router = useRouter();
-  const [selectedPolicyId, setSelectedPolicyId] = useState<string>("policy-001");
-  const [policies] = useState<PolicySubmission[]>(samplePolicySubmissions);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>("");
+  const [policies, setPolicies] = useState<PolicySubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<Set<string>>(new Set());
   
+  // 政策投稿履歴を取得
+  useEffect(() => {
+    const loadPolicySubmissions = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchMyPolicySubmissions();
+        setPolicies(data);
+        
+        // 最初の政策を選択
+        if (data.length > 0 && !selectedPolicyId) {
+          setSelectedPolicyId(data[0].id);
+        }
+      } catch (err) {
+        console.error('政策投稿履歴取得エラー:', err);
+        setError(err instanceof Error ? err.message : 'データの取得に失敗しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPolicySubmissions();
+  }, []);
+
   const handleGoToDashboard = () => {
     router.push('/dashboard');
   };
@@ -439,11 +456,36 @@ export const PolicyCommentsPage = () => {
     setFeedbackSubmitted(prev => new Set(prev).add(feedback.commentId));
   };
   
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  
   const selectedPolicy = policies.find(p => p.id === selectedPolicyId);
-  const allComments = selectedPolicyId ? getCommentsByPolicyId(selectedPolicyId) : [];
+  
+  // コメントを取得
+  useEffect(() => {
+    if (selectedPolicyId) {
+      const loadComments = async () => {
+        setCommentsLoading(true);
+        setComments([]); // 新しい政策を選択したら一旦クリア
+        try {
+          // 少し遅延を入れてローディング状態を見せる
+          await new Promise(resolve => setTimeout(resolve, 300));
+          const fetchedComments = await fetchCommentsByPolicyId(selectedPolicyId);
+          setComments(fetchedComments);
+        } catch (error) {
+          console.error('コメント取得エラー:', error);
+          setComments([]);
+        } finally {
+          setCommentsLoading(false);
+        }
+      };
+      
+      loadComments();
+    }
+  }, [selectedPolicyId]);
   
   // フィルタリング
-  const filteredComments = allComments.filter(comment => {
+  const filteredComments = comments.filter(comment => {
     const isSubmitted = feedbackSubmitted.has(comment.id);
     switch (activeTab) {
       case "unfb":
@@ -457,9 +499,9 @@ export const PolicyCommentsPage = () => {
 
   // 件数計算
   const counts = {
-    all: allComments.length,
-    unfb: allComments.filter(c => !feedbackSubmitted.has(c.id)).length,
-    fb: allComments.filter(c => feedbackSubmitted.has(c.id)).length,
+    all: comments.length,
+    unfb: comments.filter(c => !feedbackSubmitted.has(c.id)).length,
+    fb: comments.filter(c => feedbackSubmitted.has(c.id)).length,
   };
   
   return (
@@ -507,36 +549,86 @@ export const PolicyCommentsPage = () => {
                     <span>TOPに戻る</span>
                   </button>
                 </div>
-              <div className="space-y-2">
-                {policies.map((policy) => (
-                  <PolicySubmissionCard 
-                    key={policy.id} 
-                    policy={policy} 
-                    onViewComments={handleViewComments}
-                    isSelected={policy.id === selectedPolicyId}
-                  />
-                ))}
-              </div>
-            </Card>
+                
+                {loading ? (
+                  <div className="animate-fade-in-up">
+                    <div className="space-y-4">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded mb-2 animate-pulse-slow" style={{ width: '60%' }} />
+                              <div className="flex items-center space-x-2">
+                                <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '40%' }} />
+                                <div className="h-3 w-1 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                                <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '30%' }} />
+                              </div>
+                            </div>
+                            <div className="h-8 w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                          </div>
+                          <div className="space-y-2 mb-4">
+                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '95%' }} />
+                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '85%' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-8">
+                    <p className="text-red-500">{error}</p>
+                    <button 
+                      onClick={() => window.location.reload()}
+                      className="mt-2 px-3 py-1 bg-[#4AA0E9] text-white text-xs rounded hover:bg-[#3a8fd9] transition-colors"
+                    >
+                      再試行
+                    </button>
+                  </div>
+                ) : policies.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">投稿履歴がありません</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {policies.map((policy) => (
+                      <PolicySubmissionCard 
+                        key={policy.id} 
+                        policy={policy} 
+                        onViewComments={handleViewComments}
+                        isSelected={policy.id === selectedPolicyId}
+                      />
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
           </div>
           
           {/* 右側: コメントエリア */}
           <div className="xl:col-span-3 lg:col-span-2 order-1 lg:order-2">
             <Card className="p-6 bg-white border-0">
-              {selectedPolicy && (
+              {loading ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">読み込み中...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-8">
+                  <p className="text-red-500">{error}</p>
+                </div>
+              ) : selectedPolicy ? (
                 <>
                   <div className="mb-8">
                     {/* 政策タイトル */}
-                                          <h1 className="text-2xl font-bold text-[#4AA0E9] mb-3 leading-tight">
-                          {selectedPolicy.title}
-                      </h1>
+                    <h1 className="text-2xl font-bold text-[#4AA0E9] mb-3 leading-tight">
+                      {selectedPolicy.title}
+                    </h1>
                     
                     {/* メタ情報 */}
                     <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
                       <span className="font-medium">中小企業庁 産業事業支援課</span>
                       <span className="text-gray-400">•</span>
-                          <span>{selectedPolicy.submittedAt}</span>
+                      <span>{selectedPolicy.submittedAt}</span>
                     </div>
                     
                     {/* 政策概要 */}
@@ -554,29 +646,61 @@ export const PolicyCommentsPage = () => {
                   />
                   
                   <div className="space-y-2">
-                    {filteredComments.length > 0 ? (
-                      filteredComments.map((comment) => (
-                        <CommentItem 
-                          key={comment.id} 
-                          comment={comment} 
-                          onFeedbackSubmit={handleFeedbackSubmit}
-                          isFeedbackSubmitted={feedbackSubmitted.has(comment.id)}
-                        />
-                      ))
+                    {commentsLoading ? (
+                      <div className="animate-fade-in-up">
+                        <CommentSkeletonList count={3} />
+                      </div>
+                    ) : filteredComments.length > 0 ? (
+                      <div className="space-y-4">
+                        {filteredComments.map((comment, index) => (
+                          <div 
+                            key={comment.id} 
+                            className="animate-fade-in-up"
+                            style={{ animationDelay: `${index * 0.1}s` }}
+                          >
+                            <CommentItem 
+                              comment={comment} 
+                              onFeedbackSubmit={handleFeedbackSubmit}
+                              isFeedbackSubmitted={feedbackSubmitted.has(comment.id)}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">
-                          {activeTab === "all" 
-                            ? "まだコメントがありません" 
-                            : activeTab === "unfb" 
-                            ? "未対応のコメントはありません"
-                            : "対応済みのコメントはありません"
-                          }
-                        </p>
+                      <div className="text-center py-12 animate-fade-in-up">
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                          </div>
+                          <div className="text-center">
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">
+                              {activeTab === "all" 
+                                ? "まだコメントがありません" 
+                                : activeTab === "unfb" 
+                                ? "未対応のコメントはありません"
+                                : "対応済みのコメントはありません"
+                              }
+                            </h3>
+                            <p className="text-gray-500 text-sm">
+                              {activeTab === "all" 
+                                ? "この政策に対するコメントがまだ投稿されていません。"
+                                : activeTab === "unfb" 
+                                ? "すべてのコメントが対応済みです。"
+                                : "まだ対応していないコメントはありません。"
+                              }
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
                 </>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">政策を選択してください</p>
+                </div>
               )}
             </Card>
           </div>
