@@ -2,14 +2,48 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal, PolicyTag } from "@/types";
-import { policyThemes, getArticlesByTheme, searchArticles, getArticleComments, sortComments } from "@/data/expert-articles-data";
+import { ExpertPolicyTheme, ExpertArticle, ExpertPageState, ExpertFilterState, ExpertOverlayState, ExpertComment, CommentSortOption, PolicyProposal, UsersInfoResponse } from "@/types";
+import { policyThemes, getArticlesByTheme, searchArticles, sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
-import { getPolicyProposals } from "@/lib/expert-api";
+import { CommentCount } from "@/components/ui/comment-count";
+import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 
 // 画像アセット
 const imgSubTitleIcon = "http://localhost:3845/assets/97cd832355f773e22c5e4fede61842ffbe828a02.svg";
 const imgUserIcon = "http://localhost:3845/assets/0046f2f481d47419a2b5046e941c98fae542e480.svg";
+
+// 日付フォーマット関数
+const formatDate = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      return "昨日";
+    } else if (diffDays <= 7) {
+      return `${diffDays}日前`;
+    } else if (diffDays <= 30) {
+      const weeks = Math.floor(diffDays / 7);
+      return `${weeks}週間前`;
+    } else if (diffDays <= 365) {
+      const months = Math.floor(diffDays / 30);
+      return `${months}ヶ月前`;
+    } else {
+      return date.toLocaleDateString('ja-JP', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  } catch {
+    // パースに失敗した場合は元の文字列を返す
+    return dateString;
+  }
+};
 
 // データ変換関数
 const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertArticle => ({
@@ -18,7 +52,7 @@ const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertA
   summary: proposal.body.substring(0, 100) + "...", // 最初の100文字をサマリーとして使用
   content: proposal.body,
   department: "中小企業庁 地域産業支援課", // 仮の値
-  publishedAt: proposal.published_at || proposal.created_at,
+  publishedAt: formatDate(proposal.published_at || proposal.created_at),
   commentCount: 0, // 後で計算
   themeId: proposal.policy_tags && proposal.policy_tags.length > 0 
     ? proposal.policy_tags[0].id.toString() 
@@ -135,15 +169,11 @@ const ArticleCard = ({
       </div>
       
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-        <div className="flex items-center justify-center w-4 h-4">
-          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </div>
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] text-gray-500 font-medium">コメント</span>
-          <span className="text-[12px] text-gray-700 font-bold">({article.commentCount})</span>
-        </div>
+        <CommentCount 
+          policyProposalId={article.id}
+          className="text-[12px] text-gray-700 font-bold"
+          showIcon={true}
+        />
       </div>
       
       <div className="absolute flex h-[3.983px] items-center justify-center left-0 right-0 top-[85px]">
@@ -258,12 +288,92 @@ const ArticleOverlay = ({
   isAnimating: boolean;
 }) => {
   const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
+  const [comments, setComments] = useState<ExpertComment[]>([]);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
+  
+  // コメントを取得する関数
+  const fetchComments = useCallback(async (articleId: string) => {
+    try {
+      setIsLoadingComments(true);
+      
+      // バックエンドからコメントデータを取得
+      const policyComments = await getPolicyProposalComments(articleId);
+      
+      // ユーザーIDの一覧を取得
+      const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
+      
+              // ユーザー情報を一括取得
+        let usersInfo: UsersInfoResponse = {};
+      if (userIds.length > 0) {
+        try {
+          usersInfo = await getUsersInfo(userIds);
+        } catch (error) {
+          console.error("ユーザー情報の一括取得に失敗しました:", error);
+        }
+      }
+      
+      // コメントを変換（ユーザー情報を使用）
+      const convertedComments = policyComments.map(comment => {
+        const userInfo = usersInfo[comment.author_id];
+        return {
+          id: comment.id,
+          author: {
+            id: comment.author_id,
+            name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+            role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+            company: userInfo?.company || "会社名",
+            badges: userInfo?.badges?.map((badge: {
+              type: string;
+              label: string;
+              color: string;
+              description: string;
+            }) => ({
+              type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+              label: badge.label,
+              color: badge.color,
+              description: badge.description
+            })) || [
+              {
+                type: "expert" as const,
+                label: "認定エキスパート",
+                color: "#4AA0E9",
+                description: "認定されたエキスパート"
+              }
+            ],
+            expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+          },
+          content: comment.comment_text,
+          createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          likeCount: 0,
+          viewCount: 0,
+          isLiked: false
+        } as ExpertComment;
+      });
+      
+      setComments(convertedComments);
+    } catch (error) {
+      console.error("コメントの取得エラー:", error);
+      setComments([]);
+    } finally {
+      setIsLoadingComments(false);
+    }
+  }, []);
+  
+  // 記事が変更されたときにコメントを取得
+  useEffect(() => {
+    if (overlay.selectedArticle) {
+      fetchComments(overlay.selectedArticle.id);
+    }
+  }, [overlay.selectedArticle, fetchComments]);
   
   if (!overlay.isOpen || !overlay.selectedArticle) return null;
 
   const article = overlay.selectedArticle;
-  const allComments = getArticleComments(article.id);
-  const sortedComments = sortComments(allComments, sortOption);
+  const sortedComments = sortComments(comments, sortOption);
 
   return (
     <>
@@ -302,7 +412,13 @@ const ArticleOverlay = ({
             <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
               <span>{article.department}</span>
               <span>{article.publishedAt}</span>
-              <span>コメント: {article.commentCount}件</span>
+              <span>
+                コメント: <CommentCount 
+                  policyProposalId={article.id}
+                  className="text-gray-600"
+                  showIcon={false}
+                />
+              </span>
             </div>
             
             {/* 記事本文 */}
@@ -345,9 +461,19 @@ const ArticleOverlay = ({
             <div className="px-6 pb-6">
               {/* コメント一覧 */}
               <div className="space-y-6">
-                                  {sortedComments.map((comment, _index) => (
+                {isLoadingComments ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">コメントを読み込み中...</p>
+                  </div>
+                ) : sortedComments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">まだ意見が投稿されていません</p>
+                  </div>
+                ) : (
+                  sortedComments.map((comment, _index) => (
                     <CommentCard key={comment.id} comment={comment} />
-                  ))}
+                  ))
+                )}
               </div>
             </div>
           </div>

@@ -1,0 +1,331 @@
+"use client";
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { PolicySubmission, PolicyComment, CommentAnalysis } from '@/types';
+import { samplePolicySubmissions, getCommentsByPolicyId } from '@/data/policy-data';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+// ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
+const _getStatusInfo = (status: PolicySubmission['status']) => {
+  switch (status) {
+    case 'draft':
+      return { label: '下書き', color: 'bg-gray-500' };
+    case 'submitted':
+      return { label: '投稿済み', color: 'bg-blue-500' };
+    case 'under_review':
+      return { label: '審査中', color: 'bg-yellow-500' };
+    case 'approved':
+      return { label: '承認済み', color: 'bg-green-500' };
+    case 'rejected':
+      return { label: '却下', color: 'bg-red-500' };
+    default:
+      return { label: '不明', color: 'bg-gray-500' };
+  }
+};
+
+// AI分析スコアに応じた色を取得
+const getScoreColor = (score: number) => {
+  if (score >= 80) return 'text-green-600';
+  if (score >= 60) return 'text-blue-600';
+  if (score >= 40) return 'text-yellow-600';
+  return 'text-red-600';
+};
+
+// カテゴリに応じた色を取得
+const getCategoryColor = (category: string) => {
+  switch (category) {
+    case 'constructive':
+      return 'bg-green-100 text-green-800';
+    case 'positive':
+      return 'bg-blue-100 text-blue-800';
+    case 'neutral':
+      return 'bg-gray-100 text-gray-800';
+    case 'critical':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'negative':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+// 専門性レベルに応じた色を取得
+const getExpertiseColor = (level: string) => {
+  switch (level) {
+    case 'high':
+      return 'bg-purple-100 text-purple-800';
+    case 'medium':
+      return 'bg-blue-100 text-blue-800';
+    case 'low':
+      return 'bg-gray-100 text-gray-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+// 政策投稿カードコンポーネント
+const PolicySubmissionCard = ({ 
+  policy, 
+  onViewComments,
+  isSelected = false
+}: { 
+  policy: PolicySubmission;
+  onViewComments: (policyId: string) => void;
+  isSelected?: boolean;
+}) => {
+  return (
+    <div 
+      className={`p-4 cursor-pointer transition-all ${
+        isSelected 
+          ? 'bg-[#4AA0E9]/10 border-l-4 border-[#4AA0E9]' 
+          : 'hover:bg-gray-50'
+      }`}
+      onClick={() => onViewComments(policy.id)}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <h3 className={`text-xs font-medium ${isSelected ? 'text-[#4AA0E9]' : 'text-gray-700'} line-clamp-2`}>
+          {policy.title}
+        </h3>
+      </div>
+      
+      <div className="text-[7.456px] text-gray-500 mb-2">
+        {policy.submittedAt}
+      </div>
+      
+      <div className="flex justify-between items-center mt-2 text-[7.456px] text-gray-500">
+        <span>コメント: {policy.commentCount}件</span>
+        {policy.attachedFiles && policy.attachedFiles.length > 0 && (
+          <span>添付ファイル: {policy.attachedFiles.length}件</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// AI分析結果表示コンポーネント
+const AIAnalysisCard = ({ analysis }: { analysis: CommentAnalysis }) => {
+  return (
+    <Card className="p-4 mb-4 bg-gradient-to-r from-[#4AA0E9]/10 to-[#4AA0E9]/5 border-[#4AA0E9]/20">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-bold text-[12.782px] text-gray-900 tracking-[1.5338px]">AI分析結果</h4>
+        <div className="flex items-center gap-2">
+          <Badge className={getCategoryColor(analysis.category)}>
+            {analysis.category === 'constructive' ? '建設的' : 
+             analysis.category === 'positive' ? 'ポジティブ' : 
+             analysis.category === 'neutral' ? '中立' : 
+             analysis.category === 'critical' ? '批判的' : '否定的'}
+          </Badge>
+          <Badge className={getExpertiseColor(analysis.expertiseLevel)}>
+            {analysis.expertiseLevel === 'high' ? '高' : 
+             analysis.expertiseLevel === 'medium' ? '中' : '低'}専門性
+          </Badge>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4 mb-3">
+        <div>
+          <div className="text-[10.652px] font-medium text-gray-700 mb-1">総合スコア</div>
+          <div className={`text-2xl font-bold ${getScoreColor(analysis.score)}`}>
+            {analysis.score}
+          </div>
+        </div>
+        <div>
+          <div className="text-[10.652px] font-medium text-gray-700 mb-1">関連性スコア</div>
+          <div className={`text-2xl font-bold ${getScoreColor(analysis.relevanceScore)}`}>
+            {analysis.relevanceScore}
+          </div>
+        </div>
+      </div>
+      
+      <div className="mb-3">
+        <div className="text-[10.652px] font-medium text-gray-700 mb-1">要約</div>
+        <p className="text-[10.201px] text-gray-600 leading-[17.341px]">{analysis.summary}</p>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div className="text-[10.652px] font-medium text-gray-700 mb-1">重要なポイント</div>
+          <ul className="text-[10.201px] text-gray-600 space-y-1 leading-[17.341px]">
+            {analysis.keyPoints.map((point: string, index: number) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="text-[#4AA0E9]">•</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <div className="text-[10.652px] font-medium text-gray-700 mb-1">実行可能な洞察</div>
+          <ul className="text-[10.201px] text-gray-600 space-y-1 leading-[17.341px]">
+            {analysis.actionableInsights.map((insight: string, index: number) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="text-green-500">→</span>
+                <span>{insight}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// コメント表示コンポーネント
+const CommentItem = ({ comment }: { comment: PolicyComment }) => {
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+      <div className="flex justify-between items-start mb-3">
+        <div>
+          <div className="font-bold text-[15.76px] text-gray-900 leading-[19.7px]">{comment.author}</div>
+          <div className="text-[11.82px] text-gray-500 leading-[14.775px]">{comment.authorRole}</div>
+        </div>
+        <div className="text-[9.098px] text-gray-500 leading-[14.775px]">{comment.createdAt}</div>
+      </div>
+      
+      <p className="text-[10.201px] text-gray-700 mb-4 leading-[17.341px]">{comment.content}</p>
+      
+      {comment.attachments && comment.attachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {comment.attachments.map((file, index) => (
+            <Badge key={index} variant="outline" className="text-[9.611px]">
+              📎 {file}
+            </Badge>
+          ))}
+        </div>
+      )}
+      
+      {comment.aiAnalysis && (
+        <AIAnalysisCard analysis={comment.aiAnalysis} />
+      )}
+    </div>
+  );
+};
+
+// メインページコンポーネント
+export const PolicyCommentsPage = () => {
+  const router = useRouter();
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string>("policy-001");
+  const [policies] = useState<PolicySubmission[]>(samplePolicySubmissions);
+  
+  const handleGoToDashboard = () => {
+    router.push('/dashboard');
+  };
+  
+  const handleViewComments = (policyId: string) => {
+    setSelectedPolicyId(policyId);
+  };
+  
+  const selectedPolicy = policies.find(p => p.id === selectedPolicyId);
+  const comments = selectedPolicyId ? getCommentsByPolicyId(selectedPolicyId) : [];
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-t from-[#b4d9d6] to-[#58aadb] p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="font-['Montserrat',_sans-serif] font-semibold text-white text-[18px] tracking-[2.16px] cursor-pointer hover:opacity-80 transition-opacity" onClick={handleGoToDashboard}>
+              METI Picks
+            </h1>
+            <div className="text-white text-xs font-bold">テックゼロ太郎さん</div>
+          </div>
+          
+          <div className="flex items-start gap-10">
+            <div className="w-[250.7px] h-[70.36px] relative shrink-0">
+              <div className="absolute top-0 left-0 w-[50px] h-[25px] bg-white rounded-tl-[8.414px] rounded-tr-[8.414px] flex items-center justify-center z-10">
+                <span className="font-['Montserrat',_sans-serif] font-semibold text-[7px] tracking-[0.42px]" style={{ color: "#4AA0E9" }}>Policy</span>
+              </div>
+              <div className="absolute top-[25px] left-0 right-0 bottom-0 rounded-tr-[8.414px] rounded-br-[8.414px] rounded-bl-[8.414px] border border-white" />
+              <div className="absolute left-[40px] top-[35px]">
+                <span className="font-['Noto_Sans_JP'] font-bold text-white text-[10.62px] tracking-[1.893px]">政策案でつながる</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* 左側: 投稿履歴 */}
+          <div className="lg:col-span-1">
+            <Card className="p-6 bg-white border-0">
+              <h2 className="text-xs font-bold text-gray-900 mb-6 tracking-[2px]">投稿履歴</h2>
+              <div className="space-y-2">
+                {policies.map((policy) => (
+                  <PolicySubmissionCard 
+                    key={policy.id} 
+                    policy={policy} 
+                    onViewComments={handleViewComments}
+                    isSelected={policy.id === selectedPolicyId}
+                  />
+                ))}
+              </div>
+            </Card>
+          </div>
+          
+          {/* 右側: コメントエリア */}
+          <div className="lg:col-span-3">
+            <Card className="p-6 bg-white border-0">
+              {selectedPolicy && (
+                <>
+                  <div className="mb-6">
+                    {/* 政策タイトルとアイコン */}
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-[34.085px] h-[32.587px] flex-shrink-0">
+                        <img 
+                          src="http://localhost:3845/assets/ee465fb73eb749d6fb926684896020ddb7f7cc2b.svg" 
+                          alt="policy icon" 
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-[21.303px] font-black text-[#4AA0E9] leading-[13.634px] mb-4">
+                          {selectedPolicy.title}
+                        </h2>
+                        <div className="flex items-center gap-4 text-[7.456px] text-gray-500 leading-[8.947px]">
+                          <span>{selectedPolicy.submittedAt}</span>
+                          <span>中小企業庁 産業事業支援課</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* 区切り線 */}
+                    <div className="h-px bg-gray-300 mb-3"></div>
+                    
+                    {/* 政策内容 */}
+                    <p className="text-[10.201px] text-gray-700 leading-[17.341px] mb-3">{selectedPolicy.content}</p>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-[14.006px] font-bold text-gray-900">コメント（{comments.length}）</h3>
+                    <div className="flex items-center gap-4 text-[9.337px] text-gray-500">
+                      <button className="flex items-center gap-1 hover:text-gray-700">
+                        <span>並び替える</span>
+                      </button>
+                      <button className="flex items-center gap-1 hover:text-gray-700">
+                        <span>絞り込む</span>
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {comments.length > 0 ? (
+                      comments.map((comment) => (
+                        <CommentItem key={comment.id} comment={comment} />
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">まだコメントがありません</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
