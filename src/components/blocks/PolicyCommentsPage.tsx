@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
 import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
 import { Card } from '@/components/ui/card';
 import { CommentCount } from '@/components/ui/comment-count';
 import { CommentSkeletonList } from '@/components/ui/skeleton';
+import BackgroundEllipses from '@/components/blocks/BackgroundEllipses';
+import { Header } from '@/components/ui/header';
 
 // ステータスに応じた色とラベルを取得（現在は使用していないが将来の拡張用）
 const _getStatusInfo = (status: PolicySubmission['status']) => {
@@ -400,7 +401,6 @@ const CommentItem = ({
 
 // メインページコンポーネント
 export const PolicyCommentsPage = () => {
-  const router = useRouter();
   const [selectedPolicyId, setSelectedPolicyId] = useState<string>("");
   const [policies, setPolicies] = useState<PolicySubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -431,9 +431,7 @@ export const PolicyCommentsPage = () => {
     loadPolicySubmissions();
   }, []);
 
-  const handleGoToDashboard = () => {
-    router.push('/dashboard');
-  };
+
   
   const handleViewComments = (policyId: string) => {
     setSelectedPolicyId(policyId);
@@ -504,32 +502,31 @@ export const PolicyCommentsPage = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[#b4d9d6] to-[#58aadb] p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* ヘッダー */}
-        <div className="mb-8">
-                    <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 lg:mb-6 space-y-4 lg:space-y-0">
-            <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-8">
-              <h1 className="font-['Montserrat',_sans-serif] font-semibold text-white text-[16px] lg:text-[18.654px] tracking-[2.2384px] cursor-pointer hover:opacity-80 transition-opacity" onClick={handleGoToDashboard}>
-              METI Picks
-            </h1>
-              <div className="flex flex-wrap items-center space-x-4 lg:space-x-6">
-                <div className="text-white text-[12px] lg:text-[13.412px] font-bold tracking-[2.0118px] cursor-pointer hover:opacity-80 transition-opacity opacity-70" onClick={() => window.location.href = '/search'}>
-                  つながりを探す
-                </div>
-                <div className="text-white text-[12px] lg:text-[13.412px] font-bold tracking-[2.0118px] cursor-pointer hover:opacity-80 transition-opacity opacity-70" onClick={() => window.location.href = '/policy'}>
-                  政策を投稿する
-          </div>
-                <div className="text-white text-[12px] lg:text-[13.412px] font-bold tracking-[2.0118px] cursor-pointer hover:opacity-80 transition-opacity border-b-2 border-white pb-1">
-                  意見を確認する
-              </div>
-              </div>
-            </div>
-            <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors self-start lg:self-auto">
-              テックゼロ太郎さん
-            </div>
-          </div>
-        </div>
+    <div className="relative min-h-screen w-full overflow-hidden">
+      {/* 背景グラデーション */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9]" />
+      
+      {/* テクスチャ効果 */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <filter id="noiseFilter">
+              <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="4" stitchTiles="stitch"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+          </svg>
+        `)}")`
+      }}></div>
+
+      {/* 背景装飾 */}
+      <BackgroundEllipses scale={0.8} />
+
+      {/* 統一されたヘッダー */}
+      <Header />
+      
+      {/* メインコンテンツエリア */}
+      <div className="relative z-10 flex-1 px-6 lg:px-12 pb-6 pt-32">
+        <div className="max-w-7xl mx-auto">
         
         <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-1 gap-4 lg:gap-8">
           {/* 左側: 投稿履歴 */}
@@ -705,6 +702,7 @@ export const PolicyCommentsPage = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };
