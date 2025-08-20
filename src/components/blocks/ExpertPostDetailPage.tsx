@@ -691,8 +691,38 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   if (isLoading) {
     return (
       <div className="bg-[#939393] relative size-full h-screen overflow-hidden">
-        <div className="flex items-center justify-center h-full">
-          <div className="text-white text-lg">読み込み中...</div>
+        {/* 背景グラデーション */}
+        <div className="absolute bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9] h-[1024px] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[1440px]" />
+        
+        {/* ノイズテクスチャ効果 */}
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
+              <svg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'>
+                <filter id='noiseFilter'>
+                  <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/>
+                </filter>
+                <rect width='100%' height='100%' filter='url(%23noiseFilter)' opacity='0.4'/>
+              </svg>
+            `)}")`,
+          }}
+        />
+        
+        <div className="flex flex-col items-center justify-center h-full relative z-10">
+          <div className="text-white text-lg mb-6">読み込み中...</div>
+          
+          {/* ローディングバー */}
+          <div className="w-64 bg-white/20 rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-white rounded-full animate-pulse"></div>
+          </div>
+          
+          {/* アニメーションするローディングドット */}
+          <div className="flex space-x-1 mt-4">
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -711,7 +741,22 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   return (
     <div className="bg-[#939393] relative size-full h-screen overflow-hidden">
       {/* 背景グラデーション */}
-      <div className="absolute bg-gradient-to-t from-[#b4d9d6] h-[400px] left-1/2 to-[#58aadb] top-0 translate-x-[-50%] w-[1440px]" />
+      <div className="absolute bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9] h-[1024px] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[1440px]" />
+      
+      {/* ノイズテクスチャ効果 */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
+            <svg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'>
+              <filter id='noiseFilter'>
+                <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/>
+              </filter>
+              <rect width='100%' height='100%' filter='url(%23noiseFilter)' opacity='0.4'/>
+            </svg>
+          `)}")`,
+        }}
+      />
       
       {/* 背景装飾 */}
       <BackgroundEllipses scale={0.8} />

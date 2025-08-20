@@ -8,11 +8,7 @@ import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { CommentCount } from "@/components/ui/comment-count";
 import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 
-// 画像アセット
-const fileSvg = "/file.svg";
-const globeSvg = "/globe.svg";
-const imgSubTitleIcon = fileSvg;
-const imgUserIcon = globeSvg;
+
 
 // 日付フォーマット関数
 const formatDate = (dateString: string): string => {
@@ -70,29 +66,29 @@ const PolicyThemeSelector = ({
   onThemeSelect: (themeId: string) => void;
 }) => {
   return (
-    <div className="absolute contents left-[74.99px] top-[123.83px]">
+    <div className="absolute contents left-[65px] top-[123.83px]">
       {themes.map((theme, index) => {
-        // Figmaのデザインに合わせた正確な位置計算
+        // メインエリアのカードと同じ位置に合わせた位置計算
         const positions = [
-          { left: 74.99, top: 123.83 }, // 経済産業省
-          { left: 74.99, top: 163.00 }, // 再生可能エネルギー
-          { left: 238.77, top: 123.83 }, // DX（デジタル変革）
-          { left: 238.77, top: 163.00 }, // 水素社会
-          { left: 402.56, top: 123.83 }, // 産業構造転換
-          { left: 402.56, top: 163.00 }, // 資源外交
-          { left: 566.35, top: 123.83 }, // スタートアップ・中小企業支援
-          { left: 566.35, top: 163.00 }, // グリーン成長戦略
-          { left: 730.13, top: 124.33 }, // 通商戦略
-          { left: 730.13, top: 163.00 }, // デジタル政策
-          { left: 893.92, top: 124.33 }, // 経済安全保障
-          { left: 893.92, top: 163.00 }, // 人材政策
-          { left: 1057.7, top: 124.33 }, // 経済連携
-          { left: 1057.7, top: 163.00 }, // 産学連携
-          { left: 1221.49, top: 124.33 }, // ADX（アジア新産業共創）
-          { left: 1221.49, top: 163.00 }, // 地域政策
+          { left: 65, top: 123.83 }, // 経済産業省
+          { left: 65, top: 163.00 }, // 再生可能エネルギー
+          { left: 228.78, top: 123.83 }, // DX（デジタル変革）
+          { left: 228.78, top: 163.00 }, // 水素社会
+          { left: 392.57, top: 123.83 }, // 産業構造転換
+          { left: 392.57, top: 163.00 }, // 資源外交
+          { left: 556.36, top: 123.83 }, // スタートアップ・中小企業支援
+          { left: 556.36, top: 163.00 }, // グリーン成長戦略
+          { left: 720.14, top: 124.33 }, // 通商戦略
+          { left: 720.14, top: 163.00 }, // デジタル政策
+          { left: 883.93, top: 124.33 }, // 経済安全保障
+          { left: 883.93, top: 163.00 }, // 人材政策
+          { left: 1047.71, top: 124.33 }, // 経済連携
+          { left: 1047.71, top: 163.00 }, // 産学連携
+          { left: 1211.5, top: 124.33 }, // ADX（アジア新産業共創）
+          { left: 1211.5, top: 163.00 }, // 地域政策
         ];
         
-        const position = positions[index] || { left: 74.99, top: 140.83 };
+        const position = positions[index] || { left: 65, top: 140.83 };
         
         return (
           <div
@@ -651,7 +647,19 @@ export default function ExpertArticleListPage() {
   return (
     <div className="bg-[#939393] relative size-full h-screen overflow-hidden">
       {/* 背景グラデーション */}
-      <div className="absolute bg-gradient-to-t from-[#b4d9d6] h-[1024px] left-1/2 to-[#58aadb] top-1/2 translate-x-[-50%] translate-y-[-50%] w-[1440px]" />
+      <div className="absolute bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9] h-[1024px] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] w-[1440px]" />
+      
+      {/* テクスチャ効果 */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <filter id="noiseFilter">
+              <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="4" stitchTiles="stitch"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+          </svg>
+        `)}")`
+      }}></div>
       
       {/* 背景装飾 */}
       <BackgroundEllipses scale={0.8} />
@@ -672,9 +680,6 @@ export default function ExpertArticleListPage() {
         <div className="absolute inset-[13.58%_6.81%_14.98%_81.12%]">
           <div className="absolute bottom-[2.5%] font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold leading-[0] left-0 right-[20%] text-[#ffffff] text-[12.62px] text-left text-nowrap top-[12.5%] tracking-[1.5144px]">
             <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">テックゼロ太郎さん</p>
-          </div>
-          <div className="absolute inset-[12.5%_4.83%_10%_85.67%]">
-            <img alt="ユーザーアイコン" className="block max-w-none size-full" src={imgUserIcon} />
           </div>
         </div>
         
@@ -724,11 +729,8 @@ export default function ExpertArticleListPage() {
       
       {/* サブタイトル */}
       <div className="absolute h-[25px] left-[77.48px] top-[85px] w-[563.542px]">
-        <div className="absolute flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold justify-center leading-[0] left-[27.38px] text-[#ffffff] text-[11.948px] text-left top-[12.5px] tracking-[2.4842px] translate-y-[-50%] w-[536.163px]">
+        <div className="absolute flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold justify-center leading-[0] left-0 text-[#ffffff] text-[11.948px] text-left top-[12.5px] tracking-[2.4842px] translate-y-[-50%] w-[563.542px]">
           <p className="adjustLetterSpacing block leading-[24.67px]">政策テーマを選ぶ</p>
-        </div>
-        <div className="absolute left-0 size-[21.407px] top-[1px]">
-          <img alt="サブタイトルアイコン" className="block max-w-none size-full" src={imgSubTitleIcon} />
         </div>
       </div>
       
@@ -750,8 +752,15 @@ export default function ExpertArticleListPage() {
       <div className="absolute h-[500px] left-[65px] top-[249px] w-[1304px] z-40">
         <div className="absolute bg-[#ffffff] h-[500px] left-0 rounded-[11.759px] top-0 w-[1304px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           {pageState === "loading" && (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-gray-500">読み込み中...</div>
+            <div className="flex flex-col items-center justify-center h-full">
+              <div className="text-gray-500 text-lg mb-4 font-medium">Loading...</div>
+              
+              {/* アニメーションするローディングドット */}
+              <div className="flex space-x-2">
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
             </div>
           )}
           
@@ -764,7 +773,14 @@ export default function ExpertArticleListPage() {
           <div className="p-6 pb-8">
             {pageState === "loading" && (
               <div className="text-center py-8">
-                <p className="text-gray-500">読み込み中...</p>
+                <div className="text-gray-500 text-lg mb-4 font-medium">Loading...</div>
+                
+                {/* アニメーションするローディングドット */}
+                <div className="flex justify-center space-x-2">
+                  <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
             )}
             
@@ -777,8 +793,24 @@ export default function ExpertArticleListPage() {
             {pageState !== "loading" && pageState !== "error" && (
               <>
                 {filteredArticles.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">記事が見つかりませんでした</p>
+                  <div className="text-center py-12">
+                    {/* メインテキスト */}
+                    <h3 className="text-lg font-semibold text-[#58aadb] mb-2">記事がまだありません</h3>
+                    
+                    {/* サブテキスト */}
+                    <p className="text-gray-500 text-sm max-w-md mx-auto leading-relaxed">
+                      選択されたテーマに関連する記事がまだ投稿されていません。<br />
+                      他のテーマを選択するか、しばらくお待ちください。
+                    </p>
+                    
+                    {/* 装飾的な要素 */}
+                    <div className="mt-6 flex justify-center">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-200 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                        <div className="w-2 h-2 bg-gray-200 rounded-full"></div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   filteredArticles.map((article, _index) => (
