@@ -461,11 +461,41 @@ const ArticleOverlay = ({
               <div className="space-y-6">
                 {isLoadingComments ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">コメントを読み込み中...</p>
+                    <div className="text-gray-500 text-sm mb-3">コメントを読み込み中...</div>
+                    
+                    {/* アニメーションするローディングドット */}
+                    <div className="flex justify-center space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
                   </div>
                 ) : sortedComments.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">まだ意見が投稿されていません</p>
+                    {/* アイコン */}
+                    <div className="mb-4">
+                      <svg className="w-12 h-12 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    
+                    {/* メインテキスト */}
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2">まだ意見が投稿されていません</h3>
+                    
+                    {/* サブテキスト */}
+                    <p className="text-gray-500 text-xs max-w-xs mx-auto leading-relaxed">
+                      この記事に関する意見がまだ投稿されていません。<br />
+                      最初の意見を投稿してみませんか？
+                    </p>
+                    
+                    {/* 装飾的な要素 */}
+                    <div className="mt-4 flex justify-center">
+                      <div className="flex space-x-1">
+                        <div className="w-1.5 h-1.5 bg-gray-200 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-300 rounded-full"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-200 rounded-full"></div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   sortedComments.map((comment, _index) => (
@@ -497,6 +527,7 @@ export default function ExpertArticleListPage() {
   });
   const [isOverlayAnimating, setIsOverlayAnimating] = useState(false);
   const [filteredArticles, setFilteredArticles] = useState<ExpertArticle[]>([]);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // 記事のフィルタリング処理
   const filterArticles = useCallback(async (selectedTheme: string, searchQuery: string) => {
@@ -638,11 +669,23 @@ export default function ExpertArticleListPage() {
     router.push(`/expert/articles/${article.id}`);
   };
 
-  // ログアウト処理
-  const handleLogout = () => {
-    // ログアウト処理を実装
-    router.push("/login");
+
+
+  // ドロップダウンメニューを閉じる処理
+  const handleClickOutside = (event: MouseEvent) => {
+    const target = event.target as Element;
+    if (!target.closest('.user-menu-container')) {
+      setShowUserMenu(false);
+    }
   };
+
+  // クリックイベントリスナーの追加
+  useEffect(() => {
+    if (showUserMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showUserMenu]);
 
   return (
     <div className="bg-[#939393] relative size-full h-screen overflow-hidden">
@@ -666,21 +709,102 @@ export default function ExpertArticleListPage() {
       
       {/* ヘッダー */}
       <div className="absolute h-[29.446px] left-[68px] top-6 w-[1306.73px]">
-        <button
-          onClick={handleLogout}
-          className="absolute bg-[#ffffff] box-border content-stretch flex flex-row inset-[3.4%_-0.02%_-1.03%_94.36%] items-center justify-center px-[7.097px] py-[9.463px] rounded-[15.971px] hover:bg-gray-50 transition-colors"
-        >
-          <div className="box-border content-stretch flex flex-row gap-[5.914px] items-center justify-center px-[9.463px] py-0 relative shrink-0">
-            <div className="bg-clip-text bg-gradient-to-b font-['Noto_Sans_JP:Bold',_sans-serif] font-bold from-[#64b0db] leading-[0] relative shrink-0 text-[9.463px] text-left text-nowrap to-[#a8d3d7] tracking-[0.2957px]">
-              <p className="adjustLetterSpacing block leading-none whitespace-pre">ログアウト</p>
+        <div className="absolute inset-[13.58%_6.81%_14.98%_81.12%] right-0">
+          <div className="absolute right-0 top-0 flex items-center gap-3">
+            <div className="font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold text-[#ffffff] text-[12.62px] text-right text-nowrap tracking-[1.5144px]">
+              <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">テックゼロ太郎さん</p>
             </div>
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </button>
           </div>
-        </button>
-        
-        <div className="absolute inset-[13.58%_6.81%_14.98%_81.12%]">
-          <div className="absolute bottom-[2.5%] font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold leading-[0] left-0 right-[20%] text-[#ffffff] text-[12.62px] text-left text-nowrap top-[12.5%] tracking-[1.5144px]">
-            <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">テックゼロ太郎さん</p>
-          </div>
+          
+          {/* ユーザーメニュードロップダウン */}
+          {showUserMenu && (
+            <div className="absolute right-0 top-12 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[400px] z-[9999]">
+              {/* 矢印 */}
+              <div className="absolute -top-2 right-4 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
+              
+              {/* メニュー項目 */}
+              <div className="py-2">
+                <div className="px-4 py-2">
+                  <div className="flex items-center gap-3 mb-2">
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.5 3.75a6 6 0 0 1 6 6v3.75l-1.5 1.5H6l-1.5-1.5V9.75a6 6 0 0 1 6-6z" />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-700">新着通知</span>
+                  </div>
+                  
+                  {/* 通知リスト */}
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    <div className="p-2 bg-gray-50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-[#58aadb] rounded-full mt-1.5 flex-shrink-0"></div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-gray-900 mb-1">新しい政策案が投稿されました</p>
+                          <p className="text-xs text-gray-600">「スタートアップ向け税制優遇措置の拡充」について新しい意見が投稿されました</p>
+                          <p className="text-xs text-gray-500 mt-1">2時間前</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-2 bg-gray-50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-[#58aadb] rounded-full mt-1.5 flex-shrink-0"></div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-gray-900 mb-1">コメントが追加されました</p>
+                          <p className="text-xs text-gray-600">「地方スタートアップ育成ファンドの創設」に新しいコメントが追加されました</p>
+                          <p className="text-xs text-gray-500 mt-1">5時間前</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-2 bg-gray-50 rounded text-xs">
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-gray-300 rounded-full mt-1.5 flex-shrink-0"></div>
+                        <div className="flex-1">
+                          <p className="text-xs font-medium text-gray-900 mb-1">新しい政策テーマが追加されました</p>
+                          <p className="text-xs text-gray-600">「DX-デジタル変革」テーマに新しい記事が追加されました</p>
+                          <p className="text-xs text-gray-500 mt-1">1日前</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-t border-gray-100 my-1"></div>
+                <button
+                  onClick={() => {
+                    // TODO: プロフィール画面への遷移
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                >
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                  プロフィール
+                </button>
+                <div className="border-t border-gray-100 my-1"></div>
+                <button
+                  onClick={() => {
+                    router.push("/login");
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3"
+                >
+                  <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  ログアウト
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* 検索バー */}

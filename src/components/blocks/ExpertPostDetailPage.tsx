@@ -447,6 +447,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   const [isLoading, setIsLoading] = useState(true);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSuccessNotification, setShowSuccessNotification] = useState(false);
 
   // サンプル添付資料
   const attachedDocuments = [
@@ -596,7 +597,11 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
             isLiked: false
           };
           setComments(prev => [newComment, ...prev]);
-          alert("意見の投稿が完了しました");
+          setShowSuccessNotification(true);
+          // 3秒後に自動で閉じる
+          setTimeout(() => {
+            setShowSuccessNotification(false);
+          }, 3000);
         } catch (error) {
           console.error("ユーザー情報の取得に失敗しました:", error);
           // エラー時はフォールバック情報を使用
@@ -628,7 +633,11 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
             isLiked: false
           };
           setComments(prev => [newComment, ...prev]);
-          alert("意見の投稿が完了しました");
+          setShowSuccessNotification(true);
+          // 3秒後に自動で閉じる
+          setTimeout(() => {
+            setShowSuccessNotification(false);
+          }, 3000);
         }
       }
     } catch (error) {
@@ -958,6 +967,31 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
           </div>
         </div>
       </div>
+      
+      {/* 成功通知 */}
+      {showSuccessNotification && (
+        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right duration-300">
+          <div className="bg-[#58aadb] text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]">
+            <div className="flex-shrink-0">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-sm">投稿完了</h4>
+              <p className="text-xs opacity-90">意見の投稿が正常に完了しました</p>
+            </div>
+            <button
+              onClick={() => setShowSuccessNotification(false)}
+              className="flex-shrink-0 text-white/80 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
