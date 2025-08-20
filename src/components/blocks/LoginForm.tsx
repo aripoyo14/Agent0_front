@@ -4,6 +4,103 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, getUserFromToken } from "@/lib/auth";
 
+// パスワードリセットオーバーレイコンポーネント
+const PasswordResetOverlay = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsSubmitting(true);
+    // ハリボテ実装 - 実際のAPI呼び出しは行わない
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      // 3秒後にオーバーレイを閉じる
+      setTimeout(() => {
+        onClose();
+        setIsSubmitted(false);
+        setEmail("");
+      }, 3000);
+    }, 1500);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative">
+        {/* 閉じるボタン */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="閉じる"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {!isSubmitted ? (
+          <>
+            {/* ヘッダー */}
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">パスワードリセット</h2>
+              <p className="text-sm text-gray-600">
+                登録済みのメールアドレスを入力してください。<br />
+                パスワードリセット用のリンクをお送りします。
+              </p>
+            </div>
+
+            {/* フォーム */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  メールアドレス
+                </label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="example@email.com"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4AA0E9] focus:border-transparent"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSubmitting || !email}
+                className="w-full bg-[#4AA0E9] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3a8fd9] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? "送信中..." : "リセットメールを送信"}
+              </button>
+            </form>
+          </>
+        ) : (
+          /* 送信完了メッセージ */
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">メールを送信しました</h3>
+            <p className="text-sm text-gray-600">
+              {email} にパスワードリセット用のリンクを送信しました。<br />
+              メールをご確認ください。
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 type SubmitState = "idle" | "submitting" | "error" | "success";
 
 export default function LoginForm() {
@@ -12,6 +109,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [state, setState] = useState<SubmitState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -53,9 +151,9 @@ export default function LoginForm() {
   return (
     <div className="w-full max-w-xs">
       {/* タイトル */}
-              <h1 className="text-center text-xl font-bold text-white mb-12 tracking-[0.25em]">
-        人脈検索プラットフォーム
-             </h1>
+      <h1 className="text-center text-xl font-bold text-white mb-12 tracking-[0.25em]">
+        METI Picks
+      </h1>
 
       <form
         onSubmit={handleSubmit}
@@ -106,7 +204,7 @@ export default function LoginForm() {
           <div className="mt-2 text-center">
             <button
               type="button"
-              onClick={() => alert("パスワードリセット機能（準備中）")}
+              onClick={() => setShowPasswordReset(true)}
               className="text-[10px] text-white/80 hover:text-white underline decoration-white/50 hover:decoration-white transition-colors"
             >
               パスワードをお忘れですか？
@@ -133,6 +231,12 @@ export default function LoginForm() {
           </button>
         </div>
       </form>
+
+      {/* パスワードリセットオーバーレイ */}
+      <PasswordResetOverlay 
+        isOpen={showPasswordReset} 
+        onClose={() => setShowPasswordReset(false)} 
+      />
     </div>
   );
 }
