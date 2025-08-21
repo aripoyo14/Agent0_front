@@ -7,6 +7,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileNetworkRoutes } from "@/components/ui/profile-network-routes";
 import { ExpertInsightsOut, MeetingOverviewOut, PolicyProposalCommentOut, NetworkMapResponseDTO, stanceToLabel } from "@/types";
 import { apiFetch } from "@/lib/apiClient";
+import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 
 // Finazch Dashboard inspired UI components
 
@@ -82,7 +83,22 @@ export default function ProfileDetailPage() {
   return (
     <div className="h-screen w-full relative flex flex-col overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#b4d9d6] to-[#58aadb]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9]" />
+      
+      {/* テクスチャ効果 */}
+      <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
+        backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(`
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <filter id="noiseFilter">
+              <feTurbulence type="fractalNoise" baseFrequency="1.5" numOctaves="4" stitchTiles="stitch"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#noiseFilter)"/>
+          </svg>
+        `)}")`
+      }}></div>
+      
+      {/* 背景装飾 */}
+      <BackgroundEllipses scale={0.8} />
       
       {/* Header */}
       <div className="relative z-10 px-6 lg:px-8 py-4">
@@ -95,9 +111,12 @@ export default function ProfileDetailPage() {
             <span className="font-medium text-xs">検索に戻る</span>
           </button>
           
-          <h1 className="font-semibold text-white text-sm tracking-wide">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="font-semibold text-white text-sm tracking-wide hover:text-white/80 transition-colors cursor-pointer"
+          >
             METI Picks
-          </h1>
+          </button>
         </div>
 
         {/* Profile Header Card */}
