@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // 追加
 
 export default function TopPageFitted() {
   const router = useRouter();
@@ -73,7 +74,7 @@ export default function TopPageFitted() {
                 <div className="absolute inset-0 flex items-center justify-center z-10 group-hover:scale-105 transition-transform duration-150">
                   <div className="flex-none rotate-[16deg]">
                     <div className="relative w-[420px] h-[420px]">
-                      <img src="/network-search-bg.svg" alt="人脈を探す背景" className="w-full h-full" />
+                      <Image src="/network-search-bg.svg" alt="人脈を探す背景" className="w-full h-full" width={420} height={420} />
                     </div>
                   </div>
                 </div>
@@ -110,7 +111,7 @@ export default function TopPageFitted() {
                 {/* 背景装飾 - シンプルな星形SVG */}
                 <div className="absolute inset-0 flex items-center justify-center z-10 group-hover:scale-105 transition-transform duration-150">
                                     <div className="relative w-[380px] h-[380px]">
-                    <img src="/policy-submit-bg.svg" alt="政策を投稿する背景" className="w-full h-full" />
+                    <Image src="/policy-submit-bg.svg" alt="政策を投稿する背景" className="w-full h-full" width={380} height={380} />
                   </div>
                 </div>
                 
@@ -146,7 +147,7 @@ export default function TopPageFitted() {
                 {/* 背景装飾 - シンプルな円形SVG */}
                 <div className="absolute inset-0 flex items-center justify-center z-10 group-hover:scale-105 transition-transform duration-150">
                                     <div className="relative w-[380px] h-[380px]">
-                    <img src="/comments-view-bg.svg" alt="意見を確認する背景" className="w-full h-full" />
+                    <Image src="/comments-view-bg.svg" alt="意見を確認する背景" className="w-full h-full" width={380} height={380} />
                   </div>
                 </div>
                 
