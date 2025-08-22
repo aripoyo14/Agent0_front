@@ -1,6 +1,15 @@
 import { getToken } from "./storage";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+// デプロイ先での動作確認のため、一時的に直接設定
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' 
+    ? "https://aps-agent0-01-anbcenbnembacacr.italynorth-01.azurewebsites.net"
+    : "http://localhost:8000");
+
+// デバッグ用ログ
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
+console.log('現在のホスト名:', typeof window !== 'undefined' ? window.location.hostname : 'server-side');
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
@@ -33,13 +42,18 @@ export async function apiFetch<T>(
     }
   }
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const fullUrl = `${API_BASE_URL}${path}`;
+  console.log('apiFetch 呼び出し:', { method, url: fullUrl, auth });
+
+  const res = await fetch(fullUrl, {
     method,
     headers: finalHeaders,
     body: body instanceof FormData ? body : (body != null ? JSON.stringify(body) : undefined),
     credentials: "include",
     signal,
   });
+
+  console.log('apiFetch レスポンス:', { status: res.status, url: fullUrl });
 
   const isJson = res.headers.get("content-type")?.includes("application/json");
   const data = isJson ? await res.json().catch(() => null) : null;
