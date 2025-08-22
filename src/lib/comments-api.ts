@@ -22,8 +22,6 @@ export async function fetchCommentsByPolicyId(
 ): Promise<Comment[]> {
   try {
     const apiUrl = `/api/policy-proposals/${policyId}/comments?limit=${limit}&offset=${offset}`;
-    console.log('コメント取得API URL:', apiUrl);
-    console.log('環境変数 NEXT_PUBLIC_API_BASE_URL:', process.env.NEXT_PUBLIC_API_BASE_URL);
     
     // 認証トークンを取得
     const { accessToken, tokenType } = getToken();
@@ -34,9 +32,6 @@ export async function fetchCommentsByPolicyId(
     // 認証ヘッダーを追加
     if (accessToken) {
       headers['Authorization'] = `${tokenType || "Bearer"} ${accessToken}`;
-      console.log('認証ヘッダーを追加しました');
-    } else {
-      console.log('認証トークンが見つかりません');
     }
     
     const response = await fetch(apiUrl, {
@@ -45,17 +40,13 @@ export async function fetchCommentsByPolicyId(
       credentials: 'include', // クッキーも含める
     });
 
-    console.log('API レスポンスステータス:', response.status);
-    console.log('API レスポンスヘッダー:', Object.fromEntries(response.headers.entries()));
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API エラーレスポンス:', errorText);
+      console.error('コメント取得エラー:', response.status, errorText);
       throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
     }
 
     const comments = await response.json();
-    console.log('取得したコメント数:', comments.length);
     return comments;
   } catch (error) {
     console.error('コメント取得エラー:', error);
