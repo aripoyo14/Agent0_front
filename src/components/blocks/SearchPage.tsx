@@ -17,6 +17,7 @@ export function SearchPage() {
     positions: []
   });
   const [networkData, setNetworkData] = useState<NetworkMapResponseDTO | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // 環境変数はベースURL（例: http://localhost:8000）を想定。未設定時はローカルを既定
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
@@ -38,7 +39,17 @@ export function SearchPage() {
     }));
   };
 
+  const handleClearAll = () => {
+    setFilters(prev => ({
+      ...prev,
+      policyThemes: [],
+      searchQuery: ""
+    }));
+    setNetworkData(null); // 人脈マップもリセット
+  };
+
   const handleSearch = async () => {
+    setIsLoading(true);
     // バックエンドへ政策テーマ（文字ID）と自由記述をPOST
     const selectedTitles = policyThemes
       .filter(t => filters.policyThemes.includes(t.id))
@@ -67,6 +78,8 @@ export function SearchPage() {
       setNetworkData(data as NetworkMapResponseDTO);
     } catch (err) {
       console.warn('network_map/match request failed:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,25 +104,26 @@ export function SearchPage() {
       <Header />
 
       {/* メインコンテンツエリア */}
-      <div className="relative z-10 flex-1 px-6 lg:px-12 pb-6 pt-32">
+      <div className="relative z-10 flex-1 px-6 lg:px-12 pb-6 pt-32 min-h-0">
 
 
         {/* メインコンテンツエリア */}
-        <div className="flex gap-4 h-full">
+        <div className="flex gap-4 h-full min-h-0">
           {/* 絞り込みエリア - 1:3の比率で1の部分 */}
-          <div className="w-1/4 relative">
+          <div className="w-1/4 relative flex-shrink-0">
             {/* タイトルをカード外に配置 */}
             <h3 className="absolute -top-6 left-0 font-['Noto_Sans_JP'] font-medium text-white text-xs tracking-[0.5px] drop-shadow-md">
               絞り込む
             </h3>
             
-            <div className="bg-white rounded-lg p-3 h-full overflow-y-auto flex flex-col">
+            <div className="bg-white rounded-lg p-3 h-full max-h-full overflow-y-auto flex flex-col">
               {/* 政策テーマセレクター */}
-              <div className="mb-5">
+              <div className="mb-5 flex-shrink-0">
                 <PolicyThemeSelector
                   themes={policyThemes}
                   selectedThemes={filters.policyThemes}
                   onThemeToggle={handlePolicyThemeToggle}
+                  onClearAll={handleClearAll}
                 />
               </div>
               {/* フリーワード検索（下部に検索ボタンを配置） */}
@@ -124,31 +138,49 @@ export function SearchPage() {
                     onChange={(e) => handleFilterChange("searchQuery", e.target.value)}
                     onKeyDown={(e) => (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) && handleSearch()}
                     placeholder="キーワードを入力してください"
-                    className="w-full h-32 pl-10 pr-3 py-3 bg-gray-100 rounded border border-gray-200 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58aadb] focus:border-transparent transition-colors resize-none"
+                    className="w-full h-24 pl-10 pr-3 py-3 bg-gray-100 rounded border border-gray-200 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#58aadb] focus:border-transparent transition-colors resize-none"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={handleSearch}
-                  className="mt-3 inline-flex items-center justify-center px-4 py-2 bg-[#58aadb] text-white rounded text-sm font-medium hover:opacity-90 transition-opacity"
+                  disabled={isLoading}
+                  className="mt-3 inline-flex items-center justify-center px-4 py-2 bg-[#58aadb] text-white rounded text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  検索
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      検索中...
+                    </>
+                  ) : (
+                    '検索'
+                  )}
                 </button>
               </div>
             </div>
           </div>
 
           {/* 人脈マップエリア - 1:3の比率で3の部分 */}
-          <div className="w-3/4 relative">
+          <div className="w-3/4 relative flex-1 min-h-0">
             {/* タイトルをカード外に配置 */}
             <h3 className="absolute -top-6 left-0 font-['Noto_Sans_JP'] font-medium text-white text-xs tracking-[0.5px] drop-shadow-md">
               人脈マップ
             </h3>
             
-            <div className="bg-white rounded-lg p-2 h-full">
+            <div className="bg-black/20 rounded-lg p-2 h-full min-h-0">
               {/* 人脈マップの表示エリア */}
-              <div className="w-full h-full">
-                <NetworkMap filters={filters} backendData={networkData} />
+              <div className="w-full h-full min-h-0">
+                {isLoading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#58aadb] mx-auto mb-4"></div>
+                      <p className="text-white text-lg mb-2 font-bold">人脈マップを検索中...</p>
+                      <p className="text-white text-sm">しばらくお待ちください</p>
+                    </div>
+                  </div>
+                ) : (
+                  <NetworkMap filters={filters} backendData={networkData} />
+                )}
               </div>
             </div>
           </div>
