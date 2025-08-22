@@ -43,8 +43,16 @@ export default function TopPageFitted() {
                 </div>
               </div>
             </div>
-            <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors self-start lg:self-auto">
-              テックゼロ太郎さん
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push('/meeting-upload')}
+                className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors"
+              >
+                面談録のアップロード
+              </button>
+              <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors">
+                テックゼロ太郎さん
+              </div>
             </div>
           </div>
         </div>

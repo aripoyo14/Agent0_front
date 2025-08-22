@@ -1,0 +1,14 @@
+{
+  "components/ui/network-map.tsx -> react-force-graph-2d": {
+    "id": 9748,
+    "files": [
+      "static/chunks/748.1b0c0e78b717f48a.js"
+    ]
+  },
+  "components/ui/profile-network-routes.tsx -> react-force-graph-2d": {
+    "id": 9748,
+    "files": [
+      "static/chunks/748.1b0c0e78b717f48a.js"
+    ]
+  }
+}

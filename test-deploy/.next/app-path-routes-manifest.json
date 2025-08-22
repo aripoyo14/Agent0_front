@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/comments/page": "/comments",
+  "/expert/articles/[id]/page": "/expert/articles/[id]",
+  "/mfa-test/page": "/mfa-test",
+  "/policy/page": "/policy",
+  "/profile/[id]/page": "/profile/[id]",
+  "/search/page": "/search",
+  "/dashboard/page": "/dashboard",
+  "/expert/articles/page": "/expert/articles",
+  "/login/page": "/login",
+  "/user/registration/page": "/user/registration",
+  "/expert/registration/page": "/expert/registration",
+  "/page": "/"
+}
