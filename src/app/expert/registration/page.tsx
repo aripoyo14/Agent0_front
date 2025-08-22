@@ -1,9 +1,29 @@
+import { Suspense } from "react";
 import ExpertRegistrationForm from "@/components/blocks/ExpertRegistrationForm";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 
 export const metadata = {
   title: "Expert-Registration",
 };
+
+// ローディング用のフォールバックコンポーネント
+function RegistrationFormFallback() {
+  return (
+    <div className="w-full max-w-md">
+      <div className="text-center mb-12">
+        <h1 className="text-2xl font-bold text-white tracking-[0.25em] mb-2">
+          METI Picks
+        </h1>
+        <h2 className="text-base font-bold text-white/90 tracking-[0.15em]">
+          エントリーフォーム
+        </h2>
+      </div>
+      <div className="bg-white/90 backdrop-blur-sm rounded-lg p-6 text-center">
+        <p className="text-gray-600">読み込み中...</p>
+      </div>
+    </div>
+  );
+}
 
 export default function Page() {
   return (
@@ -20,7 +40,9 @@ export default function Page() {
       }}></div>
       <BackgroundEllipses scale={0.8} />
       <div className="relative flex min-h-screen items-center justify-center px-4">
-        <ExpertRegistrationForm />
+        <Suspense fallback={<RegistrationFormFallback />}>
+          <ExpertRegistrationForm />
+        </Suspense>
       </div>
     </main>
   );
