@@ -13,6 +13,7 @@ interface PolicyThemeSelectorProps {
   themes: PolicyTheme[];
   selectedThemes: string[];
   onThemeToggle: (themeId: string) => void;
+  onClearAll?: () => void; // 全てクリア用のコールバック
   className?: string;
 }
 
@@ -20,11 +21,22 @@ export function PolicyThemeSelector({
   themes,
   selectedThemes,
   onThemeToggle,
+  onClearAll,
   className,
 }: PolicyThemeSelectorProps) {
   return (
-    <div className={cn("space-y-2", className)}>
-      <h4 className="text-sm font-semibold text-gray-700 mb-3">政策テーマを選択</h4>
+    <div className={cn("space-y-2 lg:max-h-none lg:overflow-visible max-h-48 overflow-y-auto", className)}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold text-gray-700">政策テーマを選択</h4>
+        {selectedThemes.length > 0 && (
+          <button
+            onClick={onClearAll || (() => selectedThemes.forEach(id => onThemeToggle(id)))}
+            className="text-xs text-gray-600 hover:text-gray-800 transition-colors font-medium"
+          >
+            すべてクリア
+          </button>
+        )}
+      </div>
       
       <div className="flex flex-wrap gap-2">
         {themes.map((theme) => {
@@ -45,16 +57,6 @@ export function PolicyThemeSelector({
           );
         })}
       </div>
-      
-      {/* クリアボタン */}
-      {selectedThemes.length > 0 && (
-        <button
-          onClick={() => selectedThemes.forEach(id => onThemeToggle(id))}
-          className="w-full py-2 text-xs text-gray-600 hover:text-gray-800 transition-colors mt-3 font-medium"
-        >
-          すべてクリア
-        </button>
-      )}
     </div>
   );
 }

@@ -31,9 +31,13 @@ export function PolicySubmissionPage() {
   // const COLOR_PRIMARY = "#007aff"; // Commented out to fix unused variable error
   // const IMG_OCTICON_FILE_16 = "/file.svg"; // Direct path instead of import
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleThemeToggle = (_themeId: string) => {
-    // 機能は削除済み
+  const handleThemeToggle = (themeId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedThemes: prev.selectedThemes.includes(themeId)
+        ? prev.selectedThemes.filter(id => id !== themeId)
+        : [...prev.selectedThemes, themeId]
+    }));
   };
 
   const handleInputChange = (field: keyof PolicyFormData, value: string) => {
@@ -210,73 +214,49 @@ export function PolicySubmissionPage() {
         <div className="mb-16 relative mt-8">
           <h3 className="absolute -top-6 left-0 font-['Noto_Sans_JP'] font-bold text-white text-xs tracking-[2px]">政策テーマを選択する</h3>
           <div className="grid grid-cols-8 gap-x-3 gap-y-2 w-full">
-            {/* 1行目 */}
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              経済産業省
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              DX-デジタル変革
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              産業構造転換
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              <span className="text-[10px] leading-[1.2] px-1 whitespace-pre-line">スタートアップ・{'\n'}中小企業支援</span>
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              通商戦略
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              経済連携
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              <span className="text-[10px] leading-[1.2] px-1 whitespace-pre-line">ADX-アジア新産業共創</span>
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              経済安全保障
-            </button>
-            
-            {/* 2行目 */}
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              再生可能エネルギー
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              水素社会
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              資源外交
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              グリーン成長戦略
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              デジタル政策
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              人材政策
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              産学連携
-            </button>
-            <button className="relative px-3 py-1 bg-transparent rounded-[40px] text-xs font-bold text-white hover:bg-white/10 transition-all hover:shadow-md h-7 flex items-center justify-center">
-              <div className="absolute border-solid inset-0 pointer-events-none rounded-[40px] border-white/60 border-[1px]" />
-              地域政策
-            </button>
+            {[
+              { id: "economy-industry", title: "経済産業" },
+              { id: "digital-transformation", title: "DX-デジタル変革" },
+              { id: "manufacturing-it-distribution-services", title: "産業構造転換" },
+              { id: "startup-support", title: "スタートアップ・中小企業支援" },
+              { id: "external-economy", title: "通商戦略" },
+              { id: "sme-regional-economy", title: "経済連携" },
+              { id: "regional-co-creation", title: "ADX-アジア新産業共創" },
+              { id: "economic-security", title: "経済安全保障" },
+              { id: "energy-environment", title: "再生可能エネルギー" },
+              { id: "green-growth", title: "水素社会" },
+              { id: "safety-security", title: "資源外交" },
+              { id: "diversity-management", title: "グリーン成長戦略" },
+              { id: "data-ai-utilization", title: "デジタル政策" },
+              { id: "femtech", title: "人材政策" },
+              { id: "cashless", title: "産学連携" },
+              { id: "other", title: "地域政策" }
+            ].map((theme) => {
+              const isSelected = formData.selectedThemes.includes(theme.id);
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => handleThemeToggle(theme.id)}
+                  className={`relative px-3 py-1 rounded-[40px] text-xs font-bold transition-all hover:shadow-md h-7 flex items-center justify-center ${
+                    isSelected 
+                      ? 'bg-white text-[#2d8cd9] shadow-md' 
+                      : 'bg-transparent text-white hover:bg-white/10'
+                  }`}
+                >
+                  <div className={`absolute border-solid inset-0 pointer-events-none rounded-[40px] border-[1px] ${
+                    isSelected ? 'border-white' : 'border-white/60'
+                  }`} />
+                  <span className={`text-[10px] leading-[1.2] px-1 ${
+                    theme.title.includes('・') ? 'whitespace-pre-line' : ''
+                  }`}>
+                    {theme.title.includes('・') 
+                      ? theme.title.replace('・', '\n・')
+                      : theme.title
+                    }
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 

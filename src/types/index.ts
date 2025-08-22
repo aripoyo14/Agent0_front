@@ -90,6 +90,8 @@ export interface NetworkNode {
   connections: string[]
   x?: number
   y?: number
+  fx?: number
+  fy?: number
   relevanceScore?: number // 0-1の関連度スコア
 }
 
