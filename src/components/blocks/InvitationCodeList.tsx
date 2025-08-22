@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { isAuthenticated } from "@/lib/auth";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation"; // 未使用なので削除
 
 export default function InvitationCodeList() {
-  const router = useRouter();
+  // const router = useRouter(); // 未使用なので削除
   const [codes, setCodes] = useState<InvitationCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function InvitationCodeList() {
       setCodes(prev => prev.map(c => 
         c.code === code ? { ...c, is_active: false } : c
       ));
-    } catch (error) {
+    } catch { // エラー変数を完全に削除
       alert("招待コードの無効化に失敗しました");
     }
   };
