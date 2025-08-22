@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, UsersInfoResponse } from "@/types";
 import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
-import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments, getUserInfo, getUsersInfo } from "@/lib/expert-api";
+import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
 import { getUserFromToken } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
 
