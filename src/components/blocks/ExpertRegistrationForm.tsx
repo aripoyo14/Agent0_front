@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { registerExpert, type ExpertRegistrationFormData } from "@/lib/expert_registration";
 import { completeMFASetup, generateQRCode, type MFAResponse } from "@/lib/mfa";
 import { BusinessCardUpload } from "@/components/ui/business-card-upload";
@@ -13,6 +13,7 @@ type RegistrationStep = "input" | "mfa-setup" | "completion";
 
 export default function ExpertRegistrationForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [currentStep, setCurrentStep] = useState<RegistrationStep>("input");
   const [formData, setFormData] = useState<ExpertRegistrationFormData>({
     last_name: "",
@@ -29,6 +30,9 @@ export default function ExpertRegistrationForm() {
   const [error, setError] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState<string>(""); // ← mfaCodeをtotpCodeに統一
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // URLパラメータから招待コードを取得
+  const invitationCode = searchParams.get("code");
 
   // MFAデータが設定されたらQRコードを生成
   const generateQRCodeForUser = useCallback(async () => {
@@ -97,8 +101,10 @@ export default function ExpertRegistrationForm() {
       };
 
       console.log("送信するフォームデータ:", apiData); // この行を追加
+      console.log("招待コード:", invitationCode);
 
-      const result = await registerExpert(apiData);
+      // 招待コード付きで登録APIを呼び出し
+      const result = await registerExpert(apiData, invitationCode);
       console.log("登録成功:", result);
       setMfaData(result);
       setCurrentStep("mfa-setup");
@@ -144,6 +150,11 @@ export default function ExpertRegistrationForm() {
           <h2 className="text-base font-bold text-white/90 tracking-[0.15em]">
             エントリーフォーム
           </h2>
+          {invitationCode && (
+            <p className="text-sm text-white/80 mt-2">
+              招待コード: {invitationCode}
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
