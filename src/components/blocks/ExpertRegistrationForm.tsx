@@ -17,6 +17,7 @@ export default function ExpertRegistrationForm() {
   const [formData, setFormData] = useState<ExpertRegistrationFormData>({
     last_name: "",
     first_name: "",
+    email: "",
     self_pr: "",
     password: "",
     password_confirm: "",
@@ -188,6 +189,26 @@ export default function ExpertRegistrationForm() {
                 className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
               />
             </div>
+          </div>
+
+          {/* メールアドレス */}
+          <div>
+            <label htmlFor="email" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
+              メールアドレス
+              <span className="inline-block rounded bg-[#2d8cd9] px-1 py-0.5 text-[10px] font-bold text-white">
+                必須
+              </span>
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="メールアドレスを入力してください"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+            />
           </div>
 
           {/* 自己PR */}
