@@ -148,6 +148,7 @@ const CommentCard = ({ comment }: { comment: ExpertComment }) => {
 const OpinionForm = ({ onSubmit, attachedFile }: { onSubmit: (content: string) => void; attachedFile: File | null }) => {
   const [content, setContent] = useState("");
   const [showConfirmOverlay, setShowConfirmOverlay] = useState(false);
+  const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,14 +161,41 @@ const OpinionForm = ({ onSubmit, attachedFile }: { onSubmit: (content: string) =
     onSubmit(content);
     setContent("");
     setShowConfirmOverlay(false);
+    // 投稿完了のポップアップを表示
+    setShowSubmissionSuccess(true);
   };
 
   const handleCancelSubmit = () => {
     setShowConfirmOverlay(false);
   };
 
+  const handleSubmissionComplete = () => {
+    setShowSubmissionSuccess(false);
+  };
+
   return (
     <div>
+      {/* 投稿完了オーバーレイ */}
+      {showSubmissionSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 w-[600px] mx-4 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#7bc8e8] to-[#2d8cd9] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">投稿完了しました</h3>
+            <p className="text-gray-600 mb-8 text-sm leading-relaxed">意見が正常に投稿されました</p>
+            <button
+              onClick={handleSubmissionComplete}
+              className="w-32 px-6 py-3 bg-gradient-to-r from-[#7bc8e8] to-[#2d8cd9] text-white rounded-full font-semibold hover:from-[#6bb8d8] hover:to-[#1d7cc9] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              完了
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 確認オーバーレイ */}
       {showConfirmOverlay && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
@@ -563,7 +591,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
           // 現在のユーザー情報を取得
           const currentUserInfo = await getUserInfo(userInfo.userId);
           
-          // 新しいコメントを追加
+          // 新しいコメントを追加（最新のコメントを一番上に表示）
           const newComment: ExpertComment = {
             id: response.comment_id,
             author: {
@@ -596,12 +624,78 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
             viewCount: 0,
             isLiked: false
           };
+          
+          // 新しいコメントを一番上に追加
           setComments(prev => [newComment, ...prev]);
+          
+          // 成功通知を表示
           setShowSuccessNotification(true);
+          
           // 3秒後に自動で閉じる
           setTimeout(() => {
             setShowSuccessNotification(false);
           }, 3000);
+          
+          // コメント一覧を最新の状態に更新
+          try {
+            const updatedComments = await getPolicyProposalComments(articleId);
+            const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
+            
+            let usersInfo: UsersInfoResponse = {};
+            if (userIds.length > 0) {
+              try {
+                usersInfo = await getUsersInfo(userIds);
+              } catch (error) {
+                console.error("ユーザー情報の一括取得に失敗しました:", error);
+              }
+            }
+            
+            const convertedComments = updatedComments.map(comment => {
+              const userInfo = usersInfo[comment.author_id];
+              return {
+                id: comment.id,
+                author: {
+                  id: comment.author_id,
+                  name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+                  role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+                  company: userInfo?.company || "会社名",
+                  badges: userInfo?.badges?.map((badge: {
+                    type: string;
+                    label: string;
+                    color: string;
+                    description: string;
+                  }) => ({
+                    type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+                    label: badge.label,
+                    color: badge.color,
+                    description: badge.description
+                  })) || [
+                    {
+                      type: "expert" as const,
+                      label: "認定エキスパート",
+                      color: "#4AA0E9",
+                      description: "認定されたエキスパート"
+                    }
+                  ],
+                  expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+                },
+                content: comment.comment_text,
+                createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                }),
+                likeCount: 0,
+                viewCount: 0,
+                isLiked: false
+              } as ExpertComment;
+            });
+            
+            setComments(convertedComments);
+          } catch (error) {
+            console.error("コメントの再取得に失敗しました:", error);
+          }
+          
         } catch (error) {
           console.error("ユーザー情報の取得に失敗しました:", error);
           // エラー時はフォールバック情報を使用
@@ -632,12 +726,77 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
             viewCount: 0,
             isLiked: false
           };
+          
+          // 新しいコメントを一番上に追加
           setComments(prev => [newComment, ...prev]);
+          
+          // 成功通知を表示
           setShowSuccessNotification(true);
+          
           // 3秒後に自動で閉じる
           setTimeout(() => {
             setShowSuccessNotification(false);
           }, 3000);
+          
+          // コメント一覧を最新の状態に更新
+          try {
+            const updatedComments = await getPolicyProposalComments(articleId);
+            const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
+            
+            let usersInfo: UsersInfoResponse = {};
+            if (userIds.length > 0) {
+              try {
+                usersInfo = await getUsersInfo(userIds);
+              } catch (error) {
+                console.error("ユーザー情報の一括取得に失敗しました:", error);
+              }
+            }
+            
+            const convertedComments = updatedComments.map(comment => {
+              const userInfo = usersInfo[comment.author_id];
+              return {
+                id: comment.id,
+                author: {
+                  id: comment.author_id,
+                  name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+                  role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+                  company: userInfo?.company || "会社名",
+                  badges: userInfo?.badges?.map((badge: {
+                    type: string;
+                    label: string;
+                    color: string;
+                    description: string;
+                  }) => ({
+                    type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+                    label: badge.label,
+                    color: badge.color,
+                    description: badge.description
+                  })) || [
+                    {
+                      type: "expert" as const,
+                      label: "認定エキスパート",
+                      color: "#4AA0E9",
+                      description: "認定されたエキスパート"
+                    }
+                  ],
+                  expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+                },
+                content: comment.comment_text,
+                createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                }),
+                likeCount: 0,
+                viewCount: 0,
+                isLiked: false
+              } as ExpertComment;
+            });
+            
+            setComments(convertedComments);
+          } catch (error) {
+            console.error("コメントの再取得に失敗しました:", error);
+          }
         }
       }
     } catch (error) {

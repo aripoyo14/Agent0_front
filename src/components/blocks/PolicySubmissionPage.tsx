@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-// import { useRouter } from "next/navigation"; // Commented out to fix unused variable error
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header";
 // import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 
@@ -15,7 +15,7 @@ interface PolicyFormData {
 
 
 export function PolicySubmissionPage() {
-  // const router = useRouter(); // Commented out to fix unused variable error
+  const router = useRouter();
   const [formData, setFormData] = useState<PolicyFormData>({
     selectedThemes: [],
     policyTitle: "",
@@ -24,6 +24,7 @@ export function PolicySubmissionPage() {
   });
   const [showSuccessOverlay, setShowSuccessOverlay] = useState(false);
   const [showErrorOverlay, setShowErrorOverlay] = useState(false);
+  const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   // Figma variables and assets
@@ -44,7 +45,13 @@ export function PolicySubmissionPage() {
 
   const handleSubmit = () => {
     console.log("政策案投稿:", formData);
-    // TODO: 次のページに遷移
+    // 投稿完了のポップアップを表示
+    setShowSubmissionSuccess(true);
+  };
+
+  const handleSubmissionComplete = () => {
+    // ダッシュボードに遷移
+    router.push('/dashboard');
   };
 
   const handleSaveDraft = () => {
@@ -129,6 +136,27 @@ export function PolicySubmissionPage() {
 
       {/* 統一されたヘッダー */}
       <Header />
+      
+      {/* 投稿完了オーバーレイ */}
+      {showSubmissionSuccess && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 w-[600px] mx-4 text-center shadow-2xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#7bc8e8] to-[#2d8cd9] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 mb-3">投稿完了しました</h3>
+            <p className="text-gray-600 mb-8 text-sm leading-relaxed">政策案が正常に投稿されました</p>
+            <button
+              onClick={handleSubmissionComplete}
+              className="w-32 px-6 py-3 bg-gradient-to-r from-[#7bc8e8] to-[#2d8cd9] text-white rounded-full font-semibold hover:from-[#6bb8d8] hover:to-[#1d7cc9] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            >
+              完了
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* 成功オーバーレイ */}
       {showSuccessOverlay && (
@@ -265,21 +293,47 @@ export function PolicySubmissionPage() {
                 <div className="flex flex-col">
                   {/* 政策名 */}
                   <div className="mb-4">
-                    
-                    <input
-                      type="text"
-                      value={formData.policyTitle}
-                      onChange={(e) => handleInputChange("policyTitle", e.target.value)}
-                      placeholder="政策名を入力してください"
-                      className="w-full px-3 py-2 bg-white/90 rounded border border-white/70 text-xs placeholder-gray-500 focus:outline-none transition-colors"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.policyTitle}
+                        onChange={(e) => handleInputChange("policyTitle", e.target.value)}
+                        placeholder="政策名を入力してください"
+                        className="w-full px-3 py-2 bg-white/90 rounded border border-white/70 text-xs placeholder-gray-500 focus:outline-none transition-colors pr-10"
+                      />
+                      {formData.policyTitle && (
+                        <button
+                          onClick={() => handleInputChange("policyTitle", "")}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+                          aria-label="政策名を削除"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {/* 投稿内容 */}
                   <div className="flex-1 flex flex-col">
-                    <label className="block text-xs tracking-[2px] font-bold text-white mb-2">
-                      政策の詳細を記入してください
-                    </label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs tracking-[2px] font-bold text-white">
+                        政策の詳細を記入してください
+                      </label>
+                      {formData.policyContent && (
+                        <button
+                          onClick={() => setFormData(prev => ({ ...prev, policyContent: "" }))}
+                          className="text-xs text-white/70 hover:text-white transition-colors flex items-center gap-1"
+                          aria-label="政策内容を削除"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          クリア
+                        </button>
+                      )}
+                    </div>
                     
                     <textarea
                       value={formData.policyContent}
