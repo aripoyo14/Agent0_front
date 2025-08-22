@@ -3,6 +3,7 @@
 import { useTopPageNavigation } from "@/hooks/useTopPageNavigation";
 import { getCommentCount } from "@/lib/expert-api";
 import { useState, useEffect } from "react";
+import Image from "next/image"; // 追加
 
 // SVGファイルを直接インポート
 const fileSvg = "/file.svg";
@@ -41,7 +42,7 @@ function Component27() {
           data-name="Vector"
           id="node-1321_7718"
         >
-          <img alt="アラート" className="block max-w-none size-full" src={imgVector} />
+          <Image alt="アラート" className="block max-w-none size-full" src={imgVector} width={24} height={24} />
         </div>
       </div>
     </div>
@@ -109,10 +110,12 @@ export default function TopPage() {
                 data-name="Background"
                 id="node-1255_24006"
               >
-                <img
+                <Image
                   alt=""
                   className="block max-w-none size-full"
                   src={imgBackground}
+                  width={700}
+                  height={700}
                 />
               </div>
             </div>
@@ -209,11 +212,13 @@ export default function TopPage() {
                         data-name="Group"
                         id="node-1247_17168"
                       >
-                        <img
+                        <Image
                           alt=""
                           className="block max-w-none size-full"
                           loading="lazy"
                           src={imgGroup}
+                          width={800}
+                          height={800}
                         />
                       </div>
                     </div>
@@ -364,10 +369,12 @@ export default function TopPage() {
               data-name="Background"
               id="node-1247_17162"
             >
-              <img
+              <Image
                 alt=""
                 className="block max-w-none size-full"
                 src={imgBackground1}
+                width={700}
+                height={700}
               />
             </div>
           </div>
