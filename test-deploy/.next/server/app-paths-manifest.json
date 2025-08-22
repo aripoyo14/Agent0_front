@@ -1,0 +1,16 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/comments/page": "app/comments/page.js",
+  "/expert/articles/[id]/page": "app/expert/articles/[id]/page.js",
+  "/mfa-test/page": "app/mfa-test/page.js",
+  "/policy/page": "app/policy/page.js",
+  "/profile/[id]/page": "app/profile/[id]/page.js",
+  "/search/page": "app/search/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/expert/articles/page": "app/expert/articles/page.js",
+  "/login/page": "app/login/page.js",
+  "/user/registration/page": "app/user/registration/page.js",
+  "/expert/registration/page": "app/expert/registration/page.js",
+  "/page": "app/page.js"
+}
