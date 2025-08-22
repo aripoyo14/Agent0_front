@@ -145,7 +145,17 @@ const CommentCard = ({ comment }: { comment: ExpertComment }) => {
 };
 
 // 意見投稿フォームコンポーネント
-const OpinionForm = ({ onSubmit, attachedFile }: { onSubmit: (content: string) => void; attachedFile: File | null }) => {
+const OpinionForm = ({ 
+  onSubmit, 
+  attachedFile, 
+  articleId, 
+  setComments 
+}: { 
+  onSubmit: (content: string) => void; 
+  attachedFile: File | null;
+  articleId: string;
+  setComments: React.Dispatch<React.SetStateAction<ExpertComment[]>>;
+}) => {
   const [content, setContent] = useState("");
   const [showConfirmOverlay, setShowConfirmOverlay] = useState(false);
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
@@ -169,8 +179,68 @@ const OpinionForm = ({ onSubmit, attachedFile }: { onSubmit: (content: string) =
     setShowConfirmOverlay(false);
   };
 
-  const handleSubmissionComplete = () => {
+  const handleSubmissionComplete = async () => {
     setShowSubmissionSuccess(false);
+    
+    // 完了ボタンを押した時に、バックエンドから最新のコメント一覧を再取得
+    try {
+      const updatedComments = await getPolicyProposalComments(articleId);
+      const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
+      
+      let usersInfo: UsersInfoResponse = {};
+      if (userIds.length > 0) {
+        try {
+          usersInfo = await getUsersInfo(userIds);
+        } catch (error) {
+          console.error("ユーザー情報の一括取得に失敗しました:", error);
+        }
+      }
+      
+      const convertedComments = updatedComments.map(comment => {
+        const userInfo = usersInfo[comment.author_id];
+        return {
+          id: comment.id,
+          author: {
+            id: comment.author_id,
+            name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+            role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
+            company: userInfo?.company || "会社名",
+            badges: userInfo?.badges?.map((badge: {
+              type: string;
+              label: string;
+              color: string;
+              description: string;
+            }) => ({
+              type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
+              label: badge.label,
+              color: badge.color,
+              description: badge.description
+            })) || [
+              {
+                type: "expert" as const,
+                label: "認定エキスパート",
+                color: "#4AA0E9",
+                description: "認定されたエキスパート"
+              }
+            ],
+            expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+          },
+          content: comment.comment_text,
+          createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          likeCount: 0,
+          viewCount: 0,
+          isLiked: false
+        } as ExpertComment;
+      });
+      
+      setComments(convertedComments);
+    } catch (error) {
+      console.error("コメントの再取得に失敗しました:", error);
+    }
   };
 
   return (
@@ -198,49 +268,50 @@ const OpinionForm = ({ onSubmit, attachedFile }: { onSubmit: (content: string) =
 
       {/* 確認オーバーレイ */}
       {showConfirmOverlay && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-xl shadow-xl max-w-lg mx-4 overflow-hidden">
-          {/* コンテンツ */}
-          <div className="px-6 py-6">
-              <p className="text-gray-600 mb-4 text-center font-bold text-sm">この内容で意見を投稿しますか？</p>
-              
-              {/* 意見内容 */}
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">意見内容</h4>
-                <div className="bg-gray-50 rounded-lg p-3 max-h-64 overflow-y-auto border border-gray-100">
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{content}</p>
-                </div>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 w-[600px] mx-4 shadow-2xl">
+            {/* ヘッダー */}
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">投稿内容の確認</h3>
+              <p className="text-gray-600 text-sm">この内容で意見を投稿しますか？</p>
+            </div>
+            
+            {/* 意見内容 */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">意見内容</h4>
+              <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto border border-gray-200">
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{content}</p>
               </div>
-              
-              {/* 添付資料 */}
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">添付資料</h4>
-                <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                  {attachedFile ? (
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span className="text-sm text-gray-700">{attachedFile.name}</span>
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-500">添付なし</span>
-                  )}
-                </div>
+            </div>
+            
+            {/* 添付資料 */}
+            <div className="mb-8">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">添付資料</h4>
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                {attachedFile ? (
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span className="text-sm text-gray-700 font-medium">{attachedFile.name}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-500">添付なし</span>
+                )}
               </div>
             </div>
             
             {/* ボタン */}
-            <div className="px-6 py-3 bg-gray-50 flex gap-3">
+            <div className="flex gap-4 justify-center">
               <button
                 onClick={handleCancelSubmit}
-                className="flex-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 transition-colors font-medium text-sm"
+                className="w-32 px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors font-semibold border border-gray-300 rounded-full hover:bg-gray-50"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleConfirmSubmit}
-                className="flex-1 px-3 py-1.5 bg-[#58aadb] text-white rounded-lg hover:bg-[#4a9bcc] transition-colors font-medium text-sm"
+                className="w-32 px-6 py-3 bg-gradient-to-r from-[#7bc8e8] to-[#2d8cd9] text-white rounded-full font-semibold hover:from-[#6bb8d8] hover:to-[#1d7cc9] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 投稿する
               </button>
@@ -587,217 +658,8 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
       });
 
       if (response.success) {
-        try {
-          // 現在のユーザー情報を取得
-          const currentUserInfo = await getUserInfo(userInfo.userId);
-          
-          // 新しいコメントを追加（最新のコメントを一番上に表示）
-          const newComment: ExpertComment = {
-            id: response.comment_id,
-            author: {
-              id: userInfo.userId,
-              name: currentUserInfo?.name || "ユーザー",
-              role: currentUserInfo?.role || (userInfo.role === "contributor" ? "エキスパート" : userInfo.role),
-              company: currentUserInfo?.company || "会社名",
-              badges: currentUserInfo?.badges?.map(badge => ({
-                type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
-                label: badge.label,
-                color: badge.color,
-                description: badge.description
-              })) || [
-                {
-                  type: "expert" as const,
-                  label: "認定エキスパート",
-                  color: "#4AA0E9",
-                  description: "認定されたエキスパート"
-                }
-              ],
-              expertiseLevel: (currentUserInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
-            },
-            content,
-            createdAt: new Date().toLocaleDateString('ja-JP', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }),
-            likeCount: 0,
-            viewCount: 0,
-            isLiked: false
-          };
-          
-          // 新しいコメントを一番上に追加
-          setComments(prev => [newComment, ...prev]);
-          
-          // 成功通知を表示
-          setShowSuccessNotification(true);
-          
-          // 3秒後に自動で閉じる
-          setTimeout(() => {
-            setShowSuccessNotification(false);
-          }, 3000);
-          
-          // コメント一覧を最新の状態に更新
-          try {
-            const updatedComments = await getPolicyProposalComments(articleId);
-            const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
-            
-            let usersInfo: UsersInfoResponse = {};
-            if (userIds.length > 0) {
-              try {
-                usersInfo = await getUsersInfo(userIds);
-              } catch (error) {
-                console.error("ユーザー情報の一括取得に失敗しました:", error);
-              }
-            }
-            
-            const convertedComments = updatedComments.map(comment => {
-              const userInfo = usersInfo[comment.author_id];
-              return {
-                id: comment.id,
-                author: {
-                  id: comment.author_id,
-                  name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
-                  role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
-                  company: userInfo?.company || "会社名",
-                  badges: userInfo?.badges?.map((badge: {
-                    type: string;
-                    label: string;
-                    color: string;
-                    description: string;
-                  }) => ({
-                    type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
-                    label: badge.label,
-                    color: badge.color,
-                    description: badge.description
-                  })) || [
-                    {
-                      type: "expert" as const,
-                      label: "認定エキスパート",
-                      color: "#4AA0E9",
-                      description: "認定されたエキスパート"
-                    }
-                  ],
-                  expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
-                },
-                content: comment.comment_text,
-                createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                }),
-                likeCount: 0,
-                viewCount: 0,
-                isLiked: false
-              } as ExpertComment;
-            });
-            
-            setComments(convertedComments);
-          } catch (error) {
-            console.error("コメントの再取得に失敗しました:", error);
-          }
-          
-        } catch (error) {
-          console.error("ユーザー情報の取得に失敗しました:", error);
-          // エラー時はフォールバック情報を使用
-          const newComment: ExpertComment = {
-            id: response.comment_id,
-            author: {
-              id: userInfo.userId,
-              name: "ユーザー",
-              role: userInfo.role === "contributor" ? "エキスパート" : userInfo.role,
-              company: "会社名",
-              badges: [
-                {
-                  type: "expert" as const,
-                  label: "認定エキスパート",
-                  color: "#4AA0E9",
-                  description: "認定されたエキスパート"
-                }
-              ],
-              expertiseLevel: "expert" as const
-            },
-            content,
-            createdAt: new Date().toLocaleDateString('ja-JP', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            }),
-            likeCount: 0,
-            viewCount: 0,
-            isLiked: false
-          };
-          
-          // 新しいコメントを一番上に追加
-          setComments(prev => [newComment, ...prev]);
-          
-          // 成功通知を表示
-          setShowSuccessNotification(true);
-          
-          // 3秒後に自動で閉じる
-          setTimeout(() => {
-            setShowSuccessNotification(false);
-          }, 3000);
-          
-          // コメント一覧を最新の状態に更新
-          try {
-            const updatedComments = await getPolicyProposalComments(articleId);
-            const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
-            
-            let usersInfo: UsersInfoResponse = {};
-            if (userIds.length > 0) {
-              try {
-                usersInfo = await getUsersInfo(userIds);
-              } catch (error) {
-                console.error("ユーザー情報の一括取得に失敗しました:", error);
-              }
-            }
-            
-            const convertedComments = updatedComments.map(comment => {
-              const userInfo = usersInfo[comment.author_id];
-              return {
-                id: comment.id,
-                author: {
-                  id: comment.author_id,
-                  name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
-                  role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
-                  company: userInfo?.company || "会社名",
-                  badges: userInfo?.badges?.map((badge: {
-                    type: string;
-                    label: string;
-                    color: string;
-                    description: string;
-                  }) => ({
-                    type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
-                    label: badge.label,
-                    color: badge.color,
-                    description: badge.description
-                  })) || [
-                    {
-                      type: "expert" as const,
-                      label: "認定エキスパート",
-                      color: "#4AA0E9",
-                      description: "認定されたエキスパート"
-                    }
-                  ],
-                  expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
-                },
-                content: comment.comment_text,
-                createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                }),
-                likeCount: 0,
-                viewCount: 0,
-                isLiked: false
-              } as ExpertComment;
-            });
-            
-            setComments(convertedComments);
-          } catch (error) {
-            console.error("コメントの再取得に失敗しました:", error);
-          }
-        }
+        // 投稿成功時は即座のコメント追加は行わず、完了ボタンで更新する
+        console.log("投稿が完了しました");
       }
     } catch (error) {
       console.error("意見投稿エラー:", error);
@@ -1120,7 +982,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
               }
             `}</style>
             <div className="sticky top-8 space-y-6">
-              <OpinionForm onSubmit={handleOpinionSubmit} attachedFile={attachedFile} />
+              <OpinionForm onSubmit={handleOpinionSubmit} attachedFile={attachedFile} articleId={articleId} setComments={setComments} />
               <DocumentUploadForm onSubmit={handleDocumentSubmit} />
             </div>
           </div>
