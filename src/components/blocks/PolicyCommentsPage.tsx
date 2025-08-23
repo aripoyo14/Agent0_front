@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
-import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
+import { fetchCommentsByPolicyId, fetchRepliesByCommentId, fetchReplyCountByCommentId, organizeComments, Comment } from '@/lib/comments-api';
 import { saveCommentEvaluation, generateAIResponse, postAIResponse } from '@/lib/evaluation-api';
 import { getUserFromToken } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
@@ -309,6 +309,113 @@ const CommentFeedbackForm = ({
   );
 };
 
+// 検索・フィルタリング・ページネーション用のUIコンポーネント
+const PolicyListControls = ({
+  searchTerm,
+  onSearchChange,
+  sortBy,
+  onSortChange,
+  currentPage,
+  totalPages,
+  onPageChange,
+  totalItems,
+  itemsPerPage
+}: {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  sortBy: "date" | "title";
+  onSortChange: (value: "date" | "title") => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems: number;
+  itemsPerPage: number;
+}) => {
+  return (
+    <div className="space-y-3 mb-4">
+      {/* 検索ボックス */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="政策を検索..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4AA0E9] focus:border-transparent"
+        />
+        <svg className="absolute right-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+
+      {/* ソート・表示件数 */}
+      <div className="flex justify-between items-center">
+        <select
+          value={sortBy}
+          onChange={(e) => onSortChange(e.target.value as "date" | "title")}
+          className="px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-[#4AA0E9]"
+        >
+          <option value="date">投稿日時順</option>
+          <option value="title">タイトル順</option>
+        </select>
+        
+        <span className="text-xs text-gray-500">
+          {totalItems}件中 {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, totalItems)}件
+        </span>
+      </div>
+
+      {/* ページネーション */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center space-x-1">
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            前へ
+          </button>
+          
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const page = i + 1;
+            if (totalPages <= 5) {
+              return page;
+            }
+            if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+              return page;
+            }
+            if (page === currentPage - 2 || page === currentPage + 2) {
+              return "...";
+            }
+            return null;
+          }).filter(Boolean).map((page, index) => (
+            <button
+              key={index}
+              onClick={() => typeof page === "number" ? onPageChange(page) : null}
+              disabled={page === "..."}
+              className={`px-2 py-1 text-xs rounded ${
+                page === currentPage
+                  ? "bg-[#4AA0E9] text-white"
+                  : page === "..."
+                  ? "text-gray-400 cursor-default"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            次へ
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // 政策投稿カードコンポーネント
 const PolicySubmissionCard = ({ 
   policy, 
@@ -354,6 +461,25 @@ const PolicySubmissionCard = ({
   );
 };
 
+// 返信コメント表示コンポーネント
+const ReplyItem = ({ reply }: { reply: Comment }) => {
+  return (
+    <div className="ml-6 p-3 bg-gray-50 rounded-lg border-l-2 border-[#4AA0E9] mb-2">
+      <div className="flex justify-between items-start mb-2">
+        <div>
+          <div className="font-medium text-sm text-gray-900 leading-tight mb-1">{reply.author_name}</div>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500 leading-tight">{reply.author_type}</span>
+            <span className="text-xs text-gray-400">•</span>
+            <span className="text-xs text-gray-500 leading-tight">{new Date(reply.posted_at).toLocaleDateString('ja-JP')}</span>
+          </div>
+        </div>
+      </div>
+      <p className="text-sm text-gray-700 leading-relaxed">{reply.comment_text}</p>
+    </div>
+  );
+};
+
 // コメント表示コンポーネント（一覧ビュー）
 const CommentItem = ({ 
   comment, 
@@ -370,6 +496,50 @@ const CommentItem = ({
   isFeedbackSubmitted?: boolean;
 }) => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [showReplies, setShowReplies] = useState(false);
+  const [replies, setReplies] = useState<Comment[]>([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [replyCount, setReplyCount] = useState<number>(0);
+
+  // コンポーネントマウント時に返信件数を取得
+  useEffect(() => {
+    const loadReplyCount = async () => {
+      try {
+        const count = await fetchReplyCountByCommentId(comment.id);
+        setReplyCount(count);
+      } catch (error) {
+        console.error('返信件数取得エラー:', error);
+        // エラーメッセージを表示（オプション）
+        if (error instanceof Error) {
+          console.error('エラー詳細:', error.message);
+        }
+      }
+    };
+    loadReplyCount();
+  }, [comment.id]);
+
+  // 返信コメントを取得する関数
+  const loadReplies = async () => {
+    if (replies.length > 0) {
+      setShowReplies(!showReplies);
+      return;
+    }
+
+    setRepliesLoading(true);
+    try {
+      const response = await fetchRepliesByCommentId(comment.id);
+      setReplies(response.replies);
+      setShowReplies(true);
+    } catch (error) {
+      console.error('返信コメント取得エラー:', error);
+      // エラーメッセージを表示（オプション）
+      if (error instanceof Error) {
+        console.error('エラー詳細:', error.message);
+      }
+    } finally {
+      setRepliesLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white p-4 mb-4 relative rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-gray-200">
@@ -403,7 +573,42 @@ const CommentItem = ({
       
       <p className="text-sm text-gray-700 mb-4 leading-relaxed">{comment.comment_text}</p>
       
+      {/* 返信表示ボタン */}
+      {replyCount > 0 && (
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={loadReplies}
+            disabled={repliesLoading}
+            className="flex items-center gap-1 text-xs text-[#4AA0E9] hover:text-[#3a8fd9] transition-colors disabled:opacity-50"
+          >
+          {repliesLoading ? (
+            <>
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              読み込み中...
+            </>
+          ) : (
+            <>
+              <svg className={`w-3 h-3 transition-transform ${showReplies ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              {showReplies ? '返信を隠す' : `返信を表示 (${replyCount})`}
+            </>
+          )}
+        </button>
+        </div>
+      )}
 
+      {/* 返信コメント表示 */}
+      {showReplies && replies.length > 0 && (
+        <div className="mb-4">
+          {replies.map((reply) => (
+            <ReplyItem key={reply.id} reply={reply} />
+          ))}
+        </div>
+      )}
 
       {/* フィードバックフォーム（展開形式） */}
       {showFeedbackForm && (
@@ -430,6 +635,12 @@ export const PolicyCommentsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<Set<string>>(new Set());
+  
+  // 投稿履歴のページネーション・フィルタリング用の状態
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // 1ページあたりの表示件数
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"date" | "title">("date");
   
   // 政策投稿履歴を取得
   useEffect(() => {
@@ -522,8 +733,11 @@ export const PolicyCommentsPage = () => {
     }
   }, [selectedPolicyId]);
   
-  // フィルタリング
-  const filteredComments = comments.filter(comment => {
+  // コメントを親コメントと返信に分類
+  const { parentComments } = organizeComments(comments);
+  
+  // フィルタリング（親コメントのみ）
+  const filteredParentComments = parentComments.filter(comment => {
     const isSubmitted = feedbackSubmitted.has(comment.id);
     switch (activeTab) {
       case "unfb":
@@ -535,11 +749,47 @@ export const PolicyCommentsPage = () => {
     }
   });
 
-  // 件数計算
+  // 投稿履歴のフィルタリング・ソート・ページネーション
+  const filteredPolicies = policies.filter(policy =>
+    policy.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    policy.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const sortedPolicies = [...filteredPolicies].sort((a, b) => {
+    if (sortBy === "date") {
+      return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+    } else {
+      return a.title.localeCompare(b.title);
+    }
+  });
+
+  const totalPages = Math.ceil(sortedPolicies.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPolicies = sortedPolicies.slice(startIndex, endIndex);
+
+  // 検索やページ変更時に選択された政策が表示されない場合の処理
+  useEffect(() => {
+    if (selectedPolicyId && !currentPolicies.find(p => p.id === selectedPolicyId)) {
+      // 選択された政策が現在のページにない場合、最初の政策を選択
+      if (currentPolicies.length > 0) {
+        setSelectedPolicyId(currentPolicies[0].id);
+      } else {
+        setSelectedPolicyId("");
+      }
+    }
+  }, [currentPolicies, selectedPolicyId]);
+
+  // 検索時にページを1に戻す
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy]);
+
+  // 件数計算（親コメントのみ）
   const counts = {
-    all: comments.length,
-    unfb: comments.filter(c => !feedbackSubmitted.has(c.id)).length,
-    fb: comments.filter(c => feedbackSubmitted.has(c.id)).length,
+    all: parentComments.length,
+    unfb: parentComments.filter(c => !feedbackSubmitted.has(c.id)).length,
+    fb: parentComments.filter(c => feedbackSubmitted.has(c.id)).length,
   };
   
   return (
@@ -586,6 +836,19 @@ export const PolicyCommentsPage = () => {
                     <span>TOPに戻る</span>
                   </button>
                 </div>
+
+                {/* 検索・フィルタリング・ページネーション */}
+                <PolicyListControls
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalItems={sortedPolicies.length}
+                  itemsPerPage={itemsPerPage}
+                />
                 
                 {loading ? (
                   <div className="animate-fade-in-up">
@@ -628,14 +891,27 @@ export const PolicyCommentsPage = () => {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {policies.map((policy) => (
-                      <PolicySubmissionCard 
-                        key={policy.id} 
-                        policy={policy} 
-                        onViewComments={handleViewComments}
-                        isSelected={policy.id === selectedPolicyId}
-                      />
-                    ))}
+                    {currentPolicies.length > 0 ? (
+                      currentPolicies.map((policy) => (
+                        <PolicySubmissionCard 
+                          key={policy.id} 
+                          policy={policy} 
+                          onViewComments={handleViewComments}
+                          isSelected={policy.id === selectedPolicyId}
+                        />
+                      ))
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="flex flex-col items-center space-y-2">
+                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          <p className="text-sm text-gray-500">
+                            {searchTerm ? `"${searchTerm}" に一致する政策が見つかりません` : "政策がありません"}
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </Card>
@@ -687,9 +963,9 @@ export const PolicyCommentsPage = () => {
                       <div className="animate-fade-in-up">
                         <CommentSkeletonList count={3} />
                       </div>
-                    ) : filteredComments.length > 0 ? (
+                    ) : filteredParentComments.length > 0 ? (
                       <div className="space-y-4">
-                        {filteredComments.map((comment, index) => (
+                        {filteredParentComments.map((comment, index) => (
                           <div 
                             key={comment.id} 
                             className="animate-fade-in-up"
