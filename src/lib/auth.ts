@@ -1,5 +1,6 @@
 import { apiFetch } from "./apiClient";
 import { saveToken, clearToken, isAuthenticated, getToken } from "./storage";
+import { UserInfo } from "@/types";
 
 type LoginResponse = {
   access_token: string;
@@ -63,6 +64,51 @@ export function getUserFromToken(): { userId: string; userType: string; role: st
   }
 }
 
+// ユーザー名を取得する関数（JWTトークンから）
+export function getUserName(): string {
+  const userInfo = getUserFromToken();
+  if (userInfo) {
+    // JWTトークンにユーザー名が含まれている場合は使用
+    // 現在はデフォルト値を返す
+    return "ログインユーザー";
+  }
+  return "ゲストユーザー";
+}
+
+// ユーザー名を取得する関数（APIから）
+export async function getUserNameFromAPI(): Promise<string> {
+  try {
+    const userInfo = getUserFromToken();
+    if (!userInfo) {
+      return "ゲストユーザー";
+    }
+    
+    // /api/users/meエンドポイントからユーザー情報を取得
+    const response = await apiFetch<{
+      id: string;
+      email: string;
+      last_name: string;
+      first_name: string;
+      role: string;
+    }>("/api/users/me", {
+      method: "GET",
+      auth: true,
+    });
+    
+    // firstnameとlastnameが存在する場合は結合して返す
+    if (response.first_name && response.last_name) {
+      return `${response.last_name} ${response.first_name}`;
+    }
+    
+    // 従来のnameフィールドをフォールバックとして使用
+    return response.first_name || response.last_name || "ログインユーザー";
+  } catch (error) {
+    console.error("ユーザー名取得エラー:", error);
+    // APIが失敗した場合はJWTトークンから取得を試行
+    return getUserName();
+  }
+}
+
 // ログインAPIを呼び出す関数
 export async function login(email: string, password: string): Promise<void> {
   const data = await apiFetch<LoginResponse>("/api/auth/login", {
@@ -78,5 +124,45 @@ export function logout(): void {
 }
 
 export { isAuthenticated, getToken };
+
+// デバッグ用：トークンの状態を確認
+export async function debugToken(): Promise<void> {
+  try {
+    const tokenInfo = getToken();
+    if (!tokenInfo || !tokenInfo.accessToken) {
+      console.log("❌ トークンが存在しません");
+      return;
+    }
+
+    console.log("🔍 トークンデバッグ開始...");
+    console.log("トークン長:", tokenInfo.accessToken.length);
+    console.log("トークンプレビュー:", tokenInfo.accessToken.substring(0, 50) + "...");
+
+    const response = await apiFetch("/api/users/debug-token", {
+      method: "GET",
+      auth: true,
+    });
+
+    console.log("✅ トークンデバッグ結果:", response);
+  } catch (error) {
+    console.error("❌ トークンデバッグエラー:", error);
+  }
+}
+
+// テスト用：認証処理の各段階をテスト
+export async function testAuth(): Promise<void> {
+  try {
+    console.log("🧪 認証テスト開始...");
+    
+    const response = await apiFetch("/api/users/test-auth", {
+      method: "GET",
+      auth: true,
+    });
+
+    console.log("✅ 認証テスト結果:", response);
+  } catch (error) {
+    console.error("❌ 認証テストエラー:", error);
+  }
+}
 
 

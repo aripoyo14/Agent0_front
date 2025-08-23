@@ -7,6 +7,7 @@ import { policyThemes, getArticlesByTheme, searchArticles, sortComments } from "
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { CommentCount } from "@/components/ui/comment-count";
 import { getPolicyProposals, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
+import { getUserNameFromAPI, debugToken, testAuth, getUserName } from "@/lib/auth";
 
 
 
@@ -529,6 +530,32 @@ export default function ExpertArticleListPage() {
   const [filteredArticles, setFilteredArticles] = useState<ExpertArticle[]>([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [dataSource, setDataSource] = useState<'api' | 'public' | 'sample' | null>(null);
+  const [userName, setUserName] = useState<string>("ログインユーザー");
+
+  // ユーザー名を取得
+  useEffect(() => {
+    const fetchUserName = async () => {
+      console.log("🔄 ユーザー名取得開始...");
+      
+      // デバッグ情報を出力
+      await debugToken();
+      await testAuth();
+      
+      try {
+        const name = await getUserNameFromAPI();
+        setUserName(name);
+        console.log("✅ ユーザー名取得成功:", name);
+      } catch (error) {
+        console.error("❌ ユーザー名取得エラー:", error);
+        // フォールバック
+        const fallbackName = getUserName();
+        setUserName(fallbackName);
+        console.log("✔ ユーザー名取得成功:", fallbackName);
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   // 記事のフィルタリング処理
   const filterArticles = useCallback(async (selectedTheme: string, searchQuery: string) => {
@@ -715,7 +742,7 @@ export default function ExpertArticleListPage() {
         <div className="absolute inset-[13.58%_6.81%_14.98%_81.12%] right-0">
           <div className="absolute right-0 top-0 flex items-center gap-3">
             <div className="font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold text-[#ffffff] text-[12.62px] text-right text-nowrap tracking-[1.5144px]">
-              <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">テックゼロ太郎さん</p>
+              <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">{userName}</p>
             </div>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
