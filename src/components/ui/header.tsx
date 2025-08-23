@@ -1,9 +1,28 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { getUserName, getUserNameFromAPI } from "@/lib/auth";
 
 export function Header() {
   const router = useRouter();
+  const [userName, setUserName] = useState<string>("ログインユーザー");
+
+  // ユーザー名を取得
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const name = await getUserNameFromAPI();
+        setUserName(name);
+      } catch {
+        // APIが失敗した場合はJWTトークンから取得
+        const fallbackName = getUserName();
+        setUserName(fallbackName);
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   const handleGoToDashboard = () => {
     router.push('/dashboard');
@@ -30,7 +49,7 @@ export function Header() {
             </div>
           </div>
           <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors self-start lg:self-auto">
-            テックゼロ太郎さん
+            {userName}
           </div>
         </div>
       </div>

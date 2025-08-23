@@ -353,6 +353,8 @@ export interface ExpertInsightsOut {
 export interface UserInfo {
   id: string;
   name: string;
+  firstname?: string;  // 名
+  lastname?: string;   // 姓
   role: string;
   company: string;
   department?: string;
