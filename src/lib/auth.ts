@@ -1,6 +1,7 @@
 import { apiFetch } from "./apiClient";
 import { saveToken, clearToken, isAuthenticated, getToken } from "./storage";
-import { UserInfo } from "@/types";
+// UserInfo型は現在使用していないため、コメントアウト
+// import { UserInfo } from "@/types";
 
 type LoginResponse = {
   access_token: string;

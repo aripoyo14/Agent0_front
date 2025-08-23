@@ -14,7 +14,7 @@ export function Header() {
       try {
         const name = await getUserNameFromAPI();
         setUserName(name);
-      } catch (error) {
+      } catch {
         // APIが失敗した場合はJWTトークンから取得
         const fallbackName = getUserName();
         setUserName(fallbackName);
