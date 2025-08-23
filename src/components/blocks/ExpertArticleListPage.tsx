@@ -528,6 +528,7 @@ export default function ExpertArticleListPage() {
   const [isOverlayAnimating, setIsOverlayAnimating] = useState(false);
   const [filteredArticles, setFilteredArticles] = useState<ExpertArticle[]>([]);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [dataSource, setDataSource] = useState<'api' | 'public' | 'sample' | null>(null);
 
   // 記事のフィルタリング処理
   const filterArticles = useCallback(async (selectedTheme: string, searchQuery: string) => {
@@ -569,6 +570,7 @@ export default function ExpertArticleListPage() {
       });
       
       setFilteredArticles(articles);
+      setDataSource('api'); // 認証付きAPIから取得
       setPageState("success");
     } catch (error) {
       console.error("記事のフィルタリングエラー:", error);
@@ -590,6 +592,7 @@ export default function ExpertArticleListPage() {
         }
         
         setFilteredArticles(articles);
+        setDataSource('sample'); // サンプルデータを使用
         setPageState("success");
       } catch (fallbackError) {
         console.error("サンプルデータの読み込みエラー:", fallbackError);
@@ -875,6 +878,33 @@ export default function ExpertArticleListPage() {
       {/* 記事エリア */}
       <div className="absolute h-[500px] left-[65px] top-[249px] w-[1304px] z-40">
         <div className="absolute bg-[#ffffff] h-[500px] left-0 rounded-[11.759px] top-0 w-[1304px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          {/* データソース表示 */}
+          {dataSource === 'sample' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 m-4">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <p className="text-yellow-800 text-sm font-medium">
+                  現在サンプルデータを表示しています。ログインすると最新のデータをご覧いただけます。
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {dataSource === 'public' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 m-4">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-blue-800 text-sm font-medium">
+                  公開データを表示しています。ログインするとより詳細な情報をご覧いただけます。
+                </p>
+              </div>
+            </div>
+          )}
+          
           {pageState === "loading" && (
             <div className="flex flex-col items-center justify-center h-full">
               <div className="text-gray-500 text-lg mb-4 font-medium">Loading...</div>
