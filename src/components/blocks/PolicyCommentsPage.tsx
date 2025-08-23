@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
 import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
-import { saveCommentEvaluation, generateAIResponse, postAIResponse, EvaluationData } from '@/lib/evaluation-api';
+import { saveCommentEvaluation, generateAIResponse, postAIResponse } from '@/lib/evaluation-api';
 import { getUserFromToken } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
 import { CommentCount } from '@/components/ui/comment-count';

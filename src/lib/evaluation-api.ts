@@ -108,7 +108,7 @@ export async function postAIResponse(
     author_type: "admin" | "staff" | "contributor" | "viewer";
     author_id: string;
   }
-): Promise<any> {
+): Promise<unknown> {
   const replyData: CommentReplyData = {
     author_type: authorInfo.author_type,
     author_id: authorInfo.author_id,
