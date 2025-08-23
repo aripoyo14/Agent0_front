@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
 import { fetchCommentsByPolicyId, Comment } from '@/lib/comments-api';
+import { saveCommentEvaluation, generateAIResponse, postAIResponse, EvaluationData } from '@/lib/evaluation-api';
+import { getUserFromToken } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
 import { CommentCount } from '@/components/ui/comment-count';
 import { CommentSkeletonList } from '@/components/ui/skeleton';
@@ -145,27 +147,48 @@ const CommentFeedbackForm = ({
 
   const handleGenerateAIResponse = async () => {
     setIsGenerating(true);
-    // TODO: 実際のAI API呼び出しを実装
-    setTimeout(() => {
-      setAiResponse('このコメントに対して建設的なフィードバックを提供いたします。提案された内容は非常に興味深く、特に実装可能性について詳細な検討が必要です。');
+    try {
+      const response = await generateAIResponse(commentId, {
+        persona: "丁寧で建設的な政策担当者",
+        instruction: "具体的な提案を含めて返信してください"
+      });
+      setAiResponse(response.suggested_reply);
+    } catch (error) {
+      console.error('AI返信生成エラー:', error);
+      setAiResponse('AI返信の生成に失敗しました。もう一度お試しください。');
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
   const handleRegenerate = async () => {
     setIsGenerating(true);
-    // TODO: 実際のAI API呼び出しを実装（別案生成）
-    setTimeout(() => {
-      setAiResponse('別の視点からのフィードバックを提供いたします。ご提案の背景と実現可能性について、さらに詳しく検討する必要があります。');
+    try {
+      const response = await generateAIResponse(commentId, {
+        persona: "建設的で批判的な視点を持つ政策担当者",
+        instruction: "別の視点から、より詳細な分析を含めて返信してください"
+      });
+      setAiResponse(response.suggested_reply);
+    } catch (error) {
+      console.error('AI返信再生成エラー:', error);
+      setAiResponse('AI返信の再生成に失敗しました。もう一度お試しください。');
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
 
-  const handleSaveEvaluation = () => {
+  const handleSaveEvaluation = async () => {
     if (overallRating > 0 && empathyRating > 0) {
-      // TODO: 評価データを内部DBに保存
-      console.log('評価保存:', { overallRating, empathyRating });
-      setEvaluationSaved(true);
+      try {
+        await saveCommentEvaluation(commentId, {
+          overallRating,
+          empathyRating,
+        });
+        setEvaluationSaved(true);
+      } catch (error) {
+        console.error('評価保存エラー:', error);
+        alert('評価の保存に失敗しました');
+      }
     }
   };
 
@@ -437,20 +460,38 @@ export const PolicyCommentsPage = () => {
     setSelectedPolicyId(policyId);
   };
 
-  const handleFeedbackSubmit = (feedback: {
+  const handleFeedbackSubmit = async (feedback: {
     commentId: string;
     overallRating: number;
     empathyRating: number;
     aiResponse: string;
   }) => {
-    // TODO: 実際のAPI呼び出しを実装
-    console.log('フィードバック送信:', feedback);
-    
-    // 評価データを内部DBに保存
-    // AI返信をコメントとして投稿
-    
-    // ステータスを更新
-    setFeedbackSubmitted(prev => new Set(prev).add(feedback.commentId));
+    try {
+      // 評価データを保存
+      await saveCommentEvaluation(feedback.commentId, {
+        overallRating: feedback.overallRating,
+        empathyRating: feedback.empathyRating,
+      });
+      
+      // AI返信をコメントとして投稿
+      if (feedback.aiResponse.trim()) {
+        const userInfo = getUserFromToken();
+        if (userInfo) {
+          await postAIResponse(feedback.commentId, feedback.aiResponse, {
+            author_type: userInfo.role as "admin" | "staff" | "contributor" | "viewer",
+            author_id: userInfo.userId,
+          });
+        } else {
+          throw new Error('ユーザー情報が取得できませんでした');
+        }
+      }
+      
+      // ステータスを更新
+      setFeedbackSubmitted(prev => new Set(prev).add(feedback.commentId));
+    } catch (error) {
+      console.error('フィードバック送信エラー:', error);
+      alert('フィードバックの送信に失敗しました');
+    }
   };
   
   const [comments, setComments] = useState<Comment[]>([]);
