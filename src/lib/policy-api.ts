@@ -1,7 +1,6 @@
 // 政策関連のAPIクライアント関数
 
 import { apiFetch } from './apiClient';
-import { PolicySubmission } from '@/types';
 
 export interface PolicyFormData {
   selectedThemes: string[];
@@ -19,27 +18,14 @@ export interface PolicySubmissionResponse {
   updated_at: string;
 }
 
-// PolicySubmissionResponseをPolicySubmissionに変換
-function convertToPolicySubmission(response: PolicySubmissionResponse): PolicySubmission {
-  return {
-    id: response.id,
-    title: response.title,
-    content: response.body,
-    policyThemes: [], // APIからは取得できないため空配列
-    submittedAt: response.created_at,
-    status: response.status as PolicySubmission['status'],
-    commentCount: 0, // APIからは取得できないため0
-  };
-}
-
 // ユーザーの政策提案一覧を取得
-export async function fetchMyPolicySubmissions(): Promise<PolicySubmission[]> {
+export async function fetchMyPolicySubmissions(): Promise<PolicySubmissionResponse[]> {
   try {
     const response = await apiFetch<PolicySubmissionResponse[]>('/api/policy-proposals/my-submissions', {
       method: 'GET',
       auth: true,
     });
-    return response.map(convertToPolicySubmission);
+    return response;
   } catch (error) {
     console.error('政策提案一覧の取得に失敗しました:', error);
     throw error;

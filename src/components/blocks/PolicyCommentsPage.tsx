@@ -699,7 +699,18 @@ export const PolicyCommentsPage = () => {
       try {
         setLoading(true);
         const data = await fetchMyPolicySubmissions();
-        setPolicies(data);
+        // PolicySubmissionResponseからPolicySubmissionに変換
+        const convertedData = data.map(item => ({
+          id: item.id,
+          title: item.title,
+          content: item.body,
+          policyThemes: [], // APIからは取得できないため空配列
+          submittedAt: item.created_at,
+          status: item.status as 'draft' | 'submitted' | 'under_review' | 'approved' | 'rejected',
+          attachedFiles: [], // APIからは取得できないため空配列
+          commentCount: 0 // APIからは取得できないため0
+        }));
+        setPolicies(convertedData);
         
         // 最初の政策を選択
         if (data.length > 0 && !selectedPolicyId) {
@@ -714,7 +725,14 @@ export const PolicyCommentsPage = () => {
     };
 
     loadPolicySubmissions();
-  }, []);
+  }, [selectedPolicyId]); // selectedPolicyIdを依存配列に追加
+
+  // selectedPolicyIdの初期化を別のuseEffectで管理
+  useEffect(() => {
+    if (policies.length > 0 && !selectedPolicyId) {
+      setSelectedPolicyId(policies[0].id);
+    }
+  }, [policies, selectedPolicyId]); // selectedPolicyIdの状態を監視
 
 
   
@@ -807,7 +825,7 @@ export const PolicyCommentsPage = () => {
       
       loadComments();
     }
-  }, [selectedPolicyId]);
+  }, [selectedPolicyId]); // 正しい依存配列
   
   // コメントを親コメントと返信に分類
   const { parentComments } = organizeComments(comments);
@@ -849,8 +867,11 @@ export const PolicyCommentsPage = () => {
     if (selectedPolicyId && !currentPolicies.find(p => p.id === selectedPolicyId)) {
       // 選択された政策が現在のページにない場合、最初の政策を選択
       if (currentPolicies.length > 0) {
-        setSelectedPolicyId(currentPolicies[0].id);
-      } else {
+        const firstPolicyId = currentPolicies[0].id;
+        if (firstPolicyId !== selectedPolicyId) {
+          setSelectedPolicyId(firstPolicyId);
+        }
+      } else if (selectedPolicyId !== "") {
         setSelectedPolicyId("");
       }
     }
