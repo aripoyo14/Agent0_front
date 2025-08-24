@@ -8,7 +8,8 @@ import { saveCommentEvaluation, generateAIResponse, postAIResponse } from '@/lib
 import { getUserFromToken } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
 import { CommentCount } from '@/components/ui/comment-count';
-import { CommentSkeletonList } from '@/components/ui/skeleton';
+import { CommentSkeletonList, PolicySubmissionSkeletonList } from '@/components/ui/skeleton';
+import { SuccessMessage } from '@/components/ui/success-message';
 import BackgroundEllipses from '@/components/blocks/BackgroundEllipses';
 import { Header } from '@/components/ui/header';
 
@@ -127,7 +128,8 @@ const RatingButtons = ({
 const CommentFeedbackForm = ({ 
   commentId, 
   onSubmit,
-  onClose
+  onClose,
+  isSubmitting = false
 }: { 
   commentId: string; 
   onSubmit: (feedback: {
@@ -137,6 +139,7 @@ const CommentFeedbackForm = ({
     aiResponse: string;
   }) => void;
   onClose: () => void;
+  isSubmitting?: boolean;
 }) => {
   const [overallRating, setOverallRating] = useState(0);
   const [empathyRating, setEmpathyRating] = useState(0);
@@ -299,10 +302,20 @@ const CommentFeedbackForm = ({
 
         <button
           onClick={handleSubmit}
-          disabled={overallRating === 0 || empathyRating === 0 || !aiResponse.trim()}
-          className="px-2 py-1 bg-[#4AA0E9] text-white text-xs rounded hover:bg-[#3a8fd9] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={overallRating === 0 || empathyRating === 0 || !aiResponse.trim() || isSubmitting}
+          className="px-2 py-1 bg-[#4AA0E9] text-white text-xs rounded hover:bg-[#3a8fd9] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
         >
-          投稿
+          {isSubmitting ? (
+            <>
+              <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              投稿中...
+            </>
+          ) : (
+            '投稿'
+          )}
         </button>
       </div>
     </div>
@@ -484,7 +497,8 @@ const ReplyItem = ({ reply }: { reply: Comment }) => {
 const CommentItem = ({ 
   comment, 
   onFeedbackSubmit,
-  isFeedbackSubmitted = false
+  isFeedbackSubmitted = false,
+  isSubmitting = false
 }: { 
   comment: Comment; 
   onFeedbackSubmit: (feedback: {
@@ -494,6 +508,7 @@ const CommentItem = ({
     aiResponse: string;
   }) => void;
   isFeedbackSubmitted?: boolean;
+  isSubmitting?: boolean;
 }) => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
@@ -518,9 +533,36 @@ const CommentItem = ({
     loadReplyCount();
   }, [comment.id]);
 
+  // 投稿完了後に返信件数と一覧を更新
+  useEffect(() => {
+    if (!isSubmitting) {
+      // 投稿が完了した後に返信件数を再取得
+      const updateReplyCount = async () => {
+        try {
+          const count = await fetchReplyCountByCommentId(comment.id);
+          if (count !== replyCount) {
+            setReplyCount(count);
+            
+            // 返信が表示されている場合は一覧も更新
+            if (showReplies) {
+              const response = await fetchRepliesByCommentId(comment.id);
+              setReplies(response.replies);
+            }
+          }
+        } catch (error) {
+          console.error('返信更新エラー:', error);
+        }
+      };
+      
+      // 少し遅延を入れてDBの更新を待つ
+      const timeoutId = setTimeout(updateReplyCount, 1000);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isSubmitting, comment.id, replyCount, showReplies]);
+
   // 返信コメントを取得する関数
   const loadReplies = async () => {
-    if (replies.length > 0) {
+    if (replies.length > 0 && !isSubmitting) {
       setShowReplies(!showReplies);
       return;
     }
@@ -530,6 +572,10 @@ const CommentItem = ({
       const response = await fetchRepliesByCommentId(comment.id);
       setReplies(response.replies);
       setShowReplies(true);
+      
+      // 返信件数も更新
+      const count = await fetchReplyCountByCommentId(comment.id);
+      setReplyCount(count);
     } catch (error) {
       console.error('返信コメント取得エラー:', error);
       // エラーメッセージを表示（オプション）
@@ -587,7 +633,7 @@ const CommentItem = ({
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              読み込み中...
+              返信を取得中...
             </>
           ) : (
             <>
@@ -613,14 +659,15 @@ const CommentItem = ({
       {/* フィードバックフォーム（展開形式） */}
       {showFeedbackForm && (
         <div className="mt-4 border-t border-gray-200 pt-4">
-          <CommentFeedbackForm 
-            commentId={comment.id} 
-            onSubmit={(feedback) => {
-              onFeedbackSubmit(feedback);
-              setShowFeedbackForm(false);
-            }}
-            onClose={() => setShowFeedbackForm(false)}
-          />
+                                      <CommentFeedbackForm 
+                              commentId={comment.id} 
+                              onSubmit={async (feedback) => {
+                                await onFeedbackSubmit(feedback);
+                                setShowFeedbackForm(false);
+                              }}
+                              onClose={() => setShowFeedbackForm(false)}
+                              isSubmitting={isSubmitting}
+                            />
         </div>
       )}
     </div>
@@ -635,6 +682,10 @@ export const PolicyCommentsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [feedbackSubmitted, setFeedbackSubmitted] = useState<Set<string>>(new Set());
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [successDescription, setSuccessDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // 投稿履歴のページネーション・フィルタリング用の状態
   const [currentPage, setCurrentPage] = useState(1);
@@ -677,6 +728,7 @@ export const PolicyCommentsPage = () => {
     empathyRating: number;
     aiResponse: string;
   }) => {
+    setIsSubmitting(true);
     try {
       // 評価データを保存
       await saveCommentEvaluation(feedback.commentId, {
@@ -699,9 +751,33 @@ export const PolicyCommentsPage = () => {
       
       // ステータスを更新
       setFeedbackSubmitted(prev => new Set(prev).add(feedback.commentId));
+      
+      // コメント一覧を再取得して最新の状態に更新
+      if (selectedPolicyId) {
+        try {
+          // 少し遅延を入れてDBの更新を待つ
+          setTimeout(async () => {
+            try {
+              const updatedComments = await fetchCommentsByPolicyId(selectedPolicyId);
+              setComments(updatedComments);
+            } catch (error) {
+              console.error('コメント再取得エラー:', error);
+            }
+          }, 500);
+        } catch (error) {
+          console.error('コメント更新エラー:', error);
+        }
+      }
+      
+      // 成功メッセージを表示
+      setSuccessMessage('フィードバックが正常に投稿されました');
+      setSuccessDescription('評価と返信が保存されました');
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error('フィードバック送信エラー:', error);
       alert('フィードバックの送信に失敗しました');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -794,6 +870,17 @@ export const PolicyCommentsPage = () => {
   
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
+      {/* 成功メッセージ */}
+      {showSuccessMessage && (
+        <SuccessMessage
+          message={successMessage}
+          description={successDescription}
+          onClose={() => setShowSuccessMessage(false)}
+          autoHide={true}
+          duration={4000}
+        />
+      )}
+      
       {/* 背景グラデーション */}
       <div className="absolute inset-0 bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9]" />
       
@@ -852,28 +939,7 @@ export const PolicyCommentsPage = () => {
                 
                 {loading ? (
                   <div className="animate-fade-in-up">
-                    <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded mb-2 animate-pulse-slow" style={{ width: '60%' }} />
-                              <div className="flex items-center space-x-2">
-                                <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '40%' }} />
-                                <div className="h-3 w-1 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
-                                <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '30%' }} />
-                              </div>
-                            </div>
-                            <div className="h-8 w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
-                          </div>
-                          <div className="space-y-2 mb-4">
-                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
-                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '95%' }} />
-                            <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '85%' }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <PolicySubmissionSkeletonList count={5} />
                   </div>
                 ) : error ? (
                   <div className="text-center py-8">
@@ -922,8 +988,29 @@ export const PolicyCommentsPage = () => {
           <div className="xl:col-span-3 lg:col-span-2 order-1 lg:order-2">
             <Card className="p-6 bg-white border-0">
               {loading ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">読み込み中...</p>
+                <div className="animate-fade-in-up">
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1">
+                            <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded mb-2 animate-pulse-slow" style={{ width: '60%' }} />
+                            <div className="flex items-center space-x-2">
+                              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '40%' }} />
+                              <div className="h-3 w-1 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '30%' }} />
+                            </div>
+                          </div>
+                          <div className="h-8 w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" />
+                          <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '95%' }} />
+                          <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse-slow" style={{ width: '85%' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : error ? (
                 <div className="text-center py-8">
@@ -975,6 +1062,7 @@ export const PolicyCommentsPage = () => {
                               comment={comment} 
                               onFeedbackSubmit={handleFeedbackSubmit}
                               isFeedbackSubmitted={feedbackSubmitted.has(comment.id)}
+                              isSubmitting={isSubmitting}
                             />
                           </div>
                         ))}

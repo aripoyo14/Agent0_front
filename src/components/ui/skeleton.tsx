@@ -66,3 +66,34 @@ export function CommentSkeletonList({ count = 3 }: { count?: number }) {
     </div>
   );
 }
+
+// 政策投稿履歴用のスケルトンコンポーネント
+export function PolicySubmissionSkeleton() {
+  return (
+    <div className="p-4 cursor-pointer transition-all hover:bg-gray-50">
+      <div className="flex justify-between items-start mb-2">
+        <Skeleton className="h-4 mb-2" width="80%" />
+      </div>
+      
+      <div className="text-sm text-gray-500 mb-2">
+        <Skeleton className="h-3" width="40%" />
+      </div>
+      
+      <div className="flex justify-between items-center mt-2">
+        <Skeleton className="h-3" width="30%" />
+        <Skeleton className="h-3" width="20%" />
+      </div>
+    </div>
+  );
+}
+
+// 複数の政策投稿スケルトンを表示するコンポーネント
+export function PolicySubmissionSkeletonList({ count = 3 }: { count?: number }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: count }).map((_, index) => (
+        <PolicySubmissionSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
