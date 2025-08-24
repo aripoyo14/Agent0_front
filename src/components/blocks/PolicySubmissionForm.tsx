@@ -60,7 +60,7 @@ export function PolicySubmissionForm({
     try {
       await submitPolicyProposal(formData);
       setShowSubmissionSuccess(true);
-    } catch (error) {
+    } catch {
       setErrorMessage("投稿に失敗しました。もう一度お試しください。");
       setShowErrorOverlay(true);
     } finally {
@@ -86,7 +86,7 @@ export function PolicySubmissionForm({
       setTimeout(() => {
         setShowSuccessOverlay(false);
       }, 3000);
-    } catch (error) {
+    } catch {
       setErrorMessage("下書きの保存に失敗しました。もう一度お試しください。");
       setShowErrorOverlay(true);
     } finally {
