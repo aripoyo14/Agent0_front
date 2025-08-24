@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from "next/navigation";
 import { Header } from "@/components/ui/header";
+import { createPolicyProposalWithAttachments } from "@/lib/expert-api";
+import { getUserFromToken } from "@/lib/auth";
 // import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 
 interface PolicyFormData {
@@ -47,10 +49,73 @@ export function PolicySubmissionPage() {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log("政策案投稿:", formData);
-    // 投稿完了のポップアップを表示
-    setShowSubmissionSuccess(true);
+  const handleSubmit = async () => {
+    try {
+      console.log("政策案投稿:", formData);
+      
+      // バリデーション
+      if (!formData.policyTitle.trim()) {
+        setErrorMessage("政策名を入力してください");
+        setShowErrorOverlay(true);
+        return;
+      }
+      
+      if (!formData.policyContent.trim()) {
+        setErrorMessage("政策の詳細を入力してください");
+        setShowErrorOverlay(true);
+        return;
+      }
+      
+      // 政策テーマIDのマッピング（フロントエンドのIDをバックエンドのIDに変換）
+      const themeIdMapping: { [key: string]: number } = {
+        "economy-industry": 1,
+        "external-economy": 2,
+        "manufacturing-it-distribution-services": 3,
+        "sme-regional-economy": 4,
+        "energy-environment": 5,
+        "safety-security": 6,
+        "digital-transformation": 7,
+        "green-transformation": 8,
+        "startup-support": 9,
+        "diversity-management": 10,
+        "economic-security": 11,
+        "regional-co-creation": 12,
+        "femtech": 13,
+        "data-ai-utilization": 14,
+        "cashless": 15
+      };
+      
+      const policyTagIds = formData.selectedThemes
+        .map(themeId => themeIdMapping[themeId])
+        .filter(id => id !== undefined);
+      
+      // API呼び出し
+      const userInfo = getUserFromToken();
+      if (!userInfo) {
+        setErrorMessage("ユーザー情報が取得できませんでした");
+        setShowErrorOverlay(true);
+        return;
+      }
+      
+      const response = await createPolicyProposalWithAttachments({
+        title: formData.policyTitle,
+        body: formData.policyContent,
+        status: "published",
+        published_by_user_id: userInfo.userId,
+        files: formData.attachedFiles.length > 0 ? formData.attachedFiles : undefined,
+        policy_tag_ids: policyTagIds.length > 0 ? policyTagIds : undefined
+      });
+      
+      console.log("投稿成功:", response);
+      
+      // 投稿完了のポップアップを表示
+      setShowSubmissionSuccess(true);
+      
+    } catch (error) {
+      console.error("投稿エラー:", error);
+      setErrorMessage("政策案の投稿に失敗しました。もう一度お試しください。");
+      setShowErrorOverlay(true);
+    }
   };
 
   const handleSubmissionComplete = () => {
@@ -213,48 +278,111 @@ export function PolicySubmissionPage() {
         {/* 政策テーマ選択エリア */}
         <div className="mb-16 relative mt-8">
           <h3 className="absolute -top-6 left-0 font-['Noto_Sans_JP'] font-bold text-white text-xs tracking-[2px]">政策テーマを選択する</h3>
-          <div className="grid grid-cols-8 gap-x-3 gap-y-2 w-full">
+          <div className="grid grid-cols-5 gap-x-4 gap-y-3 w-full">
             {[
-              { id: "economy-industry", title: "経済産業" },
-              { id: "digital-transformation", title: "DX-デジタル変革" },
-              { id: "manufacturing-it-distribution-services", title: "産業構造転換" },
-              { id: "startup-support", title: "スタートアップ・中小企業支援" },
-              { id: "external-economy", title: "通商戦略" },
-              { id: "sme-regional-economy", title: "経済連携" },
-              { id: "regional-co-creation", title: "ADX-アジア新産業共創" },
-              { id: "economic-security", title: "経済安全保障" },
-              { id: "energy-environment", title: "再生可能エネルギー" },
-              { id: "green-growth", title: "水素社会" },
-              { id: "safety-security", title: "資源外交" },
-              { id: "diversity-management", title: "グリーン成長戦略" },
-              { id: "data-ai-utilization", title: "デジタル政策" },
-              { id: "femtech", title: "人材政策" },
-              { id: "cashless", title: "産学連携" },
-              { id: "other", title: "地域政策" }
+              { 
+                id: "economy-industry", 
+                title: "経済産業",
+                description: "国内外の経済動向を踏まえた産業政策や経済成長戦略を推進する分野。"
+              },
+              { 
+                id: "external-economy", 
+                title: "対外経済",
+                description: "国際経済関係や貿易・投資促進、国際協力を通じた経済成長の実現。"
+              },
+              { 
+                id: "manufacturing-it-distribution-services", 
+                title: "ものづくり/情報/流通・サービス",
+                description: "製造業や情報通信、物流・流通、サービス産業の高度化と競争力強化。"
+              },
+              { 
+                id: "sme-regional-economy", 
+                title: "中小企業・地域経済産業",
+                description: "中小企業の成長支援と地域産業の活性化を促進する分野。"
+              },
+              { 
+                id: "energy-environment", 
+                title: "エネルギー・環境",
+                description: "安定したエネルギー供給と環境保護、脱炭素社会の実現を目指す政策。"
+              },
+              { 
+                id: "safety-security", 
+                title: "安全・安心",
+                description: "国民生活や企業活動の安全確保、防災・減災、危機管理体制の強化。"
+              },
+              { 
+                id: "digital-transformation", 
+                title: "DX",
+                description: "デジタル技術を活用して業務変革や新たな価値創造を行う取り組み。"
+              },
+              { 
+                id: "green-transformation", 
+                title: "GX",
+                description: "環境負荷低減と経済成長の両立を図るグリーントランスフォーメーション。"
+              },
+              { 
+                id: "startup-support", 
+                title: "スタートアップ支援",
+                description: "新規事業創出やベンチャー企業の成長支援、資金調達や規制緩和の推進。"
+              },
+              { 
+                id: "diversity-management", 
+                title: "ダイバーシティ経営",
+                description: "多様な人材の活躍を促進し、企業価値向上を図る経営戦略。"
+              },
+              { 
+                id: "economic-security", 
+                title: "経済安全保障",
+                description: "経済活動における安全確保や重要物資・技術の保護、サプライチェーン強化。"
+              },
+              { 
+                id: "regional-co-creation", 
+                title: "地域共創",
+                description: "地域資源を活かし、自治体・企業・住民が協力して地域課題を解決。"
+              },
+              { 
+                id: "femtech", 
+                title: "フェムテック",
+                description: "女性の健康課題解決を支援するテクノロジーや製品・サービスの開発促進。"
+              },
+              { 
+                id: "data-ai-utilization", 
+                title: "データ・AI活用",
+                description: "ビッグデータやAIを活用して業務効率化や新たな価値創出を実現。"
+              },
+              { 
+                id: "cashless", 
+                title: "キャッシュレス",
+                description: "現金に依存しない決済手段の普及促進と関連インフラの整備。"
+              }
             ].map((theme) => {
               const isSelected = formData.selectedThemes.includes(theme.id);
               return (
-                <button
-                  key={theme.id}
-                  onClick={() => handleThemeToggle(theme.id)}
-                  className={`relative px-3 py-1 rounded-[40px] text-xs font-bold transition-all hover:shadow-md h-7 flex items-center justify-center ${
-                    isSelected 
-                      ? 'bg-white text-[#2d8cd9] shadow-md' 
-                      : 'bg-transparent text-white hover:bg-white/10'
-                  }`}
-                >
-                  <div className={`absolute border-solid inset-0 pointer-events-none rounded-[40px] border-[1px] ${
-                    isSelected ? 'border-white' : 'border-white/60'
-                  }`} />
-                  <span className={`text-[10px] leading-[1.2] px-1 ${
-                    theme.title.includes('・') ? 'whitespace-pre-line' : ''
-                  }`}>
-                    {theme.title.includes('・') 
-                      ? theme.title.replace('・', '\n・')
-                      : theme.title
-                    }
-                  </span>
-                </button>
+                <div key={theme.id} className="relative group">
+                  <button
+                    onClick={() => handleThemeToggle(theme.id)}
+                    className={`relative px-3 py-1 rounded-[40px] text-xs font-bold transition-all hover:shadow-md h-7 flex items-center justify-center w-full min-w-[160px] ${
+                      isSelected 
+                        ? 'bg-white text-[#2d8cd9] shadow-md' 
+                        : 'bg-transparent text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className={`absolute border-solid inset-0 pointer-events-none rounded-[40px] border-[1px] ${
+                      isSelected ? 'border-white' : 'border-white/60'
+                    }`} />
+                    <span className="text-[10px] leading-[1.2] px-1 text-center whitespace-nowrap">
+                      {theme.title}
+                    </span>
+                  </button>
+                  
+                  {/* ホバー時のツールチップ */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-4 py-3 bg-gray-900/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-[128px] whitespace-normal shadow-lg">
+                    <div className="font-bold mb-2 text-sm">{theme.title}</div>
+                    <div className="text-gray-200 leading-relaxed text-xs">{theme.description}</div>
+                    {/* ツールチップの矢印 */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900/80"></div>
+                  </div>
+                </div>
               );
             })}
           </div>

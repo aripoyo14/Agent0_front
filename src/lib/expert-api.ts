@@ -45,6 +45,7 @@ export interface PolicyProposalWithAttachmentsRequest {
   published_by_user_id: string;
   status?: string;
   files?: File[];
+  policy_tag_ids?: number[];
 }
 
 // 政策提案作成（添付ファイル付き）のレスポンス型
@@ -80,13 +81,18 @@ export async function createPolicyProposalWithAttachments(
   formData.append("published_by_user_id", data.published_by_user_id);
   formData.append("status", data.status || "draft");
   
+  // 政策テーマIDを追加
+  if (data.policy_tag_ids && data.policy_tag_ids.length > 0) {
+    formData.append("policy_tag_ids", JSON.stringify(data.policy_tag_ids));
+  }
+  
   if (data.files) {
     data.files.forEach((file) => {
       formData.append("files", file);
     });
   }
 
-  return apiFetch("/api/policy-proposal-with-attachments/", {
+  return apiFetch("/api/policy-proposals/with-attachments", {
     method: "POST",
     body: formData,
     auth: true,

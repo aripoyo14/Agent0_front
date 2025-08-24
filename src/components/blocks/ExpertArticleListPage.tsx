@@ -55,7 +55,8 @@ const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertA
   commentCount: 0, // 後で計算
   themeId: proposal.policy_tags && proposal.policy_tags.length > 0 
     ? proposal.policy_tags[0].id.toString() 
-    : "startup" // タグがない場合は"startup"に設定（「すべて」で表示される）
+    : "startup", // タグがない場合は"startup"に設定（「すべて」で表示される）
+  attachments: proposal.attachments || [] // 添付ファイル情報を追加
 });
 
 // 政策テーマ選択コンポーネント
@@ -168,6 +169,16 @@ const ArticleCard = ({
       </div>
       
       <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+        {/* 添付ファイルアイコン */}
+        {article.attachments && article.attachments.length > 0 && (
+          <div className="flex items-center gap-1 text-blue-600" title={`${article.attachments.length}個の添付ファイル`}>
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+            <span className="text-xs font-medium">{article.attachments.length}</span>
+          </div>
+        )}
+        
         <CommentCount 
           policyProposalId={article.id}
           className="text-[12px] text-gray-700 font-bold"
@@ -418,6 +429,15 @@ const ArticleOverlay = ({
                   showIcon={false}
                 />
               </span>
+              {/* 添付ファイル情報 */}
+              {article.attachments && article.attachments.length > 0 && (
+                <span className="flex items-center gap-1 text-blue-600">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-xs font-medium">{article.attachments.length}個の添付ファイル</span>
+                </span>
+              )}
             </div>
             
             {/* 記事本文 */}
