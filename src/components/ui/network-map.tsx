@@ -267,7 +267,7 @@ export function NetworkMap({ filters: _filters, className, backendData }: Networ
 			}
 		}, 200);
 		return () => clearTimeout(t);
-	}, [backendGraphData?.nodes?.length]); // ノード数が変更された時のみ実行
+	}, [backendGraphData]); // 依存配列を修正
 
 	// 政策ノード密集の緩和（リンク距離・反発力）
 	React.useEffect(() => {
@@ -337,7 +337,7 @@ export function NetworkMap({ filters: _filters, className, backendData }: Networ
 
 			fgRef.current.d3ReheatSimulation?.();
 		} catch {}
-	}, [backendGraphData?.nodes?.length]); // ノード数が変更された時のみ実行
+	}, [backendGraphData, graphData.nodes]); // 依存配列を修正
 
   const shouldShowEmpty = !backendGraphData || backendGraphData.nodes.length === 0;
   if (shouldShowEmpty) {
@@ -355,7 +355,7 @@ export function NetworkMap({ filters: _filters, className, backendData }: Networ
 	}
 
 	return (
-		<div className={`h-full w-full relative overflow-hidden min-h-0 bg-transparent absolute inset-0 ${className}`}>
+		<div className={`h-full w-full overflow-hidden min-h-0 bg-transparent ${className}`}>
 			<ForceGraph2D
 				ref={fgRef}
 				graphData={graphData}
@@ -412,4 +412,3 @@ export function NetworkMap({ filters: _filters, className, backendData }: Networ
 		</div>
 	);
 }
-
