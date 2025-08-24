@@ -193,6 +193,7 @@ export interface ExpertArticle {
   publishedAt: string;
   commentCount: number;
   themeId: string;
+  attachments?: PolicyProposalAttachment[]; // 添付ファイル情報を追加
 }
 
 // ページの状態管理（外部有識者向け）

@@ -21,7 +21,8 @@ const convertPolicyProposalToExpertArticle = (proposal: PolicyProposal): ExpertA
   department: "中小企業庁 地域産業支援課", // 仮の値
   publishedAt: formatDate(proposal.published_at || proposal.created_at),
   commentCount: 0, // 後で計算
-  themeId: "theme-1" // 仮の値
+  themeId: "theme-1", // 仮の値
+  attachments: proposal.attachments || [] // 添付ファイル情報を追加
 });
 
 // 日付フォーマット関数
@@ -474,66 +475,43 @@ const DocumentUploadForm = ({ onSubmit }: { onSubmit: (file: File) => void }) =>
   );
 };
 
-// 添付資料表示コンポーネント
-const AttachedDocuments = ({ documents }: { documents: Array<{ name: string; url: string }> }) => {
-  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<{ name: string; url: string } | null>(null);
-
-  const handleDocumentClick = (doc: { name: string; url: string }) => {
-    setSelectedDocument(doc);
-    setIsOverlayOpen(true);
-  };
-
-  const closeOverlay = () => {
-    setIsOverlayOpen(false);
-    setSelectedDocument(null);
-  };
+// PDFプレビューモーダルコンポーネント
+const PDFPreviewModal = ({ 
+  isOpen, 
+  onClose, 
+  fileUrl, 
+  fileName 
+}: { 
+  isOpen: boolean;
+  onClose: () => void;
+  fileUrl: string;
+  fileName: string;
+}) => {
+  if (!isOpen) return null;
 
   return (
-    <>
-      <div className="bg-white rounded-lg p-6 mb-6 shadow-sm border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">添付資料</h3>
-        <div className="space-y-2">
-          {documents.map((doc, index) => (
-            <button
-              key={index}
-              onClick={() => handleDocumentClick(doc)}
-              className="block text-blue-600 hover:text-blue-800 underline text-sm text-left w-full"
-            >
-              {doc.name}
-            </button>
-          ))}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-11/12 h-5/6 flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">{fileName}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 p-4">
+          <iframe
+            src={fileUrl}
+            className="w-full h-full border-0 rounded"
+            title={fileName}
+          />
         </div>
       </div>
-
-      {/* 添付資料オーバーレイ */}
-      {isOverlayOpen && selectedDocument && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl relative">
-            {/* 閉じるボタン - 右上に配置 */}
-            <button
-              onClick={closeOverlay}
-              className="absolute top-4 right-4 z-10 flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 transition-colors bg-white rounded-full shadow-md"
-              aria-label="オーバーレイを閉じる"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            {/* コンテンツ */}
-            <div className="p-6 overflow-y-auto max-h-[80vh] relative">
-              <div className="bg-gray-100 rounded-lg p-8 text-center h-full">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-gray-600 mb-4">PDFプレビュー</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 
@@ -541,18 +519,23 @@ const AttachedDocuments = ({ documents }: { documents: Array<{ name: string; url
 export default function ExpertPostDetailPage({ articleId }: { articleId: string }) {
   const router = useRouter();
   const [article, setArticle] = useState<ExpertArticle | null>(null);
-  const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
   const [comments, setComments] = useState<ExpertComment[]>([]);
+  const [sortOption, setSortOption] = useState<CommentSortOption>('relevance');
   const [isLoading, setIsLoading] = useState(true);
-  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
-
-  // サンプル添付資料
-  const attachedDocuments = [
-    { name: "スタートアップ・中小企業支援PDF", url: "#" },
-    { name: "支援制度詳細資料", url: "#" }
-  ];
+  
+  // PDFプレビューモーダルの状態管理
+  const [pdfPreviewModal, setPdfPreviewModal] = useState<{
+    isOpen: boolean;
+    fileUrl: string;
+    fileName: string;
+  }>({
+    isOpen: false,
+    fileUrl: '',
+    fileName: ''
+  });
 
   // 記事データの取得
   useEffect(() => {
@@ -928,6 +911,15 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                     showIcon={false}
                   />
                 </span>
+                {/* 添付ファイル情報 */}
+                {article.attachments && article.attachments.length > 0 && (
+                  <span className="flex items-center gap-1 text-blue-600">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-xs font-medium">{article.attachments.length}個の添付ファイル</span>
+                  </span>
+                )}
               </div>
               
               <div className="prose max-w-none mb-6">
@@ -937,7 +929,54 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
               </div>
 
               {/* 添付資料 */}
-              <AttachedDocuments documents={attachedDocuments} />
+              {article.attachments && article.attachments.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">添付資料</h3>
+                  <div className="space-y-2">
+                    {article.attachments.map((attachment) => (
+                      <div key={attachment.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{attachment.file_name}</p>
+                          <p className="text-xs text-gray-500">
+                            {(attachment.file_size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* PDFプレビューボタン */}
+                          {attachment.file_type === 'application/pdf' && (
+                            <button
+                              onClick={() => setPdfPreviewModal({
+                                isOpen: true,
+                                fileUrl: attachment.file_url,
+                                fileName: attachment.file_name
+                              })}
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+                              title="PDFをプレビュー"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              プレビュー
+                            </button>
+                          )}
+                          <a
+                            href={attachment.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          >
+                            ダウンロード
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* コメントセクション */}
@@ -1013,6 +1052,14 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
           </div>
         </div>
       )}
+
+      {/* PDFプレビューモーダル */}
+      <PDFPreviewModal
+        isOpen={pdfPreviewModal.isOpen}
+        onClose={() => setPdfPreviewModal({ isOpen: false, fileUrl: '', fileName: '' })}
+        fileUrl={pdfPreviewModal.fileUrl}
+        fileName={pdfPreviewModal.fileName}
+      />
     </div>
   );
 }
