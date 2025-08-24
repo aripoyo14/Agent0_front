@@ -110,18 +110,63 @@ export async function getUserNameFromAPI(): Promise<string> {
   }
 }
 
-// ログインAPIを呼び出す関数
+// ログインAPIを呼び出す関数（クッキー対応版）
 export async function login(email: string, password: string): Promise<void> {
   const data = await apiFetch<LoginResponse>("/api/auth/login", {
     method: "POST",
     body: { email, password },
   });
-  // console.log("ログインAPIレスポンス:", data);
+  
+  // localStorageとクッキーの両方に保存
   saveToken(data.access_token, data.token_type);
+  
+  // クッキーにも保存（SSR対応）
+  if (typeof document !== 'undefined') {
+    // セキュアなクッキー設定
+    const cookieOptions = [
+      `path=/`,
+      `max-age=86400`, // 24時間
+      `SameSite=Strict`,
+      process.env.NODE_ENV === 'production' ? 'Secure' : ''
+    ].filter(Boolean).join('; ');
+    
+    document.cookie = `access_token=${data.access_token}; ${cookieOptions}`;
+    document.cookie = `token_type=${data.token_type}; ${cookieOptions}`;
+  }
+}
+
+// クッキーからトークンを取得（クライアントサイド用）
+export function getTokenFromCookies(): { accessToken: string | null; tokenType: string | null } {
+  if (typeof document === 'undefined') {
+    return { accessToken: null, tokenType: null };
+  }
+  
+  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, value] = cookie.trim().split('=');
+    acc[key] = value;
+    return acc;
+  }, {} as Record<string, string>);
+  
+  return {
+    accessToken: cookies.access_token || null,
+    tokenType: cookies.token_type || 'Bearer'
+  };
+}
+
+// 認証状態の確認（クライアントサイド用）
+export function isAuthenticatedFromCookies(): boolean {
+  const { accessToken } = getTokenFromCookies();
+  return Boolean(accessToken);
 }
 
 export function logout(): void {
   clearToken();
+  
+  // クッキーも削除
+  if (typeof document !== 'undefined') {
+    document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'token_type=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  }
 }
 
 export { isAuthenticated, getToken };

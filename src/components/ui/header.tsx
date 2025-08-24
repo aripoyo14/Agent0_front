@@ -46,10 +46,21 @@ export function Header() {
               <div className="text-white text-[12px] lg:text-[13.412px] font-bold tracking-[2.0118px] cursor-pointer hover:opacity-80 transition-opacity opacity-70 hover:border-b-2 hover:border-white hover:pb-1" onClick={() => router.push('/comments')}>
                 意見を確認する
               </div>
+              <div className="text-white text-[12px] lg:text-[13.412px] font-bold tracking-[2.0118px] cursor-pointer hover:opacity-80 transition-opacity opacity-70 hover:border-b-2 hover:border-white hover:pb-1" onClick={() => router.push('/invitation')}>
+                招待コードを発行する
+              </div>
             </div>
           </div>
-          <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors self-start lg:self-auto">
-            {userName}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/meeting-upload')}
+              className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors"
+            >
+              面談録のアップロード
+            </button>
+            <div className="text-white text-[12px] lg:text-[13.06px] font-semibold tracking-[1.5672px] bg-white/10 rounded-lg px-3 py-2 cursor-pointer hover:bg-white/20 transition-colors">
+              {userName}
+            </div>
           </div>
         </div>
       </div>

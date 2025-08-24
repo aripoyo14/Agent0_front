@@ -45,7 +45,7 @@ export function PolicyThemeSelector({
             <div
               key={theme.id}
               className={cn(
-                "px-3 py-2 rounded-full text-xs font-medium transition-all cursor-pointer text-center flex items-center justify-center min-h-[24px] inline-flex whitespace-nowrap",
+                "px-3 py-2 rounded-full text-xs font-medium transition-all cursor-pointer text-center inline-flex items-center justify-center min-h-[24px] whitespace-nowrap",
                 isSelected
                   ? "bg-[#58aadb] text-white"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200"
