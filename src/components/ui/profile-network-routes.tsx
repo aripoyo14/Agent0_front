@@ -131,15 +131,26 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 			setRoutesData({ routes: [] });
 			return;
 		}
+		
+		// 既存のリクエストを中断
 		if (abortRef.current) {
-			try { abortRef.current.abort(); } catch {}
+			abortRef.current.abort();
 		}
-		const c = new AbortController();
-		abortRef.current = c;
+		
+		// 新しいAbortControllerを作成
+		const controller = new AbortController();
+		abortRef.current = controller;
+		
 		setLoading(true);
 		setError(null);
+		
 		(async () => {
 			try {
+				// リクエストが中断されたかチェック
+				if (controller.signal.aborted) {
+					return;
+				}
+				
 				const payload = {
 					user_id: user.userId,
 					expert_id: expertId,
@@ -149,17 +160,41 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 					overlap_coef: 0.4,
 					max_results: 5,
 				};
-				const data = await apiFetch<RoutesResponse>("/api/network_meti/routes", { method: "POST", body: payload, headers: { "x-cancel": String(Date.now()) }, signal: c.signal, auth: true });
+				
+				const data = await apiFetch<RoutesResponse>("/api/network_meti/routes", { 
+					method: "POST", 
+					body: payload, 
+					headers: { "x-cancel": String(Date.now()) }, 
+					signal: controller.signal, 
+					auth: true 
+				});
+				
+				// リクエストが中断されたかチェック
+				if (controller.signal.aborted) {
+					return;
+				}
+				
 				setRoutesData(data);
 			} catch (e: unknown) {
+				// AbortErrorの場合は状態を更新しない
+				if (e instanceof Error && e.name === 'AbortError') {
+					return;
+				}
 				setError(e instanceof Error ? e.message : "取得に失敗しました");
 				setRoutesData({ routes: [] });
 			} finally {
-				setLoading(false);
+				// リクエストが中断された場合はloading状態を更新しない
+				if (!controller.signal.aborted) {
+					setLoading(false);
+				}
 			}
 		})();
+		
 		return () => {
-			try { c.abort(); } catch {}
+			// クリーンアップ時にAbortControllerを中断
+			if (controller && !controller.signal.aborted) {
+				controller.abort();
+			}
 		};
 	}, [expertId, reloadTick]);
 
@@ -408,5 +443,3 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		</div>
 	);
 }
-
-
