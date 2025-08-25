@@ -121,8 +121,6 @@ export default function LoginForm() {
         throw new Error("メールアドレスとパスワードを入力してください");
       }
 
-      // console.log("ログイン開始:", { email });
-
       // 実APIログイン
       await login(email, password);
       setState("success");
@@ -133,8 +131,8 @@ export default function LoginForm() {
         // console.log("ログイン後のユーザー情報:", userInfo);
         
         if (userInfo?.userType === 'expert') {
-          // console.log("エキスパートとして認識、/policyに遷移");
-          router.push("/policy");
+          // console.log("エキスパートとして認識、/expert/articlesに遷移");
+          router.push("/expert/articles");
         } else {
           // console.log("一般ユーザーとして認識、/dashboardに遷移");
           router.push("/dashboard");

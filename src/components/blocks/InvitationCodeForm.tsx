@@ -32,9 +32,9 @@ export default function InvitationCodeForm() {
       console.log("自動発行開始...");
       setState("submitting");
       const result = await generateInvitationCode(formData);
-      console.log("API応答:", result);
-      console.log("QRコードデータ:", result.qr_code_data);
-      console.log("QRコードデータの長さ:", result.qr_code_data?.length);
+      // console.log("API応答:", result);
+      // console.log("QRコードデータ:", result.qr_code_data);
+      // console.log("QRコードデータの長さ:", result.qr_code_data?.length);
       setGeneratedCode(result);
       setState("success");
       console.log("状態更新完了, generatedCode:", result);

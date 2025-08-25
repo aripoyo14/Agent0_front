@@ -100,8 +100,8 @@ export default function ExpertRegistrationForm() {
         business_card_image_url: businessCardUrl, // ここでURLを設定
       };
 
-      console.log("送信するフォームデータ:", apiData); // この行を追加
-      console.log("招待コード:", invitationCode);
+      // console.log("送信するフォームデータ:", apiData); // この行を追加
+      // console.log("招待コード:", invitationCode);
 
       // 招待コード付きで登録APIを呼び出し
       const result = await registerExpert(apiData, invitationCode);
