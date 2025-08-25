@@ -43,6 +43,7 @@ interface GraphNode {
 	x?: number;
 	y?: number;
     mediator?: boolean;
+    center?: boolean;
 }
 
 interface GraphEdge {
@@ -64,17 +65,22 @@ type ForceGraphLink = {
 const MARGIN_RATIO = 0.08 as const;
 const MARGIN_MIN = 24;
 const MARGIN_MAX = 96;
+const MIN_SEPARATION = 240; // px: これ未満に近づかないように強制
 
 function clamp(v: number, lo: number, hi: number) {
 	return Math.max(lo, Math.min(hi, v));
 }
 
-export function computeAnchors(containerWidth: number, paddingLeft = 0, paddingRight = 0) {
+export function computeAnchors(containerWidth: number, containerHeight: number, paddingLeft = 0, paddingRight = 0, paddingTop = 0, paddingBottom = 0) {
+	// U/Z を左右端に近づけて横一列に配置（中心0基準）
 	const usableW = Math.max(0, containerWidth - paddingLeft - paddingRight);
-	const m = Math.max(MARGIN_MIN, Math.min(MARGIN_MAX, usableW * MARGIN_RATIO));
-	const ux = paddingLeft + m;
-	const zx = paddingLeft + usableW - m;
-	return { ux, zx };
+	const usableH = Math.max(0, containerHeight - paddingTop - paddingBottom);
+	const halfW = usableW / 2;
+	const marginX = 10; 
+	// const marginX = Math.max(24, usableW * 0.03); // 余白
+	const ux = -halfW + marginX;
+	const zx = +halfW - marginX;
+	return { ux, zx, uy: 0, zy: 0 };
 }
 
 function scoreToStrokeWidth(score?: number) {
@@ -97,9 +103,10 @@ interface ProfileNetworkRoutesProps {
 export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRoutesProps) {
 	const router = useRouter();
 	const containerRef = useRef<HTMLDivElement | null>(null);
-	const fgRef = useRef<{ zoomToFit?: (ms?: number, padding?: number) => void; d3Force?: (n: string, f?: unknown) => unknown; d3ReheatSimulation?: () => void } | null>(null);
+	const fgRef = useRef<{ centerAt?: (x: number, y: number, ms?: number) => void; zoomToFit?: (ms?: number, padding?: number) => void; d3Force?: (n: string, f?: unknown) => unknown; d3ReheatSimulation?: () => void } | null>(null);
 	const [containerW, setContainerW] = useState<number>(0);
-	const [padding, setPadding] = useState<{ left: number; right: number }>({ left: 0, right: 0 });
+	const [containerH, setContainerH] = useState<number>(0);
+	const [padding, setPadding] = useState<{ left: number; right: number; top: number; bottom: number }>({ left: 0, right: 0, top: 0, bottom: 0 });
 	const [routesData, setRoutesData] = useState<RoutesResponse | null>(null);
 	const [loading, setLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
@@ -115,8 +122,11 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 			const cs = getComputedStyle(el);
 			const pl = parseFloat(cs.paddingLeft || "0") || 0;
 			const pr = parseFloat(cs.paddingRight || "0") || 0;
-			setPadding({ left: pl, right: pr });
+			const pt = parseFloat(cs.paddingTop || "0") || 0;
+			const pb = parseFloat(cs.paddingBottom || "0") || 0;
+			setPadding({ left: pl, right: pr, top: pt, bottom: pb });
 			setContainerW(el.clientWidth);
+			setContainerH(el.clientHeight);
 		};
 		update();
 		const ro = new ResizeObserver(() => update());
@@ -198,7 +208,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		};
 	}, [expertId, reloadTick]);
 
-	const anchors = useMemo(() => computeAnchors(containerW, padding.left, padding.right), [containerW, padding.left, padding.right]);
+	const anchors = useMemo(() => computeAnchors(containerW, containerH, padding.left, padding.right, padding.top, padding.bottom), [containerW, containerH, padding.left, padding.right, padding.top, padding.bottom]);
 
 	// Transform backend routes to graph nodes/edges
 	const { nodes, links } = useMemo(() => {
@@ -241,12 +251,12 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 
 			// nodes: classify kinds
 			const uNode = ensureNode(u.id, u.name || "あなた", "user");
-			const xNode = ensureNode(x.id, x.name || x.id, "staff");
+			const xNode = ensureNode(x.id, x.name || "", "staff");
 			if (m) {
-				const mNode = ensureNode(m.id, m.name || m.id, "staff");
+				const mNode = ensureNode(m.id, m.name || "", "staff");
 				mNode.mediator = true;
 			}
-			const zNode = ensureNode(z.id, z.name || z.id, "expert");
+			const zNode = ensureNode(z.id, z.name || "", "expert");
 
 			// edges from breakdown
 			const bd = r.breakdown || {};
@@ -264,15 +274,88 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 			}
 		}
 
-		// Anchor U and Z on X axis using fx
+		// Anchor U (top-left) and target Z (bottom-right)
 		for (const n of nodes) {
-			if (n.kind === "user") n.fx = anchors.ux;
-			if (n.kind === "expert") n.fx = anchors.zx;
+			if (n.kind === "user") {
+				n.fx = anchors.ux;
+				n.fy = anchors.uy;
+				n.x = n.fx;
+				n.y = n.fy;
+			}
+			if (n.kind === "expert") {
+				if (String(n.id) === String(expertId)) {
+					n.fx = anchors.zx;
+					n.fy = anchors.zy;
+					n.x = n.fx;
+					n.y = n.fy;
+				} else {
+					n.fx = undefined;
+					n.fy = undefined;
+				}
+			}
 		}
+
+		// Place staff nodes between U and Z along the diagonal, with slight normal offsets
+		const dx = anchors.zx - anchors.ux;
+		const baseY = anchors.uy; // == anchors.zy
+		const jitter = Math.max(50, Math.abs(dx) * 0.45);
+
+		// Determine X-candidate staff nodes (connected to Z) using current aggregated edges in edgeMax
+		const xCandidateIds = new Set<string>();
+		edgeMax.forEach((e) => {
+			const s = String(e.source);
+			const t = String(e.target);
+			if (s === String(expertId)) xCandidateIds.add(t);
+			else if (t === String(expertId)) xCandidateIds.add(s);
+		});
+
+		const staffMediators: GraphNode[] = [];
+		const staffX: GraphNode[] = [];
+		const staffOthers: GraphNode[] = [];
+		for (const n of nodes) {
+			if (n.kind !== 'staff') continue;
+			if ((n as GraphNode).center) continue; // skip center marker
+			if ((n as GraphNode).mediator) staffMediators.push(n);
+			else if (xCandidateIds.has(String(n.id))) staffX.push(n);
+			else staffOthers.push(n);
+		}
+
+		const placeRandom = (list: GraphNode[], tMin: number, tMax: number) => {
+			const count = list.length;
+			if (!count) return;
+			const placed: Array<{ x: number; y: number }> = [];
+			const minSep = 48; // 最低分離距離(px)
+			for (let i = 0; i < count; i++) {
+				let px = 0, py = 0; let tries = 0;
+				while (tries < 40) {
+					const t = tMin + Math.random() * Math.max(0.01, (tMax - tMin));
+					px = anchors.ux + dx * t + (Math.random() - 0.5) * jitter * 0.25;
+					py = baseY + (Math.random() - 0.5) * 2 * jitter;
+					let ok = true;
+					for (const p of placed) {
+						const d2 = (p.x - px) * (p.x - px) + (p.y - py) * (p.y - py);
+						if (d2 < minSep * minSep) { ok = false; break; }
+					}
+					if (ok) break;
+					tries++;
+				}
+				placed.push({ x: px, y: py });
+				// 初期位置のみ設定（固定しない）
+				list[i].fx = undefined;
+				list[i].fy = undefined;
+				list[i].x = px;
+				list[i].y = py;
+			}
+		};
+
+		// Mediators near user, X near expert, others random in middle (ランダム配置)
+		placeRandom(staffMediators, 0.05, 0.40);
+		placeRandom(staffOthers,   0.30, 0.70);
+		placeRandom(staffX,        0.60, 0.95);
 
 		edgeMax.forEach((e) => links.push(e));
 		return { nodes, links };
-	}, [routesData, anchors.ux, anchors.zx]);
+	}, [routesData, anchors.ux, anchors.zx, anchors.uy, anchors.zy]);
 
 	// node rendering to emphasize U/Z and mediator ring
 	const nodeCanvasObject = (node: NodeObj, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -280,11 +363,12 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		const isUser = n.kind === "user";
 		const isExpert = n.kind === "expert";
 		const isMediator = !!n.mediator;
-		const radius = (isUser || isExpert) ? 12 : 9;
+        const isCenter = !!n.center;
+		const radius = isCenter ? 6 : ((isUser || isExpert) ? 12 : 9);
 		ctx.save();
 		ctx.beginPath();
 		ctx.arc((n.x ?? 0), (n.y ?? 0), radius, 0, 2 * Math.PI, false);
-		const fill = isExpert ? '#58aadb' : (isUser ? '#1f2937' : '#9ca3af');
+		const fill = isCenter ? '#ef4444' : (isExpert ? '#58aadb' : (isUser ? '#1f2937' : '#9ca3af'));
 		ctx.fillStyle = fill;
 		ctx.globalAlpha = isUser || isExpert ? 0.95 : 0.8;
 		ctx.fill();
@@ -304,18 +388,110 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		ctx.textAlign = 'center';
 		ctx.textBaseline = 'top';
 		ctx.fillStyle = 'rgba(31,41,55,0.95)';
-		ctx.fillText(String(n.label), (n.x ?? 0), (n.y ?? 0) + radius + 4);
+		const labelText = isCenter ? '' : String(n.label);
+		if (labelText) ctx.fillText(labelText, (n.x ?? 0), (n.y ?? 0) + radius + 4);
 		ctx.restore();
 	};
 
+	// ランタイムで最小分離距離を維持
+	const enforceSeparation = React.useCallback(() => {
+		const nlist = nodes as unknown as Array<GraphNode & { x?: number; y?: number }>;
+		for (let i = 0; i < nlist.length; i++) {
+			for (let j = i + 1; j < nlist.length; j++) {
+				const a = nlist[i];
+				const b = nlist[j];
+				if (!a || !b) continue;
+				// U/Z は固定扱い
+				const aFixed = a.kind === 'user' || a.kind === 'expert';
+				const bFixed = b.kind === 'user' || b.kind === 'expert';
+				const ax = (a.x ?? 0), ay = (a.y ?? 0);
+				const bx = (b.x ?? 0), by = (b.y ?? 0);
+				let dx = bx - ax; let dy = by - ay;
+				let d2 = dx * dx + dy * dy;
+				if (d2 === 0) { dx = (Math.random() - 0.5) * 0.01; dy = (Math.random() - 0.5) * 0.01; d2 = dx*dx + dy*dy; }
+				const d = Math.sqrt(d2);
+				if (d < MIN_SEPARATION) {
+					const nx = dx / (d || 1);
+					const ny = dy / (d || 1);
+					const push = (MIN_SEPARATION - d) * 0.6;
+					if (!aFixed && !bFixed) {
+						a.x = ax - nx * push * 0.5; a.y = ay - ny * push * 0.5;
+						b.x = bx + nx * push * 0.5; b.y = by + ny * push * 0.5;
+					} else if (!aFixed && bFixed) {
+						a.x = ax - nx * push; a.y = ay - ny * push;
+					} else if (aFixed && !bFixed) {
+						b.x = bx + nx * push; b.y = by + ny * push;
+					}
+				}
+			}
+		}
+		try { fgRef.current?.d3ReheatSimulation?.(); } catch {}
+	}, [nodes]);
+
 	React.useEffect(() => {
 		try { fgRef.current?.d3ReheatSimulation?.(); } catch {}
-		const t = setTimeout(() => { try { fgRef.current?.zoomToFit?.(400, 40); } catch {} }, 120);
+		const t = setTimeout(() => {
+			try {
+				fgRef.current?.zoomToFit?.(0, 120);
+				fgRef.current?.centerAt?.(0, 0, 0);
+				// レイアウト確定後の再フィット（念押し）
+				setTimeout(() => {
+					try {
+						fgRef.current?.zoomToFit?.(0, 120);
+						fgRef.current?.centerAt?.(0, 0, 0);
+					} catch {}
+				}, 400);
+			} catch {}
+		}, 150);
 		return () => clearTimeout(t);
-	}, [nodes.length, links.length, anchors.ux, anchors.zx]);
+	}, [nodes.length, links.length]);
+
+	// Spread nodes by adjusting forces
+	React.useEffect(() => {
+		if (!fgRef.current) return;
+		try {
+			const linkForceUnknown = fgRef.current.d3Force?.('link');
+			const linkForce = linkForceUnknown as unknown as { distance?: (fn: (link: ForceGraphLink) => number) => void } | undefined;
+			if (linkForce && typeof linkForce.distance === 'function') {
+				linkForce.distance((link: ForceGraphLink) => {
+					const sid = String(((link.source as { id?: string | number })?.id) ?? link.source ?? '');
+					const tid = String(((link.target as { id?: string | number })?.id) ?? link.target ?? '');
+					const userId = String((nodes.find(n => n.kind === 'user')?.id) ?? '');
+					const involvesPinned = sid === String(expertId) || tid === String(expertId) || sid === userId || tid === userId;
+					// U/Z を離し、その間は広めに
+					return involvesPinned ? 130 : 240;
+				});
+			}
+
+			const chargeForceUnknown = fgRef.current.d3Force?.('charge');
+			const chargeForce = chargeForceUnknown as unknown as { strength?: (fn: (node: NodeObj) => number) => void } | undefined;
+			if (chargeForce && typeof chargeForce.strength === 'function') {
+				chargeForce.strength((node: NodeObj) => {
+					const kind = (node as GraphNode).kind;
+					if (kind === 'staff') return -360; // 強い分離
+					return -220;
+				});
+			}
+
+			// Collision force to avoid overlaps using built-in d3Force if available
+			try {
+				const d3 = (fgRef.current as any)?.d3Force?.('collide');
+				if (d3 && typeof d3.radius === 'function') {
+					// 既存の衝突フォースがあれば半径を拡大
+					d3.radius((n: any) => (n.kind === 'user' || n.kind === 'expert') ? 18 : 16).strength(1.2).iterations(4);
+				} else if ((fgRef.current as any)?.d3Force) {
+					// APIが受け取れる環境では半径関数をセット（簡易）
+					(fgRef.current as any).d3Force('collide', (n: any) => (n.kind === 'user' || n.kind === 'expert') ? 18 : 16);
+				}
+			} catch {}
+
+			fgRef.current.d3ReheatSimulation?.();
+		} catch {}
+	}, [nodes.length, expertId]);
 
 	const nodeLabel = (node: NodeObj) => {
 		const kind = node.kind as NodeType;
+		if ((node as GraphNode).center) return "中心";
 		return `${node.label}\n種別: ${nodeTypeLabel(kind)}`;
 	};
 
@@ -373,40 +549,50 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 					<ForceGraph2D
 						ref={fgRef as unknown as React.MutableRefObject<unknown>}
 						graphData={{ nodes, links: links.map(l => ({ source: l.source, target: l.target, value: l.weight, label: l.label })) }}
-						nodeRelSize={6}
+						nodeRelSize={4}
 						nodeLabel={nodeLabel}
 						linkLabel={linkLabel}
 						linkColor={(link: ForceGraphLink) => {
 							const value = typeof link.value === 'number' ? link.value : 0.4;
-							const alpha = 0.25 + Math.min(0.75, value * 0.75);
+							const alpha = 0.3 + Math.min(0.7, value * 0.7);
 							return `rgba(88,170,219,${alpha.toFixed(3)})`;
 						}}
-						linkWidth={(link: ForceGraphLink) => scoreToStrokeWidth(link.value)}
+						linkDirectionalParticles={0}
+						linkWidth={(link: ForceGraphLink) => {
+							const value = typeof link.value === 'number' ? link.value : 0.4;
+							return 1.5 + value * 4;
+						}}
+						linkCurvature={0}
+						linkCurveRotation={0}
 						enableZoomInteraction
 						enablePanInteraction
-						cooldownTime={1800}
+						cooldownTime={4000}
 						onNodeClick={onNodeClick}
-						backgroundColor={'rgba(255,255,255,1)'}
+						backgroundColor={'transparent'}
 						nodeCanvasObject={nodeCanvasObject}
+						onNodeDrag={(node: unknown) => { const n = node as NodeObj; n.fx = (n as any).x; n.fy = (n as any).y; }}
+						onNodeDragEnd={(node: unknown) => { const n = node as NodeObj; if ((n as any).kind !== 'user' && (n as any).kind !== 'expert') { n.fx = undefined; n.fy = undefined; } try { fgRef.current?.d3ReheatSimulation?.(); } catch {} }}
+						onEngineTick={enforceSeparation}
+						onEngineStop={() => { try { fgRef.current?.zoomToFit?.(0, 120); fgRef.current?.centerAt?.(0, 0, 0); } catch {} }}
+						centerAt={(width: number, height: number) => ({ x: width / 2, y: height / 2 })}
+						width={Math.max(0, containerW - padding.left - padding.right)}
+						height={Math.max(0, containerH - padding.top - padding.bottom)}
+						onRenderFramePre={(ctx: CanvasRenderingContext2D) => {
+							const { width, height } = ctx.canvas;
+							ctx.save();
+							ctx.clearRect(0, 0, width, height);
+							ctx.restore();
+						}}
 						// Pin U/Z horizontally by setting fx via nodes; leave fy free
 					/>
 
 					{/* Legend */}
 					<div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg border border-white/50 text-[10px]">
 						<div className="grid grid-cols-2 gap-x-4 gap-y-1">
-							<div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-[#1f2937]" /> <span className="text-gray-700 font-bold">U</span> <span className="text-gray-600">ユーザー</span></div>
+							<div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#1f2937]" /> <span className="text-gray-700 font-bold">U</span> <span className="text-gray-600">ユーザー</span></div>
 							<div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-[#6b7280]" /> <span className="text-gray-700 font-bold">X</span> <span className="text-gray-600">職員</span></div>
 							<div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full border-2 border-dashed border-[#9ca3af]" /> <span className="text-gray-700 font-bold">M</span> <span className="text-gray-600">仲介</span></div>
 							<div className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-[#b4d9d6] to-[#58aadb]" /> <span className="text-gray-700 font-bold">Z</span> <span className="text-gray-600">有識者</span></div>
-						</div>
-						<div className="mt-2">
-							<div className="text-gray-700 font-medium mb-1">線の太さ = 関係強度</div>
-							<div className="flex items-center gap-2">
-								<div className="h-0.5 bg-[#58aadb]" style={{ width: 32 }} />
-								<span className="text-gray-600">0</span>
-								<div className="h-[6px] bg-[#58aadb]" style={{ width: 32 }} />
-								<span className="text-gray-600">1</span>
-							</div>
 						</div>
 					</div>
 
