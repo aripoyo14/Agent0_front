@@ -4,8 +4,7 @@ import * as React from "react";
 import { useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/apiClient";
-import { getUserFromToken } from "@/lib/auth";
+
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), { ssr: false }) as unknown as React.ComponentType<Record<string, unknown>>;
 
@@ -88,21 +87,17 @@ function nodeTypeLabel(kind: NodeType): string {
 interface ProfileNetworkRoutesProps {
 	expertId: string;
 	className?: string;
+	data?: RoutesResponse | null;
 }
 
-export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRoutesProps) {
+export function ProfileNetworkRoutes({ expertId, className, data }: ProfileNetworkRoutesProps) {
 	const router = useRouter();
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const fgRef = useRef<{ centerAt?: (x: number, y: number, ms?: number) => void; zoomToFit?: (ms?: number, padding?: number) => void; d3Force?: (n: string, f?: unknown) => unknown; d3ReheatSimulation?: () => void } | null>(null);
 	const [containerW, setContainerW] = useState<number>(0);
 	const [containerH, setContainerH] = useState<number>(0);
 	const [padding, setPadding] = useState<{ left: number; right: number; top: number; bottom: number }>({ left: 0, right: 0, top: 0, bottom: 0 });
-	const [routesData, setRoutesData] = useState<RoutesResponse | null>(null);
-	const [loading, setLoading] = useState<boolean>(false);
-	const [error, setError] = useState<string | null>(null);
 	const [selectedStaffId, setSelectedStaffId] = useState<string | null>(null);
-	const abortRef = useRef<AbortController | null>(null);
-	const [reloadTick, setReloadTick] = useState<number>(0);
 
 	// ResizeObserver to get container width and paddings
 	React.useLayoutEffect(() => {
@@ -124,79 +119,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		return () => ro.disconnect();
 	}, []);
 
-	// Fetch routes on mount or expert change
-	React.useEffect(() => {
-		const user = getUserFromToken();
-		if (!expertId || !user?.userId) {
-			setRoutesData({ routes: [] });
-			return;
-		}
-		
-		// 既存のリクエストを中断
-		if (abortRef.current) {
-			abortRef.current.abort();
-		}
-		
-		// 新しいAbortControllerを作成
-		const controller = new AbortController();
-		abortRef.current = controller;
-		
-		setLoading(true);
-		setError(null);
-		
-		(async () => {
-			try {
-				// リクエストが中断されたかチェック
-				if (controller.signal.aborted) {
-					return;
-				}
-				
-				const payload = {
-					user_id: user.userId,
-					expert_id: expertId,
-					window_days: 180,
-					half_life_days: 90,
-					overlap_config_id: 1,
-					overlap_coef: 0.4,
-					max_results: 5,
-				};
-				
-				const data = await apiFetch<RoutesResponse>("/api/network_meti/routes", { 
-					method: "POST", 
-					body: payload, 
-					headers: { "x-cancel": String(Date.now()) }, 
-					signal: controller.signal, 
-					auth: true 
-				});
-				
-				// リクエストが中断されたかチェック
-				if (controller.signal.aborted) {
-					return;
-				}
-				
-				setRoutesData(data);
-			} catch (e: unknown) {
-				// AbortErrorの場合は状態を更新しない
-				if (e instanceof Error && e.name === 'AbortError') {
-					return;
-				}
-				setError(e instanceof Error ? e.message : "取得に失敗しました");
-				setRoutesData({ routes: [] });
-			} finally {
-				// リクエストが中断された場合はloading状態を更新しない
-				if (!controller.signal.aborted) {
-					setLoading(false);
-				}
-			}
-		})();
-		
-		return () => {
-			// クリーンアップ時にAbortControllerを中断
-			if (controller && !controller.signal.aborted) {
-				controller.abort();
-			}
-		};
-	}, [expertId, reloadTick]);
+
 
 	const anchors = useMemo(() => computeAnchors(containerW, containerH, padding.left, padding.right, padding.top, padding.bottom), [containerW, containerH, padding.left, padding.right, padding.top, padding.bottom]);
 
@@ -204,7 +127,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 	const { nodes, links } = useMemo(() => {
 		const nodes: GraphNode[] = [];
 		const links: GraphEdge[] = [];
-		if (!routesData || !routesData.routes) return { nodes, links };
+		if (!data || !data.routes) return { nodes, links };
 
 		const nodeAdded = new Map<string, GraphNode>();
 		const edgeMax = new Map<string, GraphEdge>();
@@ -229,7 +152,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		};
 
 		// sort routes desc just in case
-		const sorted = [...routesData.routes].sort((ra, rb) => (rb.score ?? 0) - (ra.score ?? 0)).slice(0, 5);
+		const sorted = [...data.routes].sort((ra, rb) => (rb.score ?? 0) - (ra.score ?? 0)).slice(0, 5);
 		for (const r of sorted) {
 			if (!r.path || r.path.length < 3) continue;
 			const hops = r.path;
@@ -345,7 +268,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 
 		edgeMax.forEach((e) => links.push(e));
 		return { nodes, links };
-	}, [routesData, anchors.ux, anchors.zx, anchors.uy, anchors.zy, expertId]);
+	}, [data, anchors.ux, anchors.zx, anchors.uy, anchors.zy, expertId]);
 
 	// node rendering to emphasize U/Z and mediator ring
 	const nodeCanvasObject = (node: NodeObj, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -508,23 +431,10 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 		}
 	};
 
-	const shouldShowEmpty = !nodes.length || !links.length;
+	const shouldShowEmpty = !data || !data.routes || !nodes.length || !links.length;
 
 	return (
 		<div ref={containerRef} className={`h-full w-full relative overflow-hidden ${className || ""}`}>
-			{loading && (
-				<div className="absolute inset-0 flex items-center justify-center z-10">
-					<div className="bg-white/90 rounded px-3 py-1 text-xs text-gray-700 border">読み込み中...</div>
-				</div>
-			)}
-			{error && (
-				<div className="absolute inset-x-4 top-3 z-10">
-					<div className="bg-red-50 border border-red-200 text-red-700 text-xs rounded px-3 py-2 flex items-center justify-between">
-						<span>{error}</span>
-						<button className="text-red-700 underline" onClick={() => setError(null)}>閉じる</button>
-					</div>
-				</div>
-			)}
 			{shouldShowEmpty ? (
 				<div className="h-full flex items-center justify-center">
 					<div className="text-center">
@@ -532,12 +442,6 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 							<span className="material-symbols-outlined text-gray-500 text-xl">group</span>
 						</div>
 						<p className="text-gray-700 text-sm font-bold mb-1">関係が見つかりませんでした</p>
-						<button
-							onClick={() => setReloadTick(v => v + 1)}
-							className="inline-flex items-center justify-center px-3 py-1.5 bg-[#58aadb] text-white rounded text-xs hover:opacity-90"
-						>
-							再取得
-						</button>
 					</div>
 				</div>
 			) : (
