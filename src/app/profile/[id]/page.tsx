@@ -9,7 +9,8 @@ import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { useNetworkData } from "@/hooks/useNetworkData";
 import { useProfilePage } from "./hooks/useProfilePage";
 import { MeetingSkeletonCard, PolicySkeletonCard, ProfileHeaderSkeleton } from "./components/ProfileSkeletons";
-import { EmptyState, ErrorState, LoadingState } from "./components/ProfileStates";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState, LoadingState } from "@/components/ui/LoadingErrorStates";
 import { CompactCard } from "./components/ProfileCards";
 import { formatDate, getAffiliationText, getMeetingAffiliationText } from "./utils/profileUtils";
 
@@ -93,6 +94,7 @@ export default function ProfileDetailPage() {
             <ErrorState 
               message="データの読み込みに失敗しました"
               onRetry={handleRetry}
+              variant="profile"
             />
           ) : insights && showHeader ? (
             <div className="fade-in">
@@ -128,16 +130,18 @@ export default function ProfileDetailPage() {
                       <MeetingSkeletonCard />
                     </div>
                   ) : error ? (
-                    <ErrorState 
-                      message="面談記録の読み込みに失敗しました"
-                      onRetry={handleRetry}
-                    />
+                                          <ErrorState 
+                        message="面談記録の読み込みに失敗しました"
+                        onRetry={handleRetry}
+                        variant="profile"
+                      />
                                     ) : insights && meetingCards.length === 0 ? (
                     showMeetings ? (
-                      <EmptyState 
-                        icon="description"
-                        message="面談記録がありません"
-                      />
+                                          <EmptyState 
+                      icon="description"
+                      message="面談記録がありません"
+                      variant="profile"
+                    />
                     ) : null
                   ) : insights ? (
                     showMeetings ? (
@@ -205,12 +209,14 @@ export default function ProfileDetailPage() {
                       <ErrorState 
                         message="政策意見の読み込みに失敗しました"
                         onRetry={handleRetry}
+                        variant="profile"
                       />
                   ) : insights && policyCards.length === 0 ? (
                     showPolicies ? (
                       <EmptyState 
                         icon="comment"
                         message="政策意見がありません"
+                        variant="profile"
                       />
                     ) : null
                   ) : insights ? (
@@ -258,11 +264,13 @@ export default function ProfileDetailPage() {
                     <LoadingState 
                       message="人脈マップを読み込み中..."
                       icon="hub"
+                      variant="profile"
                     />
                   ) : error || networkError ? (
                     <ErrorState 
                       message="人脈マップの読み込みに失敗しました"
                       onRetry={handleRetry}
+                      variant="profile"
                     />
                   ) : showNetwork ? (
                     <div className="h-full">
