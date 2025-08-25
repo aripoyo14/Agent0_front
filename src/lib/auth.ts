@@ -84,25 +84,48 @@ export async function getUserNameFromAPI(): Promise<string> {
       return "ゲストユーザー";
     }
     
-    // /api/users/meエンドポイントからユーザー情報を取得
-    const response = await apiFetch<{
-      id: string;
-      email: string;
-      last_name: string;
-      first_name: string;
-      role: string;
-    }>("/api/users/me", {
-      method: "GET",
-      auth: true,
-    });
-    
-    // firstnameとlastnameが存在する場合は結合して返す
-    if (response.first_name && response.last_name) {
-      return `${response.last_name} ${response.first_name}`;
+    // ユーザータイプに応じて適切なエンドポイントを呼び出し
+    if (userInfo.userType === 'expert') {
+      // Expertの場合は/experts/meエンドポイントを使用（/expert/meではなく）
+      const response = await apiFetch<{
+        id: string;
+        email: string;
+        last_name: string;
+        first_name: string;
+        role: string;
+      }>("/api/experts/me", {  // /api/expert/me → /api/experts/me に修正
+        method: "GET",
+        auth: true,
+      });
+      
+      // firstnameとlastnameが存在する場合は結合して返す
+      if (response.first_name && response.last_name) {
+        return `${response.last_name} ${response.first_name}`;
+      }
+      
+      // 従来のnameフィールドをフォールバックとして使用
+      return response.first_name || response.last_name || "ログインユーザー";
+    } else {
+      // Userの場合は/users/meエンドポイントを使用
+      const response = await apiFetch<{
+        id: string;
+        email: string;
+        last_name: string;
+        first_name: string;
+        role: string;
+      }>("/api/users/me", {
+        method: "GET",
+        auth: true,
+      });
+      
+      // firstnameとlastnameが存在する場合は結合して返す
+      if (response.first_name && response.last_name) {
+        return `${response.last_name} ${response.first_name}`;
+      }
+      
+      // 従来のnameフィールドをフォールバックとして使用
+      return response.first_name || response.last_name || "ログインユーザー";
     }
-    
-    // 従来のnameフィールドをフォールバックとして使用
-    return response.first_name || response.last_name || "ログインユーザー";
   } catch (error) {
     console.error("ユーザー名取得エラー:", error);
     // APIが失敗した場合はJWTトークンから取得を試行
@@ -180,34 +203,34 @@ export async function debugToken(): Promise<void> {
       return;
     }
 
-    console.log("🔍 トークンデバッグ開始...");
-    console.log("トークン長:", tokenInfo.accessToken.length);
-    console.log("トークンプレビュー:", tokenInfo.accessToken.substring(0, 50) + "...");
+    // console.log("🔍 トークンデバッグ開始...");
+    // console.log("トークン長:", tokenInfo.accessToken.length);
+    // console.log("トークンプレビュー:", tokenInfo.accessToken.substring(0, 50) + "...");
 
-    const response = await apiFetch("/api/users/debug-token", {
+    const _response = await apiFetch("/api/users/debug-token", {
       method: "GET",
       auth: true,
     });
 
-    console.log("✅ トークンデバッグ結果:", response);
-  } catch (error) {
-    console.error("❌ トークンデバッグエラー:", error);
+    // console.log("✅ トークンデバッグ結果:", _response);
+  } catch {
+    // console.error("❌ トークンデバッグエラー");
   }
 }
 
 // テスト用：認証処理の各段階をテスト
 export async function testAuth(): Promise<void> {
   try {
-    console.log("🧪 認証テスト開始...");
+    // console.log("🧪 認証テスト開始...");
     
-    const response = await apiFetch("/api/users/test-auth", {
+    const _response = await apiFetch("/api/users/test-auth", {
       method: "GET",
       auth: true,
     });
 
-    console.log("✅ 認証テスト結果:", response);
-  } catch (error) {
-    console.error("❌ 認証テストエラー:", error);
+    // console.log("✅ 認証テスト結果:", _response);
+  } catch {
+    // console.error("❌ 認証テストエラー");
   }
 }
 

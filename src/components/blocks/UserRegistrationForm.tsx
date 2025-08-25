@@ -53,8 +53,8 @@ export default function UserRegistrationForm() {
           getDepartments(),
           getPositions()
         ]);
-        console.log('部署データ:', deptData);
-        console.log('役職データ:', posData);
+        // console.log('部署データ:', deptData);
+        // console.log('役職データ:', posData);
         setDepartments(deptData);
         setPositions(posData);
       } catch (error) {
