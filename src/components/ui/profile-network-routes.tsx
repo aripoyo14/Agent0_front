@@ -62,31 +62,21 @@ type ForceGraphLink = {
 	label?: string;
 };
 
-const MARGIN_RATIO = 0.08 as const;
-const MARGIN_MIN = 24;
-const MARGIN_MAX = 96;
 const MIN_SEPARATION = 240; // px: これ未満に近づかないように強制
 
 function clamp(v: number, lo: number, hi: number) {
 	return Math.max(lo, Math.min(hi, v));
 }
 
-export function computeAnchors(containerWidth: number, containerHeight: number, paddingLeft = 0, paddingRight = 0, paddingTop = 0, paddingBottom = 0) {
+export function computeAnchors(containerWidth: number, _containerHeight: number, paddingLeft = 0, paddingRight = 0, _paddingTop = 0, _paddingBottom = 0) {
 	// U/Z を左右端に近づけて横一列に配置（中心0基準）
 	const usableW = Math.max(0, containerWidth - paddingLeft - paddingRight);
-	const usableH = Math.max(0, containerHeight - paddingTop - paddingBottom);
 	const halfW = usableW / 2;
 	const marginX = 10; 
 	// const marginX = Math.max(24, usableW * 0.03); // 余白
 	const ux = -halfW + marginX;
 	const zx = +halfW - marginX;
 	return { ux, zx, uy: 0, zy: 0 };
-}
-
-function scoreToStrokeWidth(score?: number) {
-	const s = typeof score === "number" ? clamp(score, 0, 1) : undefined;
-	if (s == null) return 0;
-	return 1.5 + 4.5 * s;
 }
 
 function nodeTypeLabel(kind: NodeType): string {
@@ -355,7 +345,7 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 
 		edgeMax.forEach((e) => links.push(e));
 		return { nodes, links };
-	}, [routesData, anchors.ux, anchors.zx, anchors.uy, anchors.zy]);
+	}, [routesData, anchors.ux, anchors.zx, anchors.uy, anchors.zy, expertId]);
 
 	// node rendering to emphasize U/Z and mediator ring
 	const nodeCanvasObject = (node: NodeObj, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -475,19 +465,25 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 
 			// Collision force to avoid overlaps using built-in d3Force if available
 			try {
-				const d3 = (fgRef.current as any)?.d3Force?.('collide');
+				const d3 = fgRef.current?.d3Force?.('collide') as { radius?: (fn: (n: NodeObj) => number) => { strength?: (s: number) => unknown; iterations?: (i: number) => unknown } } | undefined;
 				if (d3 && typeof d3.radius === 'function') {
 					// 既存の衝突フォースがあれば半径を拡大
-					d3.radius((n: any) => (n.kind === 'user' || n.kind === 'expert') ? 18 : 16).strength(1.2).iterations(4);
-				} else if ((fgRef.current as any)?.d3Force) {
+					const ret = d3.radius((n: NodeObj) => ((n as GraphNode).kind === 'user' || (n as GraphNode).kind === 'expert') ? 18 : 16);
+					if (ret && typeof (ret as { strength?: (s: number) => unknown }).strength === 'function') {
+						(ret as { strength?: (s: number) => unknown }).strength?.(1.2);
+					}
+					if (ret && typeof (ret as { iterations?: (i: number) => unknown }).iterations === 'function') {
+						(ret as { iterations?: (i: number) => unknown }).iterations?.(4);
+					}
+				} else if (fgRef.current?.d3Force) {
 					// APIが受け取れる環境では半径関数をセット（簡易）
-					(fgRef.current as any).d3Force('collide', (n: any) => (n.kind === 'user' || n.kind === 'expert') ? 18 : 16);
+					fgRef.current.d3Force('collide', ((n: NodeObj) => ((n as GraphNode).kind === 'user' || (n as GraphNode).kind === 'expert') ? 18 : 16) as unknown as never);
 				}
 			} catch {}
 
 			fgRef.current.d3ReheatSimulation?.();
 		} catch {}
-	}, [nodes.length, expertId]);
+	}, [nodes, expertId]);
 
 	const nodeLabel = (node: NodeObj) => {
 		const kind = node.kind as NodeType;
@@ -570,8 +566,8 @@ export function ProfileNetworkRoutes({ expertId, className }: ProfileNetworkRout
 						onNodeClick={onNodeClick}
 						backgroundColor={'transparent'}
 						nodeCanvasObject={nodeCanvasObject}
-						onNodeDrag={(node: unknown) => { const n = node as NodeObj; n.fx = (n as any).x; n.fy = (n as any).y; }}
-						onNodeDragEnd={(node: unknown) => { const n = node as NodeObj; if ((n as any).kind !== 'user' && (n as any).kind !== 'expert') { n.fx = undefined; n.fy = undefined; } try { fgRef.current?.d3ReheatSimulation?.(); } catch {} }}
+						onNodeDrag={(node: unknown) => { const n = node as NodeObj; n.fx = n.x; n.fy = n.y; }}
+						onNodeDragEnd={(node: unknown) => { const n = node as NodeObj; if (n.kind !== 'user' && n.kind !== 'expert') { n.fx = undefined; n.fy = undefined; } try { fgRef.current?.d3ReheatSimulation?.(); } catch {} }}
 						onEngineTick={enforceSeparation}
 						onEngineStop={() => { try { fgRef.current?.zoomToFit?.(0, 120); fgRef.current?.centerAt?.(0, 0, 0); } catch {} }}
 						centerAt={(width: number, height: number) => ({ x: width / 2, y: height / 2 })}
