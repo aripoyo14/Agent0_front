@@ -47,7 +47,7 @@ export const useProfilePage = (expertId: string, networkLoading: boolean): UsePr
     if (expertId) {
       fetchProfileData();
     }
-  }, [fetchProfileData]);
+  }, [expertId, fetchProfileData]);
 
   // スタガードアニメーション制御
   useEffect(() => {

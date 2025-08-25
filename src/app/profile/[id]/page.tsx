@@ -145,7 +145,7 @@ export default function ProfileDetailPage() {
                     ) : null
                   ) : insights ? (
                     showMeetings ? (
-                      meetingCards.map((m, index) => {
+                      meetingCards.map((m, _index) => {
                         const first = (m.participants && m.participants.length > 0) ? m.participants[0] : null;
                         const participantDept = first?.department?.department_name || "";
                         const participantName = first ? `${first.last_name}${first.first_name}` : "";
@@ -221,7 +221,7 @@ export default function ProfileDetailPage() {
                     ) : null
                   ) : insights ? (
                     showPolicies ? (
-                      policyCards.map((p, index) => (
+                      policyCards.map((p, _index) => (
                         <div 
                           key={p.policy_proposal_id} 
                           className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-200"
