@@ -672,7 +672,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
       if (response.success) {
         setAttachedFile(file);
         alert("資料のアップロードが完了しました");
-        console.log("アップロードされたファイル:", response.attachments);
+        // console.log("アップロードされたファイル:", response.attachments);
       }
     } catch (error) {
       console.error("資料アップロードエラー:", error);

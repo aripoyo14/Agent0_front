@@ -36,10 +36,10 @@ export interface QRCodeResponse {
 
 // 招待コード用のQRコード生成
 export async function generateInvitationQRCode(code: string): Promise<string> {
-  console.log("generateInvitationQRCode 呼び出し:", code);
+  // console.log("generateInvitationQRCode 呼び出し:", code);
   try {
     const response = await apiFetch<QRCodeResponse>(`/api/invitation-codes/generate-qr/${code}`);
-    console.log("generateInvitationQRCode 成功:", response);
+    // console.log("generateInvitationQRCode 成功:", response);
     return response.qr_code;
   } catch (error) {
     console.error("generateInvitationQRCode エラー:", error);
@@ -56,7 +56,7 @@ export async function generateInvitationCode(data: InvitationCodeCreate): Promis
       body: data,
       auth: true,
     });
-    console.log("generateInvitationCode 成功:", result);
+    // console.log("generateInvitationCode 成功:", result);
     return result;
   } catch (error) {
     console.error("generateInvitationCode エラー:", error);

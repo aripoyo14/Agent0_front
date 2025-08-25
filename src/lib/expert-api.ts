@@ -1,19 +1,19 @@
 import { apiFetch } from "./apiClient";
 import { PolicyProposal, PolicyProposalComment, UserInfo, UsersInfoResponse } from "@/types";
-import { getToken, isAuthenticated } from "./storage";
+import { getToken } from "./storage";
 
 // 認証状態の詳細ログ出力関数
 function logAuthStatus() {
-  const tokenData = getToken();
-  console.log("🔐 認証状態詳細:", {
-    isAuthenticated: isAuthenticated(),
-    hasAccessToken: !!tokenData.accessToken,
-    tokenType: tokenData.tokenType,
-    tokenLength: tokenData.accessToken?.length,
-    tokenPreview: tokenData.accessToken?.substring(0, 30) + "...",
-    currentUrl: typeof window !== 'undefined' ? window.location.href : 'server-side',
-    userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server-side'
-  });
+  const _tokenData = getToken();
+  // console.log("🔐 認証状態詳細:", {
+  //   isAuthenticated: isAuthenticated(),
+  //   hasAccessToken: !!_tokenData.accessToken,
+  //   tokenType: _tokenData.tokenType,
+  //   tokenLength: _tokenData.accessToken?.length,
+  //   tokenPreview: _tokenData.accessToken?.substring(0, 30) + "...",
+  //   currentUrl: typeof window !== 'undefined' ? window.location.href : 'server-side',
+  //   userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server-side'
+  // });
 }
 
 // 政策提案コメント投稿のリクエスト型
@@ -149,12 +149,10 @@ export async function getPolicyProposals(params?: {
   logAuthStatus();
   
   try {
-    console.log("🚀 認証付きAPI呼び出し開始...");
     const result = await apiFetch<PolicyProposal[]>(`/api/policy-proposals/?${queryParams}`, {
       method: "GET",
       auth: true,
     });
-    console.log("✅ 認証付きAPI呼び出し成功:", result);
     return result;
   } catch (error) {
     console.error("❌ 認証付きAPI呼び出し失敗:", error);
@@ -174,7 +172,7 @@ export async function getPolicyProposals(params?: {
       console.log("🔄 認証エラーのため、公開APIを試行...");
       try {
         const publicResult = await getPublicPolicyProposals(params);
-        console.log("✅ 公開API呼び出し成功:", publicResult);
+        // console.log("✅ 公開API呼び出し成功:", publicResult);
         return publicResult;
       } catch (publicError) {
         console.error("❌ 公開APIも失敗:", publicError);
@@ -238,5 +236,67 @@ export async function getUsersInfo(userIds: string[]): Promise<UsersInfoResponse
   return apiFetch(`/api/users/batch?${queryParams}`, {
     method: "GET",
     auth: true,
+  });
+}
+
+// 特定の政策テーマタグに紐づく政策案を取得
+export async function getPolicyProposalsByTag(
+  tagId: string,
+  params?: {
+    status?: "draft" | "published" | "archived";
+    q?: string;
+    offset?: number;
+    limit?: number;
+  }
+): Promise<PolicyProposal[]> {
+  const queryParams = new URLSearchParams();
+  if (params?.status) queryParams.append('status', params.status);
+  if (params?.q) queryParams.append('q', params.q);
+  if (params?.offset) queryParams.append('offset', params.offset.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+  
+  try {
+    const result = await apiFetch<PolicyProposal[]>(`/api/policy-proposals/by-tag/${tagId}?${queryParams}`, {
+      method: "GET",
+      auth: true,
+    });
+    return result;
+  } catch (error) {
+    
+    // 認証エラーの場合は、公開APIを試行
+    if (error instanceof Error && 
+        (error.message.includes("credentials") || error.message.includes("401"))) {
+      try {
+        const publicResult = await getPublicPolicyProposalsByTag(tagId, params);
+        return publicResult;
+      } catch {
+        throw error;
+      }
+    }
+    
+    throw error;
+  }
+}
+
+// 公開API（認証なし）の実装
+async function getPublicPolicyProposalsByTag(
+  tagId: string,
+  params?: {
+    status?: "draft" | "published" | "archived";
+    q?: string;
+    offset?: number;
+    limit?: number;
+  }
+): Promise<PolicyProposal[]> {
+  const queryParams = new URLSearchParams();
+  if (params?.status) queryParams.append('status', params.status);
+  if (params?.q) queryParams.append('q', params.q);
+  if (params?.offset) queryParams.append('offset', params.offset.toString());
+  if (params?.limit) queryParams.append('limit', params.limit.toString());
+  
+  console.log("🌐 公開タグID別API呼び出し開始:", tagId);
+  return await apiFetch<PolicyProposal[]>(`/api/policy-proposals/public/by-tag/${tagId}?${queryParams}`, {
+    method: "GET",
+    auth: false,
   });
 }
