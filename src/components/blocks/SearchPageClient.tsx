@@ -5,6 +5,7 @@ import { PolicyThemeSelector } from "@/components/ui/policy-theme-selector";
 import { NetworkMap } from "@/components/ui/network-map";
 import { SearchFilters, NetworkMapResponseDTO, PolicyTheme, FilterOption } from "@/types";
 import { Header } from "@/components/ui/header";
+import { getToken, getTokenFromCookies } from "@/lib/auth";
 
 interface SearchPageClientProps {
   initialData: {
@@ -80,9 +81,23 @@ export function SearchPageClient({ initialData }: SearchPageClientProps) {
         free_text: filters.searchQuery,
       };
 
+      // Authorization ヘッダー付与（クライアント側）
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      try {
+        const tokenInfo = getToken?.();
+        if (tokenInfo && typeof tokenInfo === 'object' && tokenInfo.accessToken) {
+          headers['Authorization'] = `Bearer ${tokenInfo.accessToken}`;
+        } else {
+          const fromCookie = getTokenFromCookies?.();
+          if (fromCookie?.accessToken) headers['Authorization'] = `Bearer ${fromCookie.accessToken}`;
+        }
+      } catch {
+        // ignore
+      }
+
       const res = await fetch(API_BASE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
@@ -93,7 +108,6 @@ export function SearchPageClient({ initialData }: SearchPageClientProps) {
       }
 
       const data = await res.json();
-      console.log('network_map response:', data);
       setNetworkData(data as NetworkMapResponseDTO);
     } catch (error) {
       console.error('Search failed:', error);
