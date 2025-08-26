@@ -5,7 +5,9 @@ import { getUserNameFromAPI, debugToken, testAuth, getUserName } from "@/lib/aut
 export const ExpertHeader: React.FC = () => {
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userName, setUserName] = useState<string>("ログインユーザー");
+  const [userName, setUserName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   // ユーザー名を取得
   useEffect(() => {
@@ -26,6 +28,10 @@ export const ExpertHeader: React.FC = () => {
         const fallbackName = getUserName();
         setUserName(fallbackName);
         console.log("✔ ユーザー名取得成功:", fallbackName);
+      } finally {
+        setIsLoading(false);
+        // 滑らかなフェードインのため少し遅延
+        setTimeout(() => setIsVisible(true), 100);
       }
     };
 
@@ -62,7 +68,27 @@ export const ExpertHeader: React.FC = () => {
         {/* ユーザー情報とメニュー */}
         <div className="flex items-center gap-3">
           <div className="font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold text-[#ffffff] text-xs sm:text-sm md:text-base xl:text-[12.62px] text-right tracking-wide lg:tracking-[1.5144px]">
-            <p className="adjustLetterSpacing block leading-tight whitespace-pre">{userName}</p>
+            {isLoading ? (
+              // スケルトンローディング
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-white/20 rounded-full animate-pulse"></div>
+                <div className="h-4 bg-white/20 rounded animate-pulse" style={{ width: '80px' }}></div>
+              </div>
+            ) : (
+              // ユーザー名表示（滑らかなフェードイン）
+              <div 
+                className={`flex items-center gap-2 transition-opacity duration-300 ${
+                  isVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <div className="w-6 h-6 bg-white/30 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">
+                    {userName.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <p className="adjustLetterSpacing block leading-tight whitespace-pre">{userName}</p>
+              </div>
+            )}
           </div>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
