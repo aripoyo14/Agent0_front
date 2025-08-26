@@ -124,3 +124,22 @@ export function organizeComments(comments: Comment[]): {
   
   return { parentComments, repliesByParent };
 }
+
+// フィードバック状態を判定する関数
+export function isFeedbackSubmitted(comment: Comment): boolean {
+  // evaluationとstanceの両方が入力されている場合、フィードバック済みと判定
+  return comment.evaluation !== null && comment.stance !== null;
+}
+
+// コメント一覧からフィードバック状態を取得する関数
+export function getFeedbackStates(comments: Comment[]): Set<string> {
+  const feedbackSubmitted = new Set<string>();
+  
+  comments.forEach(comment => {
+    if (isFeedbackSubmitted(comment)) {
+      feedbackSubmitted.add(comment.id);
+    }
+  });
+  
+  return feedbackSubmitted;
+}

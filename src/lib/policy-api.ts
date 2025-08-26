@@ -17,6 +17,7 @@ export interface PolicySubmissionResponse {
   status: string;
   created_at: string;
   updated_at: string;
+  comment_count: number;
 }
 
 // PolicySubmissionResponseをPolicySubmissionに変換
@@ -28,7 +29,7 @@ function convertToPolicySubmission(response: PolicySubmissionResponse): PolicySu
     policyThemes: [], // APIからは取得できないため空配列
     submittedAt: response.created_at,
     status: response.status as PolicySubmission['status'],
-    commentCount: 0, // APIからは取得できないため0
+    commentCount: response.comment_count,
   };
 }
 
