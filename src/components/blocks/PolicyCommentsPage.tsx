@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { PolicySubmission } from '@/types';
 import { fetchMyPolicySubmissions } from '@/lib/policy-api';
-import { fetchCommentsByPolicyId, fetchRepliesByCommentId, fetchReplyCountByCommentId, organizeComments, Comment } from '@/lib/comments-api';
+import { fetchCommentsByPolicyId, fetchRepliesByCommentId, fetchReplyCountByCommentId, organizeComments, Comment, isFeedbackSubmitted, getFeedbackStates } from '@/lib/comments-api';
 import { saveCommentEvaluation, generateAIResponse, postAIResponse } from '@/lib/evaluation-api';
 import { getUserFromToken } from '@/lib/auth';
 import { Card } from '@/components/ui/card';
@@ -497,7 +497,6 @@ const ReplyItem = ({ reply }: { reply: Comment }) => {
 const CommentItem = ({ 
   comment, 
   onFeedbackSubmit,
-  isFeedbackSubmitted = false,
   isSubmitting = false
 }: { 
   comment: Comment; 
@@ -507,9 +506,9 @@ const CommentItem = ({
     empathyRating: number;
     aiResponse: string;
   }) => void;
-  isFeedbackSubmitted?: boolean;
   isSubmitting?: boolean;
 }) => {
+  const hasFeedback = isFeedbackSubmitted(comment);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
   const [replies, setReplies] = useState<Comment[]>([]);
@@ -590,7 +589,7 @@ const CommentItem = ({
   return (
     <div className="bg-white p-4 mb-4 relative rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02] hover:border-gray-200">
       {/* ステータス表示 */}
-      {isFeedbackSubmitted && (
+      {hasFeedback && (
         <div className="absolute top-3 right-3">
           <span className="inline-flex items-center justify-center rounded-md bg-[#4AA0E9] text-white text-xs px-2 py-0.5 font-medium">
             • 評価保存済み
@@ -607,7 +606,7 @@ const CommentItem = ({
             <span className="text-xs text-gray-500 leading-tight">{new Date(comment.posted_at).toLocaleDateString('ja-JP')}</span>
           </div>
         </div>
-        {!isFeedbackSubmitted && (
+        {!hasFeedback && (
           <button
             onClick={() => setShowFeedbackForm(true)}
             className="px-3 py-1 bg-[#4AA0E9] text-white text-xs rounded hover:bg-[#3a8fd9] transition-colors"
@@ -750,9 +749,6 @@ export const PolicyCommentsPage = () => {
         }
       }
       
-      // ステータスを更新
-      setFeedbackSubmitted(prev => new Set(prev).add(feedback.commentId));
-      
       // コメント一覧を再取得して最新の状態に更新
       if (selectedPolicyId) {
         try {
@@ -761,6 +757,10 @@ export const PolicyCommentsPage = () => {
             try {
               const updatedComments = await fetchCommentsByPolicyId(selectedPolicyId);
               setComments(updatedComments);
+              
+              // フィードバック状態も更新
+              const feedbackStates = getFeedbackStates(updatedComments);
+              setFeedbackSubmitted(feedbackStates);
             } catch (error) {
               console.error('コメント再取得エラー:', error);
             }
@@ -798,6 +798,10 @@ export const PolicyCommentsPage = () => {
           await new Promise(resolve => setTimeout(resolve, 300));
           const fetchedComments = await fetchCommentsByPolicyId(selectedPolicyId);
           setComments(fetchedComments);
+          
+          // フィードバック状態をデータベースから取得して更新
+          const feedbackStates = getFeedbackStates(fetchedComments);
+          setFeedbackSubmitted(feedbackStates);
         } catch (error) {
           console.error('コメント取得エラー:', error);
           setComments([]);
@@ -815,7 +819,7 @@ export const PolicyCommentsPage = () => {
   
   // フィルタリング（親コメントのみ）
   const filteredParentComments = parentComments.filter(comment => {
-    const isSubmitted = feedbackSubmitted.has(comment.id);
+    const isSubmitted = isFeedbackSubmitted(comment);
     switch (activeTab) {
       case "unfb":
         return !isSubmitted;
@@ -865,8 +869,8 @@ export const PolicyCommentsPage = () => {
   // 件数計算（親コメントのみ）
   const counts = {
     all: parentComments.length,
-    unfb: parentComments.filter(c => !feedbackSubmitted.has(c.id)).length,
-    fb: parentComments.filter(c => feedbackSubmitted.has(c.id)).length,
+    unfb: parentComments.filter(c => !isFeedbackSubmitted(c)).length,
+    fb: parentComments.filter(c => isFeedbackSubmitted(c)).length,
   };
   
   return (
@@ -1062,7 +1066,6 @@ export const PolicyCommentsPage = () => {
                             <CommentItem 
                               comment={comment} 
                               onFeedbackSubmit={handleFeedbackSubmit}
-                              isFeedbackSubmitted={feedbackSubmitted.has(comment.id)}
                               isSubmitting={isSubmitting}
                             />
                           </div>
