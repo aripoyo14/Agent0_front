@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, getUserFromToken } from "@/lib/auth";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 // パスワードリセットオーバーレイコンポーネント
 const PasswordResetOverlay = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
@@ -75,9 +76,16 @@ const PasswordResetOverlay = ({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <button
                 type="submit"
                 disabled={isSubmitting || !email}
-                className="w-full bg-[#4AA0E9] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3a8fd9] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#4AA0E9] text-white py-2 px-4 rounded-lg font-medium hover:bg-[#3a8fd9] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {isSubmitting ? "送信中..." : "リセットメールを送信"}
+                {isSubmitting ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" />
+                    <span>送信中...</span>
+                  </>
+                ) : (
+                  "リセットメールを送信"
+                )}
               </button>
             </form>
           </>
@@ -221,11 +229,20 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center gap-1 rounded-full bg-white/90 backdrop-blur-sm px-4 py-2 text-[#4AA0E9] text-sm font-medium transition-all hover:bg-white hover:shadow-lg disabled:opacity-60"
+            className="group inline-flex items-center justify-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-6 py-3 text-[#4AA0E9] text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-lg hover:scale-105 disabled:opacity-60 disabled:hover:scale-100 min-w-[120px]"
             aria-busy={isSubmitting}
           >
-            {isSubmitting ? "送信中…" : "ログイン"}
-            <span aria-hidden className="inline-block select-none text-base text-[#4AA0E9]">→</span>
+            {isSubmitting ? (
+              <>
+                <LoadingSpinner size="sm" color="primary" />
+                <span>ログイン中...</span>
+              </>
+            ) : (
+              <>
+                <span>ログイン</span>
+                <span aria-hidden className="inline-block select-none text-base text-[#4AA0E9] transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </>
+            )}
           </button>
         </div>
       </form>
