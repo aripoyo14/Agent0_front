@@ -47,6 +47,19 @@ export default function ProfileDetailPage() {
   const policyCards: PolicyProposalCommentOut[] = useMemo(() => insights?.policy_comments ?? [], [insights]);
   const evalAvg = insights?.evaluation_average ?? null;
 
+  // ナビゲーション用のコールバック関数
+  const handleCardClick = useCallback(async (policyId: string) => {
+    try {
+      await router.push(`/expert/articles/${policyId}`);
+    } catch (error) {
+      console.error('Navigation failed:', error);
+    }
+  }, [router]);
+
+  const handleMouseEnter = useCallback((policyId: string) => {
+    router.prefetch(`/expert/articles/${policyId}`);
+  }, [router]);
+
   return (
     <div className="h-screen w-full relative flex flex-col overflow-hidden">
       {/* Background gradient */}
@@ -224,7 +237,18 @@ export default function ProfileDetailPage() {
                       policyCards.map((p, _index) => (
                         <div 
                           key={p.policy_proposal_id} 
-                          className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-200"
+                          className="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
+                          onClick={() => handleCardClick(p.policy_proposal_id)}
+                          onMouseEnter={() => handleMouseEnter(p.policy_proposal_id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handleCardClick(p.policy_proposal_id);
+                            }
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`${p.policy_title}の詳細を見る`}
                         >
                           <div className="w-1.5 h-1.5 bg-green-500 rounded-full mt-1.5 flex-shrink-0"></div>
                           <div className="flex-1 min-w-0">
