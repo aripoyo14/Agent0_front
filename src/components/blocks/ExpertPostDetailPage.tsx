@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal, UsersInfoResponse } from "@/types";
+import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal } from "@/types";
 import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
-import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments, getUsersInfo } from "@/lib/expert-api";
+import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
 import { getUserFromToken } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
 
@@ -185,38 +185,17 @@ const OpinionForm = ({
     
     // 完了ボタンを押した時に、バックエンドから最新のコメント一覧を再取得
     try {
-      const updatedComments = await getPolicyProposalComments(articleId);
-      const userIds = [...new Set(updatedComments.map(comment => comment.author_id))];
-      
-      let usersInfo: UsersInfoResponse = {};
-      if (userIds.length > 0) {
-        try {
-          usersInfo = await getUsersInfo(userIds);
-        } catch (error) {
-          console.error("ユーザー情報の一括取得に失敗しました:", error);
-        }
-      }
+              const updatedComments = await getPolicyProposalComments(articleId);
       
       const convertedComments = updatedComments.map(comment => {
-        const userInfo = usersInfo[comment.author_id];
         return {
           id: comment.id,
           author: {
             id: comment.author_id,
-            name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
-            role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
-            company: userInfo?.company || "会社名",
-            badges: userInfo?.badges?.map((badge: {
-              type: string;
-              label: string;
-              color: string;
-              description: string;
-            }) => ({
-              type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
-              label: badge.label,
-              color: badge.color,
-              description: badge.description
-            })) || [
+            name: comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+            role: comment.author_type === "contributor" ? "エキスパート" : comment.author_type,
+            company: "会社名",
+            badges: [
               {
                 type: "expert" as const,
                 label: "認定エキスパート",
@@ -224,7 +203,7 @@ const OpinionForm = ({
                 description: "認定されたエキスパート"
               }
             ],
-            expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+            expertiseLevel: "expert" as const
           },
           content: comment.comment_text,
           createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
@@ -552,39 +531,18 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
         const policyComments = await getPolicyProposalComments(articleId);
         
         // ユーザーIDの一覧を取得
-        const userIds = [...new Set(policyComments.map(comment => comment.author_id))];
+
         
-        // ユーザー情報を一括取得
-        let usersInfo: UsersInfoResponse = {};
-        if (userIds.length > 0) {
-          try {
-            usersInfo = await getUsersInfo(userIds);
-          } catch (error) {
-            console.error("ユーザー情報の一括取得に失敗しました:", error);
-          }
-        }
-        
-        // コメントを変換（ユーザー情報を使用）
+        // コメントを変換
         const convertedComments = policyComments.map(comment => {
-          const userInfo = usersInfo[comment.author_id];
           return {
             id: comment.id,
             author: {
               id: comment.author_id,
-              name: userInfo?.name || comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
-              role: userInfo?.role || (comment.author_type === "contributor" ? "エキスパート" : comment.author_type),
-              company: userInfo?.company || "会社名",
-              badges: userInfo?.badges?.map((badge: {
-                type: string;
-                label: string;
-                color: string;
-                description: string;
-              }) => ({
-                type: badge.type as "expert" | "pro" | "verified" | "official" | "influencer",
-                label: badge.label,
-                color: badge.color,
-                description: badge.description
-              })) || [
+              name: comment.author_name || `ユーザー${comment.author_id.slice(-4)}`,
+              role: comment.author_type === "contributor" ? "エキスパート" : comment.author_type,
+              company: "会社名",
+              badges: [
                 {
                   type: "expert" as const,
                   label: "認定エキスパート",
@@ -592,7 +550,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                   description: "認定されたエキスパート"
                 }
               ],
-              expertiseLevel: (userInfo?.expertiseLevel as "expert" | "pro" | "verified" | "regular") || "expert"
+              expertiseLevel: "expert" as const
             },
             content: comment.comment_text,
             createdAt: new Date(comment.posted_at).toLocaleDateString('ja-JP', { 
@@ -889,12 +847,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
       <div className="absolute left-0 top-[60px] right-0 bottom-0 bg-white">
         <div className="grid grid-cols-3 gap-8 h-full p-8 relative">
           {/* 左側: 記事詳細とコメント (2/3) */}
-          <div className="col-span-2 space-y-6 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="col-span-2 space-y-6 overflow-y-auto">
             {/* 記事詳細 */}
             <div className="bg-white rounded-lg p-8">
               <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -1014,12 +967,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
           <div className="absolute left-[calc(66.666667%-1rem)] top-8 bottom-8 w-px bg-gray-200"></div>
 
           {/* 右側: 投稿フォーム (1/3) */}
-          <div className="col-span-1 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+          <div className="col-span-1">
             <div className="sticky top-8 space-y-6">
               <OpinionForm onSubmit={handleOpinionSubmit} attachedFile={attachedFile} articleId={articleId} setComments={setComments} />
               <DocumentUploadForm onSubmit={handleDocumentSubmit} />

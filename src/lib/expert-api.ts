@@ -1,5 +1,5 @@
 import { apiFetch } from "./apiClient";
-import { PolicyProposal, PolicyProposalComment, UserInfo, UsersInfoResponse } from "@/types";
+import { PolicyProposal, PolicyProposalComment, UserInfo } from "@/types";
 import { getToken } from "./storage";
 
 // 認証状態の詳細ログ出力関数
@@ -228,16 +228,7 @@ export async function getUserInfo(userId: string): Promise<UserInfo> {
   });
 }
 
-// 複数ユーザーの情報を一括取得するAPI
-export async function getUsersInfo(userIds: string[]): Promise<UsersInfoResponse> {
-  const queryParams = new URLSearchParams();
-  userIds.forEach(id => queryParams.append('user_ids', id));
-  
-  return apiFetch(`/api/users/batch?${queryParams}`, {
-    method: "GET",
-    auth: true,
-  });
-}
+
 
 // 特定の政策テーマタグに紐づく政策案を取得
 export async function getPolicyProposalsByTag(

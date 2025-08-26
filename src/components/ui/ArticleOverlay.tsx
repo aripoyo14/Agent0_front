@@ -115,49 +115,59 @@ const CommentCard = ({
   onToggleFullContent: (commentId: string) => void;
 }) => {
   return (
-    <div className="border-b border-gray-100 pb-4">
-      <div className="flex items-start gap-3 mb-3">
-        <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-bold text-gray-600">
+    <div className="border-b border-gray-100 pb-6 mb-6">
+      <div className="flex items-start gap-4 mb-4">
+        {/* プロフィール画像 */}
+        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0">
           {comment.author.name.charAt(0)}
         </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900">{comment.author.name}</span>
-              <span className="text-xs text-gray-500">{comment.author.role}</span>
+        
+        {/* コメント情報 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-bold text-gray-900 text-base">{comment.author.name}</span>
+              <span className="text-sm text-gray-500">{comment.author.role}</span>
             </div>
-            <div className="flex gap-1">
-              {comment.author.badges.map((badge, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
-                  style={{ backgroundColor: badge.color + '20', color: badge.color, border: `1px solid ${badge.color}40` }}
-                  title={badge.description}
-                >
-                  {badge.label}
-                </span>
-              ))}
-            </div>
+            
+            {/* 認定エキスパートバッジ */}
+            {comment.author.expertiseLevel === 'expert' && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200 flex-shrink-0">
+                認定エキスパート
+              </span>
+            )}
           </div>
-          <p className="text-sm text-gray-600">{comment.author.company}</p>
+          
+          {/* 投稿日時 */}
+          <p className="text-sm text-gray-600 mb-3">
+            {new Date(comment.createdAt).toLocaleDateString('ja-JP', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}
+          </p>
         </div>
       </div>
-      <p className="text-gray-800 mb-3">
-        {comment.content && comment.content.length > 100 && !comment.showFullContent 
-          ? `${comment.content.substring(0, 100)}...` 
-          : comment.content}
-      </p>
-      {comment.content && comment.content.length > 100 && (
-        <button
-          onClick={() => onToggleFullContent(comment.id)}
-          className="mb-3 text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-        >
-          {comment.showFullContent ? '折りたたむ' : '続きを表示'}
-        </button>
-      )}
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <span>{new Date(comment.createdAt).toLocaleDateString('ja-JP')}</span>
-        <div className="flex items-center gap-4">
+      
+      {/* コメント本文 */}
+      <div className="ml-14">
+        <p className="text-gray-800 text-sm leading-relaxed mb-4">
+          {comment.content && comment.content.length > 300 && !comment.showFullContent 
+            ? `${comment.content.substring(0, 300)}...` 
+            : comment.content}
+        </p>
+        
+        {comment.content && comment.content.length > 300 && (
+          <button
+            onClick={() => onToggleFullContent(comment.id)}
+            className="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+          >
+            {comment.showFullContent ? '折りたたむ' : '続きを表示'}
+          </button>
+        )}
+        
+        {/* いいね・閲覧数 */}
+        <div className="flex items-center gap-4 text-sm text-gray-500">
           <button className="flex items-center gap-1 hover:text-blue-600 transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m7 10a1 1 0 01-1 1H9a1 1 0 01-1-1v-3m7 10v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3" />
@@ -184,14 +194,12 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
   onClose 
 }) => {
   // すべてのHooksを最初に宣言（順序を固定）
-  const [newComment, setNewComment] = useState<string>('');
-  const [commentSort, setCommentSort] = useState<CommentSortOption>('date');
+  const [commentSort, setCommentSort] = useState<CommentSortOption>('relevance');
   const [comments, setComments] = useState<ExpertComment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [backgroundOpacity, setBackgroundOpacity] = useState(0);
-  const [showFullContent, setShowFullContent] = useState(false);
 
   // コメントの表示状態を切り替える関数
   const handleToggleCommentFullContent = (commentId: string) => {
@@ -268,20 +276,13 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
               id: 'sample-1',
               author: {
                 id: 'sample-user-1',
-                name: '政策専門家A',
-                role: '専門家',
-                company: '政策研究所',
-                badges: [
-                  {
-                    type: 'expert',
-                    label: '専門家',
-                    color: '#3B82F6',
-                    description: '政策分野の専門家'
-                  }
-                ],
+                name: 'メティ 太郎',
+                role: 'staff',
+                company: '中小企業庁',
+                badges: [],
                 expertiseLevel: 'expert'
               },
-              content: 'この政策案は非常に興味深いアプローチですね。特に地域格差の是正という点で、実効性が期待できます。',
+              content: 'コメントありがとうございます。貴重なご意見を頂き、大変感謝しております。本案の骨格が明確で実装を意識したものであるとのご指摘、特に国産セキュアクラウドの奨励やISMAP準拠についてご評価いただき、励みになります。具体的なロードマップや初年度の配分方針が現場にとっての助けになるとの点にも同意し、政策の実行に向けて着実に進めていく所存です。ご提案いただいた三点についても、大変参考になります。以下のように具体的な次のアクションを考えます。1.**成果連動枠の導入**: 実証から横展開へのスムーズな移行を図るために、導入費の後払い形式の検討を進めます。具体的なKPIの設定についての議論を始めましょう。関係者との意見交換を通じて、成果指標や評価方法について明確にしていく必要があります。2.**常設委員会の設立**: キャッシュレスの相互運用に関する適合性評価や改定頻度について定義するための常設委員会の設立を検討します。委員会メンバーの選定や初会合の日程についても早急に進める必要があります。3.**セキュアクラウドのガバナンス強化**: データ可搬性、開放API、監査ログの義務化を進めるための具体的なガイドラインを策定するための作業部会の設立を考えます。これにより、利用者に安心感を提供できる仕組みを整備したいと思います。併せて、添付ファイルの読み取りに失敗し、内容を確認できなかったことをお詫び申し上げます。もし可能であれば、ファイルを再送いただけますと幸いです。ご提案の内容をさらに深く理解し、議論を深めていくためにも、非常に有益だと考えております。引き続きご支援・ご意見を賜りますようお願い申し上げます。',
               createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2時間前
               likeCount: 5,
               viewCount: 12,
@@ -291,20 +292,13 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
               id: 'sample-2',
               author: {
                 id: 'sample-user-2',
-                name: '起業家B',
-                role: '起業家',
-                company: 'スタートアップ企業',
-                badges: [
-                  {
-                    type: 'pro',
-                    label: '起業家',
-                    color: '#10B981',
-                    description: '起業経験者'
-                  }
-                ],
-                expertiseLevel: 'pro'
+                name: '政策専門家A',
+                role: '専門家',
+                company: '政策研究所',
+                badges: [],
+                expertiseLevel: 'expert'
               },
-              content: '実際に起業した経験から言うと、このような支援策は本当に必要です。特に地方での起業を後押ししてくれるのは素晴らしいと思います。',
+              content: 'この政策案は非常に興味深いアプローチですね。特に地域格差の是正という点で、実効性が期待できます。',
               createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4時間前
               likeCount: 8,
               viewCount: 15,
@@ -350,37 +344,6 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
     }, 300);
   };
 
-  // コメント投稿処理
-  const handleCommentSubmit = async () => {
-    if (!newComment.trim()) return;
-    
-    try {
-      devLog('コメント投稿:', newComment);
-      
-      const tempComment: ExpertComment = {
-        id: Date.now().toString(),
-        author: {
-          id: 'temp-user',
-          name: 'ユーザー',
-          role: '一般',
-          company: '',
-          badges: [],
-          expertiseLevel: 'regular'
-        },
-        content: newComment,
-        createdAt: new Date().toISOString(),
-        likeCount: 0,
-        viewCount: 0,
-        isLiked: false
-      };
-      
-      setComments(prev => [tempComment, ...prev]);
-      setNewComment('');
-    } catch (error) {
-      devError('コメント投稿エラー:', error);
-    }
-  };
-
   // 早期リターン（Hooksの後に配置）
   if (!isVisible || !article) {
     return null;
@@ -407,14 +370,14 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
         {/* モバイル: 全画面、デスクトップ: 右側からスライド */}
         <div className="bg-white h-full w-full sm:w-[600px] md:w-[700px] lg:w-[800px] xl:w-[1000px] 2xl:w-[1200px] shadow-xl overflow-hidden sm:top-[5vh] sm:bottom-0">
           {/* ヘッダー部分 - レスポンシブ対応 */}
-          <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 lg:p-6 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">記事詳細</h2>
+          <div className="flex items-center justify-between p-2 sm:p-3 border-b border-gray-200 bg-gray-50">
+            <div></div>
             <button
               onClick={handleClose}
-              className="p-2 sm:p-3 rounded-full hover:bg-gray-200 transition-colors duration-200"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors duration-200"
               aria-label="オーバーレイを閉じる"
             >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -422,88 +385,66 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
           
           {/* コンテンツ部分 - レスポンシブ対応 */}
           <div className="h-[calc(100%-4rem)] overflow-y-auto">
-            {/* 記事の詳細情報 */}
+            {/* 記事の詳細情報 - 画像のような形式 */}
             <div className="p-3 sm:p-4 md:p-5 lg:p-6">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 md:mb-6 leading-tight">
+              {/* メインタイトル */}
+              <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-4 sm:mb-5 md:mb-6 leading-tight">
                 {article.title}
               </h1>
               
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-4 mb-4 sm:mb-5 md:mb-6 text-sm sm:text-base md:text-lg text-gray-600">
+              {/* メタデータ - 横並び */}
+              <div className="flex flex-row items-center gap-4 mb-4 sm:mb-5 md:mb-6 text-sm sm:text-base text-gray-600">
                 <span className="font-medium">{article.department}</span>
                 <span>{article.publishedAt}</span>
-              </div>
-              
-              <div className="prose prose-sm sm:prose-base md:prose-lg lg:prose-xl max-w-none mb-6 sm:mb-8">
-                <p className="text-gray-700 leading-relaxed text-sm sm:text-base md:text-lg">
-                  {article.content && article.content.length > 100 && !showFullContent 
-                    ? `${article.content.substring(0, 100)}...` 
-                    : article.content}
-                </p>
-                {article.content && article.content.length > 100 && (
-                  <button
-                    onClick={() => setShowFullContent(!showFullContent)}
-                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-                  >
-                    {showFullContent ? '折りたたむ' : '続きを表示'}
-                  </button>
+                <span>コメント: {article.commentCount} コメント</span>
+                {article.attachments && article.attachments.length > 0 && (
+                  <span className="flex items-center gap-1">
+                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                    {article.attachments.length}個の添付ファイル
+                  </span>
                 )}
               </div>
               
-              {/* 添付ファイルがある場合 - レスポンシブ対応 */}
-              {article.attachments && article.attachments.length > 0 && (
-                <div className="mb-6 sm:mb-8">
-                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4">添付ファイル</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                    {article.attachments.map((attachment, index) => (
-                      <div key={index} className="flex items-center p-2 sm:p-3 border border-gray-200 rounded-lg">
-                        <svg className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 mr-2 sm:mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                        </svg>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{attachment.file_name}</p>
-                          <p className="text-gray-500 text-xs sm:text-sm">{attachment.file_type}</p>
-                        </div>
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex-shrink-0">
-                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+              {/* 背景セクション */}
+              <div className="mb-6 sm:mb-8">
+                <div className="prose prose-sm sm:prose-base max-w-none">
+                  <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
+                    {article.content ? article.content.substring(0, 100) + "..." : ""}
+                  </p>
                 </div>
-              )}
+              </div>
+              
+              {/* 詳細を見るボタン */}
+              <div className="flex justify-center mb-6 sm:mb-8">
+                <button 
+                  onClick={() => window.open(`/expert/articles/${article.id}`, '_blank')}
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 text-sm sm:text-base font-medium"
+                >
+                  詳細を見る
+                </button>
+              </div>
             </div>
             
-            {/* コメントセクション - レスポンシブ対応 */}
-            <div className="border-t border-gray-200 p-3 sm:p-4 md:p-5 lg:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-5 md:mb-6">
-                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">コメント</h3>
+            {/* コメントセクション - 画像のような形式 */}
+            <div className="p-3 sm:p-4 md:p-5 lg:p-6">
+              {/* コメント一覧ヘッダー */}
+              <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">意見一覧</h3>
+                </div>
                 <CommentSortSelector 
                   currentSort={commentSort} 
                   onSortChange={setCommentSort} 
                 />
               </div>
               
-              {/* コメント入力エリア - レスポンシブ対応 */}
-              <div className="mb-4 sm:mb-5 md:mb-6">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="この記事についての意見を投稿してください..."
-                  className="w-full p-3 sm:p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                  rows={3}
-                />
-                <div className="flex justify-end mt-2 sm:mt-3">
-                  <button
-                    onClick={handleCommentSubmit}
-                    disabled={!newComment.trim()}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors duration-200 text-sm sm:text-base"
-                  >
-                    コメントを投稿
-                  </button>
-                </div>
-              </div>
+              {/* 境界線 */}
+              <div className="border-b border-gray-200 mb-4 sm:mb-5 md:mb-6"></div>
               
               {/* コメント一覧 - レスポンシブ対応 */}
               <div className="space-y-3 sm:space-y-4">
