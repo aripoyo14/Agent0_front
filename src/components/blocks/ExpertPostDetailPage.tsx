@@ -974,6 +974,15 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                   if (!response.ok) {
                                     const errorText = await response.text();
                                     console.error('エラーレスポンス:', errorText);
+                                    console.error('詳細エラー情報:', {
+                                      status: response.status,
+                                      statusText: response.statusText,
+                                      url: url,
+                                      attachmentId: attachment.id,
+                                      fileName: attachment.file_name,
+                                      fileSize: attachment.file_size,
+                                      fileType: attachment.file_type
+                                    });
                                     throw new Error(`プレビューに失敗しました: ${response.status} - ${errorText}`);
                                   }
                                   
@@ -988,7 +997,11 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                   });
                                 } catch (error) {
                                   console.error('プレビューエラー:', error);
-                                  alert('プレビューに失敗しました。');
+                                  if (error instanceof Error && error.message.includes('500')) {
+                                    alert('サーバーエラーが発生しました。バックエンドの設定を確認してください。');
+                                  } else {
+                                    alert('プレビューに失敗しました。');
+                                  }
                                 }
                               }}
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
@@ -1018,7 +1031,17 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                 });
                                 
                                 if (!response.ok) {
-                                  throw new Error(`ダウンロードに失敗しました: ${response.status}`);
+                                  const errorText = await response.text();
+                                  console.error('ダウンロードエラーレスポンス:', errorText);
+                                  console.error('ダウンロード詳細エラー情報:', {
+                                    status: response.status,
+                                    statusText: response.statusText,
+                                    attachmentId: attachment.id,
+                                    fileName: attachment.file_name,
+                                    fileSize: attachment.file_size,
+                                    fileType: attachment.file_type
+                                  });
+                                  throw new Error(`ダウンロードに失敗しました: ${response.status} - ${errorText}`);
                                 }
                                 
                                 const blob = await response.blob();
@@ -1032,7 +1055,11 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                 document.body.removeChild(a);
                               } catch (error) {
                                 console.error('ダウンロードエラー:', error);
-                                alert('ダウンロードに失敗しました。');
+                                if (error instanceof Error && error.message.includes('500')) {
+                                  alert('サーバーエラーが発生しました。バックエンドの設定を確認してください。');
+                                } else {
+                                  alert('ダウンロードに失敗しました。');
+                                }
                               }
                             }}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
