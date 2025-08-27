@@ -6,7 +6,7 @@ import { ExpertArticle, ExpertComment, CommentSortOption, PolicyProposal } from 
 import { sortComments } from "@/data/expert-articles-data";
 import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
-import { getUserFromToken } from "@/lib/auth";
+import { getUserFromToken, getUserNameFromAPI, getUserName } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
 
 // 画像アセット（現在未使用）
@@ -326,7 +326,11 @@ const OpinionForm = ({
           <div className="flex justify-center mt-4">
             <button
               type="submit"
-              className="bg-white border border-[#58aadb] text-[#58aadb] px-6 py-2 rounded-lg hover:bg-[#58aadb]/10 transition-colors text-sm font-medium flex items-center gap-2"
+              className={`${
+                content.trim() 
+                  ? 'bg-[#2d8cd9] text-white border border-[#2d8cd9] hover:bg-[#58aadb]' 
+                  : 'bg-white border border-[#58aadb] text-[#58aadb] hover:bg-[#58aadb]/10'
+              } px-6 py-2 rounded-lg transition-colors text-sm font-medium flex items-center gap-2`}
             >
               投稿する
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,6 +508,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+  const [userName, setUserName] = useState<string>("ログインユーザー");
   
   // PDFプレビューモーダルの状態管理
   const [pdfPreviewModal, setPdfPreviewModal] = useState<{
@@ -575,6 +580,23 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
 
     fetchArticle();
   }, [articleId]);
+
+  // ユーザー名を取得
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const name = await getUserNameFromAPI();
+        setUserName(name);
+      } catch (error) {
+        console.error("ユーザー名取得エラー:", error);
+        // フォールバック
+        const fallbackName = getUserName();
+        setUserName(fallbackName);
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   // コメントの並び替え
   const sortedComments = sortComments(comments, sortOption);
@@ -737,7 +759,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
         
         <div className="absolute right-0 top-0 flex items-center gap-3 user-menu-container">
           <div className="font-['Montserrat:SemiBold',_'Noto_Sans_JP:Bold',_sans-serif] font-semibold text-[#ffffff] text-[12.62px] text-right text-nowrap tracking-[1.5144px]">
-            <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">テックゼロ太郎さん</p>
+            <p className="adjustLetterSpacing block leading-[1.4] whitespace-pre">{userName}さん</p>
           </div>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}

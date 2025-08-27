@@ -14,6 +14,7 @@ import { ArticleList } from "@/components/ui/ArticleList";
 import { DataSourceIndicator } from "@/components/ui/DataSourceIndicator";
 import { LoadingErrorStates } from "@/components/ui/LoadingErrorStates";
 import { EmptyState } from "@/components/ui/EmptyState";
+import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 
 // コンポーネントのプロパティ型定義
 interface ExpertArticleListPageProps {
@@ -580,6 +581,9 @@ const devError = (...args: unknown[]) => {
         `)}")`
       }}></div>
       
+      {/* 背景エレメント */}
+      <BackgroundEllipses scale={0.8} />
+      
       {/* ヘッダー */}
       <ExpertHeader />
       
@@ -751,7 +755,7 @@ const devError = (...args: unknown[]) => {
       
       {/* 記事エリア */}
       <div className="relative px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[65px] pb-8 sm:pb-12 md:pb-16 lg:pb-20">
-        <div className="bg-white w-full h-[280px] sm:h-[320px] md:h-[350px] lg:h-[380px] xl:h-[350px] 2xl:h-[420px] rounded-lg lg:rounded-[11.759px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 shadow-lg">
+        <div className="bg-white w-full h-[300px] sm:h-[340px] md:h-[370px] lg:h-[400px] xl:h-[430px] 2xl:h-[450px] rounded-lg lg:rounded-[11.759px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 shadow-lg">
           {/* データソース表示 */}
           <DataSourceIndicator dataSource={dataSource} />
           

@@ -12,7 +12,6 @@ export const LoadingErrorStates: React.FC<LoadingErrorStatesProps> = ({
 }) => {
   
   if (pageState === "loading" || pageState === "idle") {
-    console.log("ローディング状態を表示中");
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px]">
         {/* シンプルなスピナー */}
@@ -28,10 +27,7 @@ export const LoadingErrorStates: React.FC<LoadingErrorStatesProps> = ({
           <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
         </div>
         
-        {/* デバッグ情報 */}
-        <div className="mt-4 text-xs text-gray-400">
-          状態: {pageState}
-        </div>
+
       </div>
     );
   }

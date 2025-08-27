@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { generateInvitationCode, type InvitationCodeResponse } from "@/lib/invitation-code";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAuthenticated } from "@/lib/auth";
 import { useRouter } from "next/navigation";
@@ -25,6 +24,7 @@ export default function InvitationCodeForm() {
   const [generatedCode, setGeneratedCode] = useState<InvitationCodeResponse | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // 自動発行機能
   const autoGenerateCode = useCallback(async () => {
@@ -73,8 +73,17 @@ export default function InvitationCodeForm() {
     checkAuth();
   }, [autoGenerateCode]);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      // 2秒後に元のアイコンに戻す
+      setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error('コピーに失敗しました:', error);
+    }
   };
 
   // ログインしていない場合の表示
@@ -105,15 +114,8 @@ export default function InvitationCodeForm() {
     <div className="w-full max-w-2xl mx-auto space-y-6">
       {generatedCode && (
         <Card className="border-0 shadow-none">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900">発行完了</CardTitle>
-            <CardDescription>
-              招待コードが正常に発行されました
-            </CardDescription>
-          </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">QRコード</Label>
               <div className="flex flex-col items-center space-y-2">
                 {qrCodeDataUrl ? (
                   <>
@@ -133,27 +135,15 @@ export default function InvitationCodeForm() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            {/* 説明文 */}
+            <div className="text-center mt-6 mb-4">
+              <p className="text-white/90 text-sm font-medium">
+                メールやチャットで共有する場合は、下記のリンクをご利用ください
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">招待コード</Label>
-                <div className="flex items-center space-x-2">
-                  <Input
-                    value={generatedCode.code}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    onClick={() => copyToClipboard(generatedCode.code)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    コピー
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">招待リンク</Label>
                 <div className="flex items-center space-x-2">
                   <Input
                     value={generatedCode.invitation_link}
@@ -162,32 +152,47 @@ export default function InvitationCodeForm() {
                   />
                   <Button
                     onClick={() => copyToClipboard(generatedCode.invitation_link)}
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="px-3 border-0 bg-transparent hover:bg-white/10"
                   >
-                    コピー
+                    {copySuccess ? (
+                      // チェックマークアイコン
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="white" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                      >
+                        <polyline points="20,6 9,17 4,12"/>
+                      </svg>
+                    ) : (
+                      // コピーアイコン
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="white" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                        className="h-4 w-4"
+                      >
+                        <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                        <path d="m4 16-2-2v-6c0-1.1.9-2 2-2h6l2 2"/>
+                      </svg>
+                    )}
                   </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="font-medium text-gray-700">最大使用回数:</span>
-                <span className="ml-2">{generatedCode.max_uses}</span>
-              </div>
-              <div>
-                <span className="font-medium text-gray-700">有効期限:</span>
-                <span className="ml-2">
-                  {new Date(generatedCode.expires_at).toLocaleString("ja-JP")}
-                </span>
-              </div>
-              {generatedCode.description && (
-                <div className="col-span-2">
-                  <span className="font-medium text-gray-700">説明:</span>
-                  <span className="ml-2">{generatedCode.description}</span>
-                </div>
-              )}
             </div>
           </CardContent>
         </Card>

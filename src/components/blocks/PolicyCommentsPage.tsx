@@ -123,7 +123,7 @@ export const PolicyCommentsPage = () => {
   // 検索時にページを1に戻す
   useEffect(() => {
     policyList.setCurrentPage(1);
-  }, [policyList.searchTerm, policyList.sortBy]);
+  }, [policyList.searchTerm, policyList.sortBy, policyList]);
 
   // コメントを親コメントと返信に分類
   const { parentComments } = useMemo(() => 
