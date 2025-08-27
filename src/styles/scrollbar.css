@@ -1,0 +1,130 @@
+/* レスポンシブスクロールバーのスタイル */
+
+/* デスクトップ向けスクロールバー */
+@media (min-width: 768px) {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+}
+
+/* モバイル向け：スクロールバーを隠す */
+@media (max-width: 1023px) {
+  .mobile-hide-scrollbar {
+    /* iOS Safari向け */
+    -webkit-overflow-scrolling: touch;
+    
+    /* Firefox向け */
+    scrollbar-width: none;
+    
+    /* モバイルでは親ページのスクロールを使用 */
+    overflow-y: visible;
+  }
+
+  .mobile-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* モバイルでのページ全体スクロール有効化 */
+  .mobile-page-scroll {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100vh;
+  }
+}
+
+/* スムーズスクロールアニメーション */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* スクロール位置インジケーター */
+.scroll-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.1s ease-out;
+  z-index: 10;
+}
+
+/* タッチフレンドリーなスクロールエリア */
+.touch-scroll {
+  /* iOS向けの慣性スクロール */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Android向けのタッチ最適化 */
+  overscroll-behavior: contain;
+  
+  /* スクロール時のパフォーマンス向上 */
+  will-change: scroll-position;
+}
+
+/* レスポンシブな高さ制御 */
+.responsive-scroll-container {
+  /* デスクトップ */
+  height: 450px;
+}
+
+@media (max-width: 1536px) {
+  .responsive-scroll-container {
+    height: 430px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .responsive-scroll-container {
+    height: 400px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .responsive-scroll-container {
+    height: 370px;
+  }
+}
+
+@media (max-width: 768px) {
+  .responsive-scroll-container {
+    height: 340px;
+  }
+}
+
+@media (max-width: 640px) {
+  .responsive-scroll-container {
+    height: 300px;
+  }
+}
+
+/* 小画面での最適化 */
+@media (max-height: 600px) {
+  .responsive-scroll-container {
+    height: 250px;
+  }
+}
+
+@media (max-height: 500px) {
+  .responsive-scroll-container {
+    height: 200px;
+  }
+}
