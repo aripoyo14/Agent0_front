@@ -18,7 +18,7 @@ export function MFASetup({ userId, onComplete }: MFASetupProps) {
   const [loading, setLoading] = useState(false);
 
   // バックエンドのFastAPIサーバーにリクエスト
-  const API_BASE = 'http://localhost:8000/api';
+  const API_BASE = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api`;
 
   // モックデータを使用してフロントエンドのみで動作
   const setupMFA = useCallback(async () => {

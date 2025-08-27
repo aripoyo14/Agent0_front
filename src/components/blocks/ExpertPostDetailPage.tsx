@@ -949,7 +949,8 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                     return;
                                   }
                                   
-                                  const url = `http://localhost:8000/api/policy-proposals/attachments/${attachment.id}/preview`;
+                                  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+                                  const url = `${apiBaseUrl}/api/policy-proposals/attachments/${attachment.id}/preview`;
                                   console.log('リクエストURL:', url);
                                   console.log('Attachment ID:', attachment.id);
                                   
@@ -1009,7 +1010,8 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                                   return;
                                 }
                                 
-                                const response = await fetch(`http://localhost:8000/api/policy-proposals/attachments/${attachment.id}/download`, {
+                                const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+                                const response = await fetch(`${apiBaseUrl}/api/policy-proposals/attachments/${attachment.id}/download`, {
                                   headers: {
                                     'Authorization': `${tokenType || 'Bearer'} ${accessToken}`
                                   }

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { FixedSizeList as List } from 'react-window';
+// import { FixedSizeList as List } from 'react-window';
 import { ExpertArticle } from '@/types';
 
 interface VirtualizedArticleListProps {
@@ -81,7 +81,7 @@ export const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
   articles,
   onArticleClick,
   height = 450,
-  itemHeight = 120,
+  itemHeight: _itemHeight = 120, // 一時的に使用しないため_を付ける
   className = ""
 }) => {
   // データを最適化してメモ化
@@ -101,18 +101,19 @@ export const VirtualizedArticleList: React.FC<VirtualizedArticleListProps> = ({
     );
   }
 
+  // 一時的にreact-windowを使用しない実装
   return (
     <div className={className}>
-      <List
-        width="100%"
-        height={height}
-        itemCount={articles.length}
-        itemSize={itemHeight}
-        itemData={itemData}
-        overscanCount={5} // パフォーマンス向上のため事前レンダリング
-      >
-        {ArticleRow}
-      </List>
+      <div className="w-full" style={{ height }}>
+        {articles.map((article, index) => (
+          <ArticleRow
+            key={article.id}
+            index={index}
+            style={{}}
+            data={itemData}
+          />
+        ))}
+      </div>
     </div>
   );
 };
