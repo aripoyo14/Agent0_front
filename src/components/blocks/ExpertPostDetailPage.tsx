@@ -8,6 +8,7 @@ import BackgroundEllipses from "@/components/blocks/BackgroundEllipses";
 import { submitPolicyComment, createPolicyProposalWithAttachments, getPolicyProposalById, getPolicyProposalComments } from "@/lib/expert-api";
 import { getUserFromToken, getUserNameFromAPI, getUserName } from "@/lib/auth";
 import { CommentCount } from "@/components/ui/comment-count";
+import { getToken } from "@/lib/storage";
 
 // 画像アセット（現在未使用）
 // const imgUserIcon = "/globe.svg";
@@ -521,6 +522,14 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
     fileName: ''
   });
 
+  // PDFプレビューモーダルを閉じる関数（Blob URLのクリーンアップ付き）
+  const closePdfPreviewModal = () => {
+    if (pdfPreviewModal.fileUrl && pdfPreviewModal.fileUrl.startsWith('blob:')) {
+      window.URL.revokeObjectURL(pdfPreviewModal.fileUrl);
+    }
+    setPdfPreviewModal({ isOpen: false, fileUrl: '', fileName: '' });
+  };
+
   // 記事データの取得
   useEffect(() => {
     const fetchArticle = async () => {
@@ -923,11 +932,64 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                           {/* PDFプレビューボタン */}
                           {attachment.file_type === 'application/pdf' && (
                             <button
-                              onClick={() => setPdfPreviewModal({
-                                isOpen: true,
-                                fileUrl: attachment.file_url,
-                                fileName: attachment.file_name
-                              })}
+                              onClick={async () => {
+                                try {
+                                  console.log('プレビューボタンがクリックされました');
+                                  const { accessToken, tokenType } = getToken();
+                                  console.log('認証トークン:', { 
+                                    accessToken: accessToken ? '存在' : 'なし', 
+                                    tokenType,
+                                    tokenLength: accessToken?.length,
+                                    tokenPreview: accessToken?.substring(0, 50) + "...",
+                                    fullToken: accessToken // デバッグ用に完全なトークンを出力
+                                  });
+                                  
+                                  if (!accessToken) {
+                                    alert('認証が必要です。ログインしてください。');
+                                    return;
+                                  }
+                                  
+                                  const url = `http://localhost:8000/api/policy-proposals/attachments/${attachment.id}/preview`;
+                                  console.log('リクエストURL:', url);
+                                  console.log('Attachment ID:', attachment.id);
+                                  
+                                  // 認証付きでプレビューURLを取得
+                                  const response = await fetch(url, {
+                                    headers: {
+                                      'Authorization': `${tokenType || 'Bearer'} ${accessToken}`
+                                    }
+                                  });
+                                  
+                                  console.log('レスポンスステータス:', response.status);
+                                  console.log('レスポンスヘッダー:', Object.fromEntries(response.headers.entries()));
+                                  
+                                  // デバッグ用: リクエストヘッダーの詳細を出力
+                                  console.log('リクエストヘッダー:', {
+                                    'Authorization': `${tokenType || 'Bearer'} ${accessToken}`,
+                                    'Content-Type': 'application/json',
+                                    'User-Agent': navigator.userAgent
+                                  });
+                                  
+                                  if (!response.ok) {
+                                    const errorText = await response.text();
+                                    console.error('エラーレスポンス:', errorText);
+                                    throw new Error(`プレビューに失敗しました: ${response.status} - ${errorText}`);
+                                  }
+                                  
+                                  const blob = await response.blob();
+                                  console.log('Blob取得成功:', blob.size, 'bytes');
+                                  const url2 = window.URL.createObjectURL(blob);
+                                  
+                                  setPdfPreviewModal({
+                                    isOpen: true,
+                                    fileUrl: url2,
+                                    fileName: attachment.file_name
+                                  });
+                                } catch (error) {
+                                  console.error('プレビューエラー:', error);
+                                  alert('プレビューに失敗しました。');
+                                }
+                              }}
                               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
                               title="PDFをプレビュー"
                             >
@@ -938,14 +1000,43 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
                               プレビュー
                             </button>
                           )}
-                          <a
-                            href={attachment.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            onClick={async () => {
+                              try {
+                                const { accessToken, tokenType } = getToken();
+                                if (!accessToken) {
+                                  alert('認証が必要です。ログインしてください。');
+                                  return;
+                                }
+                                
+                                const response = await fetch(`http://localhost:8000/api/policy-proposals/attachments/${attachment.id}/download`, {
+                                  headers: {
+                                    'Authorization': `${tokenType || 'Bearer'} ${accessToken}`
+                                  }
+                                });
+                                
+                                if (!response.ok) {
+                                  throw new Error(`ダウンロードに失敗しました: ${response.status}`);
+                                }
+                                
+                                const blob = await response.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = attachment.file_name;
+                                document.body.appendChild(a);
+                                a.click();
+                                window.URL.revokeObjectURL(url);
+                                document.body.removeChild(a);
+                              } catch (error) {
+                                console.error('ダウンロードエラー:', error);
+                                alert('ダウンロードに失敗しました。');
+                              }
+                            }}
                             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                           >
                             ダウンロード
-                          </a>
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1026,7 +1117,7 @@ export default function ExpertPostDetailPage({ articleId }: { articleId: string 
       {/* PDFプレビューモーダル */}
       <PDFPreviewModal
         isOpen={pdfPreviewModal.isOpen}
-        onClose={() => setPdfPreviewModal({ isOpen: false, fileUrl: '', fileName: '' })}
+        onClose={closePdfPreviewModal}
         fileUrl={pdfPreviewModal.fileUrl}
         fileName={pdfPreviewModal.fileName}
       />
