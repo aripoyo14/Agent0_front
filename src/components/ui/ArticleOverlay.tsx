@@ -420,7 +420,7 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
               <div className="flex justify-center mb-6 sm:mb-8">
                 <button 
                   onClick={() => window.open(`/expert/articles/${article.id}`, '_blank')}
-                  className="px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white rounded-full shadow-md hover:bg-blue-700 hover:shadow-lg transition-all duration-200 text-sm sm:text-base font-medium"
+                  className="px-6 sm:px-8 py-3 sm:py-4 bg-[#2d8cd9] text-white rounded-full shadow-md hover:bg-[#58aadb] hover:shadow-lg transition-all duration-200 text-sm sm:text-base font-medium"
                 >
                   詳細を見る
                 </button>
@@ -461,7 +461,6 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
                     </div>
                     <h3 className="text-sm sm:text-base font-semibold text-gray-700 mb-2 text-center">まだ意見が投稿されていません</h3>
                     <p className="text-gray-500 text-xs sm:text-sm max-w-xs mx-auto leading-relaxed text-center">
-                      この記事に関する意見がまだ投稿されていません。<br />
                       最初の意見を投稿してみませんか？
                     </p>
                   </div>

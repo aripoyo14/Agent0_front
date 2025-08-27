@@ -29,7 +29,7 @@ export const ExpertHeader: React.FC = () => {
   }, []);
 
   const handleGoToDashboard = () => {
-    router.push('/dashboard');
+    router.push('/expert/articles');
   };
 
   return (
