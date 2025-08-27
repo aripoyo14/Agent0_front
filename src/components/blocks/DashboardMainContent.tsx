@@ -1,29 +1,43 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useLoadingNavigation } from "@/hooks/useLoadingNavigation";
+import LoadingAnimation from "@/components/ui/LoadingAnimation";
 
 export default function DashboardMainContent() {
-  const router = useRouter();
-
-  const handleCardClick = (path: string) => {
-    router.push(path);
-  };
+  const {
+    isLoading,
+    loadingAnimationType,
+    navigateToSearch,
+    navigateToPolicy,
+    navigateToComments,
+  } = useLoadingNavigation({
+    loadingDuration: 1500,
+    animationType: 'spinner'
+  });
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center pt-32">
-      <div className="w-full max-w-7xl mx-auto px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+    <>
+      {/* ローディングアニメーション */}
+      <LoadingAnimation 
+        isVisible={isLoading} 
+        type={loadingAnimationType}
+        duration={1500}
+      />
+      
+      <div className="absolute inset-0 flex items-center justify-center pt-32">
+        <div className="w-full max-w-7xl mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           
           {/* 人脈を探す */}
           <div 
             className="relative group cursor-pointer hover:scale-102 transition-transform duration-150 -mt-8"
-            onClick={() => handleCardClick('/search')}
+            onClick={navigateToSearch}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                handleCardClick('/search');
+                navigateToSearch();
               }
             }}
           >
@@ -69,12 +83,12 @@ export default function DashboardMainContent() {
           {/* 政策案を投稿する */}
           <div 
             className="relative group cursor-pointer hover:scale-102 transition-transform duration-150 mt-16"
-            onClick={() => handleCardClick('/policy')}
+            onClick={navigateToPolicy}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                handleCardClick('/policy');
+                navigateToPolicy();
               }
             }}
           >
@@ -118,12 +132,12 @@ export default function DashboardMainContent() {
           {/* 意見を確認する */}
           <div 
             className="relative group cursor-pointer hover:scale-102 transition-transform duration-150 -mt-16"
-            onClick={() => handleCardClick('/comments')}
+            onClick={navigateToComments}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                handleCardClick('/comments');
+                navigateToComments();
               }
             }}
           >
@@ -164,8 +178,9 @@ export default function DashboardMainContent() {
             </div>
           </div>
           
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

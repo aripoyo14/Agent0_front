@@ -155,19 +155,26 @@ export default function LoginForm() {
   const isSubmitting = state === "submitting";
 
   return (
-    <div className="w-full max-w-xs">
+    <div className="w-full max-w-xs animate-scale-in">
+      {/* キャッチフレーズ */}
+      <div className="text-center mb-4 animate-fade-in">
+        <p className="text-white/80 text-sm font-medium tracking-wide">
+          未来に誇れる日本をつくる
+        </p>
+      </div>
+      
       {/* タイトル */}
-      <h1 className="text-center text-xl font-bold text-white mb-12 tracking-[0.25em]">
+      <h1 className="text-center text-xl font-bold text-white mb-12 tracking-[0.25em] animate-slide-up">
         METI Picks
       </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="space-y-4"
+        className="space-y-4 animate-fade-in animate-delay-300"
         aria-describedby={error ? "form-error" : undefined}
       >
         {/* メールアドレス */}
-        <div>
+        <div className="animate-slide-in-left animate-delay-400">
           <label htmlFor="email" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
             メールアドレス
             <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
@@ -184,12 +191,12 @@ export default function LoginForm() {
             placeholder="メールアドレスをご入力ください"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+            className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999] transition-all duration-300 focus:scale-105 hover:bg-white"
           />
         </div>
 
         {/* パスワード */}
-        <div>
+        <div className="animate-slide-in-right animate-delay-500">
           <label htmlFor="password" className="flex items-center gap-1 text-white text-xs font-medium mb-1">
             パスワード
             <span className="inline-block rounded bg-[#4aa0e9] px-1 py-0.5 text-[10px] font-bold text-white">
@@ -205,13 +212,13 @@ export default function LoginForm() {
             placeholder="パスワードをご入力ください"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999]"
+            className="block w-full rounded-lg bg-white/90 backdrop-blur-sm px-2 py-2 text-[#333] text-sm outline-none border-0 focus:bg-white focus:ring-1 focus:ring-white/50 placeholder:text-xs placeholder:text-[#999] transition-all duration-300 focus:scale-105 hover:bg-white"
           />
           <div className="mt-2 text-center">
             <button
               type="button"
               onClick={() => setShowPasswordReset(true)}
-              className="text-[10px] text-white/80 hover:text-white underline decoration-white/50 hover:decoration-white transition-colors"
+              className="text-[10px] text-white/80 hover:text-white underline decoration-white/50 hover:decoration-white transition-all duration-300 hover:scale-105"
             >
               パスワードをお忘れですか？
             </button>
@@ -219,17 +226,17 @@ export default function LoginForm() {
         </div>
 
         {error && (
-          <p id="form-error" className="text-[10px] text-blue-100 bg-blue-500/15 rounded px-2 py-1 text-center">
+          <p id="form-error" className="text-[10px] text-blue-100 bg-blue-500/15 rounded px-2 py-1 text-center animate-fade-in">
             {error}
           </p>
         )}
 
         {/* ログインボタン */}
-        <div className="pt-6 flex justify-center">
+        <div className="pt-6 flex justify-center animate-fade-in animate-delay-600">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="group inline-flex items-center justify-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-6 py-3 text-[#4AA0E9] text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-lg hover:scale-105 disabled:opacity-60 disabled:hover:scale-100 min-w-[120px]"
+            className="group inline-flex items-center justify-center gap-2 rounded-full bg-white/90 backdrop-blur-sm px-6 py-3 text-[#4AA0E9] text-sm font-medium transition-all duration-300 hover:bg-white hover:shadow-lg hover:scale-110 disabled:opacity-60 disabled:hover:scale-100 min-w-[120px] hover-lift animate-glow-pulse"
             aria-busy={isSubmitting}
           >
             {isSubmitting ? (

@@ -20,8 +20,15 @@ export default function Page() {
         `)}")`
       }}></div>
       
+      {/* 追加のグラデーション効果 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none"></div>
+      
+      {/* 動く光の効果 */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-200/20 rounded-full blur-2xl animate-pulse animation-reverse pointer-events-none"></div>
+      
       <BackgroundEllipses scale={0.8} />
-      <div className="relative flex min-h-screen items-center justify-center px-4">
+      <div className="relative flex min-h-screen items-center justify-center px-4 animate-fade-in">
         <LoginForm />
       </div>
     </main>
