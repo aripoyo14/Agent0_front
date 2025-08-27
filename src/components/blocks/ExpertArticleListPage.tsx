@@ -7,7 +7,8 @@ import { policyThemes, getArticlesByTheme, searchArticles } from "@/data/expert-
 import { getPolicyProposals, getPolicyProposalsByTag } from "@/lib/expert-api";
 import { isAuthenticated } from "@/lib/storage";
 import { getUserNameFromAPI, debugToken, testAuth, getUserName } from "@/lib/auth";
-// import { PolicyThemeSelector } from "@/components/ui/PolicyThemeSelector";
+import { getCachedCommentCountsBatch } from "@/lib/comment-cache";
+import { PolicyThemeSelector } from "@/components/ui/ResponsivePolicyThemeSelector";
 import { ArticleOverlay } from "@/components/ui/ArticleOverlay";
 import { ExpertHeader } from "@/components/ui/expert_header";
 import { ArticleList } from "@/components/ui/ArticleList";
@@ -54,19 +55,8 @@ const formatDate = (dateString: string): string => {
   }
 };
 
-// データ変換関数（コメント数取得付き）
-const convertPolicyProposalToExpertArticle = async (proposal: PolicyProposal): Promise<ExpertArticle> => {
-  // コメント数を取得
-  let commentCount = 0;
-  try {
-    const { getCommentCount } = await import('@/lib/expert-api');
-    const commentData = await getCommentCount(proposal.id);
-    commentCount = commentData.comment_count;
-  } catch (error) {
-    console.error(`コメント数取得エラー (${proposal.id}):`, error);
-    commentCount = 0;
-  }
-
+// 改良されたデータ変換関数（高速化）
+const convertPolicyProposalToExpertArticleFast = (proposal: PolicyProposal, commentCount: number = 0): ExpertArticle => {
   return {
     id: proposal.id,
     title: proposal.title,
@@ -80,6 +70,22 @@ const convertPolicyProposalToExpertArticle = async (proposal: PolicyProposal): P
       : "startup", // タグがない場合は"startup"に設定（「すべて」で表示される）
     attachments: proposal.attachments || [] // 添付ファイル情報を追加
   };
+};
+
+// 従来の個別取得関数（フォールバック用）
+const convertPolicyProposalToExpertArticle = async (proposal: PolicyProposal): Promise<ExpertArticle> => {
+  // コメント数を取得
+  let commentCount = 0;
+  try {
+    const { getCommentCount } = await import('@/lib/expert-api');
+    const commentData = await getCommentCount(proposal.id);
+    commentCount = commentData.comment_count;
+  } catch (error) {
+    console.error(`コメント数取得エラー (${proposal.id}):`, error);
+    commentCount = 0;
+  }
+
+  return convertPolicyProposalToExpertArticleFast(proposal, commentCount);
 };
 
 // 開発環境でのみログを表示する関数
@@ -188,11 +194,32 @@ const devError = (...args: unknown[]) => {
         // devLog("✅ 全件取得API取得成功:", policyProposals.length, "件");
       }
       
-      // コメント数取得処理（ローディング状態を維持）
-      devLog("🔄 コメント数取得中...");
-      const articlesPromises = policyProposals.map(convertPolicyProposalToExpertArticle);
-      articles = await Promise.all(articlesPromises);
-      devLog("✅ コメント数取得完了:", articles.length, "件");
+      // 高速化されたコメント数取得処理
+      devLog("🚀 改良されたコメント数取得開始...");
+      
+      // 1. 即座に記事リストを作成（コメント数は0）
+      const articlesWithoutComments = policyProposals.map(proposal => 
+        convertPolicyProposalToExpertArticleFast(proposal, 0)
+      );
+      
+      // 2. 一括でコメント数を取得（並列制限付き）
+      const proposalIds = policyProposals.map(p => p.id);
+      try {
+        const commentCounts = await getCachedCommentCountsBatch(proposalIds, 5); // 並列度5
+        
+        // 3. コメント数を統合
+        articles = articlesWithoutComments.map(article => ({
+          ...article,
+          commentCount: commentCounts[article.id] || 0
+        }));
+        
+        devLog("✅ 高速コメント数取得完了:", articles.length, "件");
+      } catch (error) {
+        devError("❌ 一括コメント数取得エラー:", error);
+        // フォールバック: コメント数0で続行
+        articles = articlesWithoutComments;
+        devLog("⚠️ コメント数なしで続行");
+      }
       
       // 検索フィルタリング処理（ローディング状態を維持）
       if (searchQuery.trim()) {
@@ -567,7 +594,7 @@ const devError = (...args: unknown[]) => {
   return (
     <div className="h-screen w-full relative flex flex-col overflow-hidden">
       {/* グラデーション背景 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#7bc8e8] via-[#58aadb] to-[#2d8cd9] pointer-events-none" />
       
       {/* テクスチャ効果 */}
       <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
@@ -582,149 +609,48 @@ const devError = (...args: unknown[]) => {
       }}></div>
       
       {/* 背景エレメント */}
-      <BackgroundEllipses scale={0.8} />
+      <div className="pointer-events-none">
+        <BackgroundEllipses scale={0.8} />
+      </div>
       
-      {/* ヘッダー */}
-      <ExpertHeader />
+      {/* ヘッダー - 固定 */}
+      <div className="flex-shrink-0">
+        <ExpertHeader />
+      </div>
       
-      {/* 政策テーマ選択 */}
-      <div className="relative px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[65px] pt-20 sm:pt-24 md:pt-28 lg:pt-32 xl:pt-[120px] pb-4">
+      {/* 政策テーマ選択 - 固定エリア */}
+      <div className="relative flex-shrink-0 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[65px] pt-24 sm:pt-28 md:pt-32 lg:pt-32 xl:pt-[120px] pb-6 sm:pb-8 lg:pb-1 z-30">
         <div className="mb-1 sm:mb-2 md:mb-3 lg:mb-4 xl:mb-6 relative">
           <h3 className="absolute -top-6 left-0 font-['Noto_Sans_JP'] font-bold text-white text-xs tracking-[2px]">
             政策テーマを選択する
           </h3>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 w-full">
-            {[
-              { 
-                id: "economy-industry", 
-                title: "経済産業",
-                description: "国内外の経済動向を踏まえた産業政策や経済成長戦略を推進する分野。"
-              },
-              { 
-                id: "external-economy", 
-                title: "対外経済",
-                description: "国際経済関係や貿易・投資促進、国際協力を通じた経済成長の実現。"
-              },
-              { 
-                id: "manufacturing-it-distribution-services", 
-                title: "ものづくり/情報/流通・サービス",
-                description: "製造業や情報通信、物流・流通、サービス産業の高度化と競争力強化。"
-              },
-              { 
-                id: "sme-regional-economy", 
-                title: "中小企業・地域経済産業",
-                description: "中小企業の成長支援と地域産業の活性化を促進する分野。"
-              },
-              { 
-                id: "energy-environment", 
-                title: "エネルギー・環境",
-                description: "安定したエネルギー供給と環境保護、脱炭素社会の実現を目指す政策。"
-              },
-              { 
-                id: "safety-security", 
-                title: "安全・安心",
-                description: "国民生活や企業活動の安全確保、防災・減災、危機管理体制の強化。"
-              },
-              { 
-                id: "digital-transformation", 
-                title: "DX",
-                description: "デジタル技術を活用して業務変革や新たな価値創造を行う取り組み。"
-              },
-              { 
-                id: "green-transformation", 
-                title: "GX",
-                description: "環境負荷低減と経済成長の両立を図るグリーントランスフォーメーション。"
-              },
-              { 
-                id: "startup-support", 
-                title: "スタートアップ支援",
-                description: "新規事業創出やベンチャー企業の成長支援、資金調達や規制緩和の推進。"
-              },
-              { 
-                id: "diversity-management", 
-                title: "ダイバーシティ経営",
-                description: "多様な人材の活躍を促進し、企業価値向上を図る経営戦略。"
-              },
-              { 
-                id: "economic-security", 
-                title: "経済安全保障",
-                description: "経済活動における安全確保や重要物資・技術の保護、サプライチェーン強化。"
-              },
-              { 
-                id: "regional-co-creation", 
-                title: "地域共創",
-                description: "地域資源を活かし、自治体・企業・住民が協力して地域課題を解決。"
-              },
-              { 
-                id: "femtech", 
-                title: "フェムテック",
-                description: "女性の健康課題解決を支援するテクノロジーや製品・サービスの開発促進。"
-              },
-              { 
-                id: "data-ai-utilization", 
-                title: "データ・AI活用",
-                description: "ビッグデータやAIを活用して業務効率化や新たな価値創出を実現。"
-              },
-              { 
-                id: "cashless", 
-                title: "キャッシュレス",
-                description: "現金に依存しない決済手段の普及促進と関連インフラの整備。"
-              }
-            ].map((theme) => {
-              const isSelected = currentTheme === theme.id;
-              return (
-                <div key={theme.id} className="relative group">
-                  <button
-                    onClick={() => handleThemeChange(theme.id)}
-                    className={`relative px-2 sm:px-3 py-1 rounded-[40px] text-xs font-bold transition-all hover:shadow-md h-7 flex items-center justify-center w-full min-w-[120px] sm:min-w-[160px] ${
-                      isSelected 
-                        ? 'bg-white text-[#2d8cd9] shadow-md' 
-                        : 'bg-transparent text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <div className={`absolute border-solid inset-0 pointer-events-none rounded-[40px] border-[1px] ${
-                      isSelected ? 'border-white' : 'border-white/60'
-                    }`} />
-                    <span className="text-[14px] sm:text-[16px] leading-[1.3] px-1 text-center whitespace-nowrap">
-                      {theme.title}
-                    </span>
-                  </button>
-                  
-                  {/* ホバー時のツールチップ - レスポンシブ対応 */}
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 sm:px-4 py-3 bg-gray-900/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 w-[280px] sm:w-[400px] lg:w-[500px] whitespace-normal shadow-lg">
-                    <div className="font-bold mb-2 text-sm">{theme.title}</div>
-                    <div className="text-gray-200 leading-relaxed text-xs">{theme.description}</div>
-                    {/* ツールチップの矢印 */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-900/80"></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          
-
+          {/* レスポンシブ政策テーマセレクター */}
+          <PolicyThemeSelector
+            currentTheme={currentTheme}
+            onThemeChange={handleThemeChange}
+          />
         </div>
       </div>
       
-      {/* 選択されたテーマのタイトルと検索バー - レスポンシブ対応 */}
-      <div className="relative px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[72px] pb-1 sm:pb-2 md:pb-3 lg:pb-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-8">
+      {/* 選択されたテーマのタイトルと検索バー - レスポンシブ対応 - 固定エリア */}
+      <div className="relative flex-shrink-0 px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[72px] pb-3 sm:pb-3 md:pb-3 lg:pb-4">
+        <div className="flex items-center justify-between gap-3 sm:gap-4 lg:gap-8">
           {/* テーマタイトル */}
-          <div className="h-8 sm:h-10 md:h-12 lg:h-16 xl:h-[24.892px] w-full lg:w-auto">
-            <div className="flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold h-full justify-center leading-tight lg:leading-[22px] text-[#fff9f9] text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-[22px] text-left tracking-wide lg:tracking-[3px] w-full">
-              <p className="adjustLetterSpacing block">
+          <div className="h-8 sm:h-10 md:h-12 lg:h-16 xl:h-[24.892px] flex-1 min-w-0">
+            <div className="flex flex-col font-['Noto_Sans_JP:Bold',_sans-serif] font-bold h-full justify-center leading-tight lg:leading-[22px] text-[#fff9f9] text-sm sm:text-lg md:text-xl lg:text-3xl xl:text-[22px] text-left tracking-wide lg:tracking-[3px] w-full">
+              <p className="adjustLetterSpacing block truncate">
                 {policyThemes.find(t => t.id === currentTheme)?.name || "政策テーマを選ぶ"}
               </p>
             </div>
           </div>
           
           {/* 検索バー - テーマタイトルの横に配置 */}
-          <div className="relative w-full lg:w-64 xl:w-80">
+          <div className="relative w-52 sm:w-56 md:w-60 lg:w-72 xl:w-80 flex-shrink-0">
             <div className="relative w-full h-10 sm:h-11 md:h-12">
               <div className="absolute inset-0 bg-white rounded-lg sm:rounded-xl shadow-md border border-gray-200 transition-all duration-300">
               </div>
-              <div className="relative flex items-center h-full px-3 sm:px-4">
+              <div className="relative flex items-center h-full px-3 sm:px-4 md:px-5">
                 <div className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3">
                   <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -732,15 +658,15 @@ const devError = (...args: unknown[]) => {
                 </div>
                 <input
                   type="text"
-                  placeholder="キーワードで検索..."
+                  placeholder="キーワードで検索"
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-sm sm:text-base text-gray-700 placeholder:text-gray-400 font-medium tracking-wide"
+                  className="flex-1 bg-transparent border-none outline-none text-sm sm:text-base md:text-base text-gray-700 placeholder:text-gray-400 font-medium tracking-wide min-w-0"
                   style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                 />
                 {/* 検索クリアボタン */}
                 <button
                   onClick={() => handleSearch("")}
-                  className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  className="flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 ml-2 sm:ml-3 hover:bg-gray-100 rounded-full transition-colors duration-200 flex-shrink-0"
                   aria-label="検索をクリア"
                 >
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -753,18 +679,22 @@ const devError = (...args: unknown[]) => {
         </div>
       </div>
       
-      {/* 記事エリア */}
-      <div className="relative px-4 sm:px-6 md:px-8 lg:px-16 xl:px-[65px] pb-8 sm:pb-12 md:pb-16 lg:pb-20">
-        <div className="bg-white w-full h-[300px] sm:h-[340px] md:h-[370px] lg:h-[400px] xl:h-[430px] 2xl:h-[450px] rounded-lg lg:rounded-[11.759px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 shadow-lg">
+      {/* 記事エリア - レスポンシブ高さ対応 */}
+      <div className="relative px-2 sm:px-4 md:px-6 lg:px-16 xl:px-[65px] pt-2 sm:pt-3 md:pt-4 lg:pt-2 pb-4 sm:pb-6 md:pb-8 lg:pb-8 xl:pb-12 flex-1 flex flex-col min-h-0">
+        <div className="bg-white w-full flex-1 flex flex-col min-h-0 rounded-lg lg:rounded-[11.759px] shadow-lg overflow-hidden">
           {/* データソース表示 */}
-          <DataSourceIndicator dataSource={dataSource} />
+          <div className="flex-shrink-0">
+            <DataSourceIndicator dataSource={dataSource} />
+          </div>
           
           {/* ローディング・エラー表示 */}
-          <LoadingErrorStates pageState={pageState} />
+          <div className="flex-shrink-0">
+            <LoadingErrorStates pageState={pageState} />
+          </div>
           
-          {/* 記事一覧 */}
+          {/* 記事一覧 - スクロール可能エリア */}
           {pageState === "success" && filteredArticles.length > 0 && (
-            <div className="p-0">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <ArticleList 
                 articles={filteredArticles} 
                 onArticleClick={handleArticleClick} 
@@ -774,7 +704,9 @@ const devError = (...args: unknown[]) => {
           
           {/* 記事がない場合のメッセージ */}
           {pageState === "success" && filteredArticles.length === 0 && (
-            <EmptyState />
+            <div className="flex-1 flex items-center justify-center">
+              <EmptyState />
+            </div>
           )}
         </div>
       </div>

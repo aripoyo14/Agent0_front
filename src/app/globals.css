@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* レスポンシブスクロールバーのスタイル */
+@import '../styles/scrollbar.css';
+
 html, body {
   height: 100%;
 }

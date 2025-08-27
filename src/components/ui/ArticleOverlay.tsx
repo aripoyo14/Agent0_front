@@ -16,6 +16,37 @@ const devError = (...args: unknown[]) => {
   }
 };
 
+// フラットなコメントリストを親子関係のある階層構造に変換する関数
+const buildCommentTree = (comments: ExpertComment[]): ExpertComment[] => {
+  const commentMap = new Map<string, ExpertComment>();
+  const rootComments: ExpertComment[] = [];
+
+  // まず全てのコメントをMapに格納し、childrenプロパティを初期化
+  comments.forEach(comment => {
+    commentMap.set(comment.id, { ...comment, children: [] });
+  });
+
+  // 親子関係を構築
+  comments.forEach(comment => {
+    const commentWithChildren = commentMap.get(comment.id);
+    if (!commentWithChildren) return;
+
+    if (comment.parentCommentId) {
+      // 子コメントの場合、親コメントのchildrenに追加
+      const parentComment = commentMap.get(comment.parentCommentId);
+      if (parentComment) {
+        parentComment.children = parentComment.children || [];
+        parentComment.children.push(commentWithChildren);
+      }
+    } else {
+      // 親コメントの場合、ルートコメントに追加
+      rootComments.push(commentWithChildren);
+    }
+  });
+
+  return rootComments;
+};
+
 export interface ExpertArticle {
   id: string;
   title: string;
@@ -58,6 +89,8 @@ export interface ExpertComment {
   viewCount: number;
   isLiked: boolean;
   showFullContent?: boolean;
+  parentCommentId?: string | null; // 親コメントのID（null: 親コメント、string: 子コメント）
+  children?: ExpertComment[]; // 子コメントの配列
 }
 
 export interface ExpertOverlayState {
@@ -106,19 +139,27 @@ const CommentSortSelector = ({
   );
 };
 
-// コメントカードコンポーネント
+// 親コメントまたは子コメントのカードコンポーネント
 const CommentCard = ({ 
   comment, 
-  onToggleFullContent 
+  onToggleFullContent,
+  isChild = false,
+  depth = 0
 }: { 
   comment: ExpertComment;
   onToggleFullContent: (commentId: string) => void;
+  isChild?: boolean;
+  depth?: number;
 }) => {
+  const maxDepth = 3; // 最大ネスト深度
+  const currentDepth = Math.min(depth, maxDepth);
+  const indentClass = currentDepth > 0 ? `ml-${4 + currentDepth * 4}` : '';
+  
   return (
-    <div className="border-b border-gray-100 pb-6 mb-6">
+    <div className={`${isChild ? 'border-l-2 border-gray-200 pl-4 mt-4' : 'border-b border-gray-100 pb-6 mb-6'} ${indentClass}`}>
       <div className="flex items-start gap-4 mb-4">
-        {/* プロフィール画像 */}
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0">
+        {/* プロフィール画像 - 子コメントは少し小さく */}
+        <div className={`${isChild ? 'w-8 h-8' : 'w-10 h-10'} bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0`}>
           {comment.author.name.charAt(0)}
         </div>
         
@@ -126,20 +167,27 @@ const CommentCard = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-bold text-gray-900 text-base">{comment.author.name}</span>
+              <span className={`font-bold text-gray-900 ${isChild ? 'text-sm' : 'text-base'}`}>
+                {comment.author.name}
+              </span>
               <span className="text-sm text-gray-500">{comment.author.role}</span>
+              {isChild && (
+                <span className="text-xs text-gray-400 bg-gray-100 px-1 py-0.5 rounded">
+                  返信
+                </span>
+              )}
             </div>
             
             {/* 認定エキスパートバッジ */}
             {comment.author.expertiseLevel === 'expert' && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200 flex-shrink-0">
+              <span className={`inline-flex items-center px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-700 border border-blue-200 flex-shrink-0 ${isChild ? 'text-xs' : 'text-xs'}`}>
                 認定エキスパート
               </span>
             )}
           </div>
           
           {/* 投稿日時 */}
-          <p className="text-sm text-gray-600 mb-3">
+          <p className={`text-gray-600 mb-3 ${isChild ? 'text-xs' : 'text-sm'}`}>
             {new Date(comment.createdAt).toLocaleDateString('ja-JP', {
               year: 'numeric',
               month: 'long',
@@ -150,8 +198,8 @@ const CommentCard = ({
       </div>
       
       {/* コメント本文 */}
-      <div className="ml-14">
-        <p className="text-gray-800 text-sm leading-relaxed mb-4">
+      <div className={`${isChild ? 'ml-12' : 'ml-14'}`}>
+        <p className={`text-gray-800 leading-relaxed mb-4 ${isChild ? 'text-sm' : 'text-sm'}`}>
           {comment.content && comment.content.length > 300 && !comment.showFullContent 
             ? `${comment.content.substring(0, 300)}...` 
             : comment.content}
@@ -160,28 +208,43 @@ const CommentCard = ({
         {comment.content && comment.content.length > 300 && (
           <button
             onClick={() => onToggleFullContent(comment.id)}
-            className="mb-4 text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+            className={`mb-4 text-blue-600 hover:text-blue-800 font-medium underline ${isChild ? 'text-xs' : 'text-sm'}`}
           >
             {comment.showFullContent ? '折りたたむ' : '続きを表示'}
           </button>
         )}
         
         {/* いいね・閲覧数 */}
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        <div className={`flex items-center gap-4 text-gray-500 ${isChild ? 'text-xs' : 'text-sm'}`}>
           <button className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`${isChild ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m7 10a1 1 0 01-1 1H9a1 1 0 01-1-1v-3m7 10v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3" />
             </svg>
             {comment.likeCount}
           </button>
           <span className="flex items-center gap-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`${isChild ? 'w-3 h-3' : 'w-4 h-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
             {comment.viewCount}
           </span>
         </div>
+        
+        {/* 子コメント表示（再帰的に表示） */}
+        {comment.children && comment.children.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {comment.children.map((childComment) => (
+              <CommentCard
+                key={childComment.id}
+                comment={childComment}
+                onToggleFullContent={onToggleFullContent}
+                isChild={true}
+                depth={currentDepth + 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -261,7 +324,8 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
             createdAt: comment.posted_at, // created_at → posted_at
             likeCount: 0, // like_countは存在しないため0
             viewCount: 0, // view_countは存在しないため0
-            isLiked: false
+            isLiked: false,
+            parentCommentId: comment.parent_comment_id || null // 親コメントIDを設定
           }));
           
           setComments(convertedComments);
@@ -270,7 +334,7 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
         } catch (error) {
           devError('コメント取得エラー:', error);
           
-          // エラーの場合はサンプルコメントを使用
+          // エラーの場合はサンプルコメントを使用（親子関係を含む）
           const sampleComments: ExpertComment[] = [
             {
               id: 'sample-1',
@@ -282,11 +346,12 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
                 badges: [],
                 expertiseLevel: 'expert'
               },
-              content: 'コメントありがとうございます。貴重なご意見を頂き、大変感謝しております。本案の骨格が明確で実装を意識したものであるとのご指摘、特に国産セキュアクラウドの奨励やISMAP準拠についてご評価いただき、励みになります。具体的なロードマップや初年度の配分方針が現場にとっての助けになるとの点にも同意し、政策の実行に向けて着実に進めていく所存です。ご提案いただいた三点についても、大変参考になります。以下のように具体的な次のアクションを考えます。1.**成果連動枠の導入**: 実証から横展開へのスムーズな移行を図るために、導入費の後払い形式の検討を進めます。具体的なKPIの設定についての議論を始めましょう。関係者との意見交換を通じて、成果指標や評価方法について明確にしていく必要があります。2.**常設委員会の設立**: キャッシュレスの相互運用に関する適合性評価や改定頻度について定義するための常設委員会の設立を検討します。委員会メンバーの選定や初会合の日程についても早急に進める必要があります。3.**セキュアクラウドのガバナンス強化**: データ可搬性、開放API、監査ログの義務化を進めるための具体的なガイドラインを策定するための作業部会の設立を考えます。これにより、利用者に安心感を提供できる仕組みを整備したいと思います。併せて、添付ファイルの読み取りに失敗し、内容を確認できなかったことをお詫び申し上げます。もし可能であれば、ファイルを再送いただけますと幸いです。ご提案の内容をさらに深く理解し、議論を深めていくためにも、非常に有益だと考えております。引き続きご支援・ご意見を賜りますようお願い申し上げます。',
+              content: 'コメントありがとうございます。貴重なご意見を頂き、大変感謝しております。本案の骨格が明確で実装を意識したものであるとのご指摘、特に国産セキュアクラウドの奨励やISMAP準拠についてご評価いただき、励みになります。具体的なロードマップや初年度の配分方針が現場にとっての助けになるとの点にも同意し、政策の実行に向けて着実に進めていく所存です。',
               createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2時間前
               likeCount: 5,
               viewCount: 12,
-              isLiked: false
+              isLiked: false,
+              parentCommentId: null
             },
             {
               id: 'sample-2',
@@ -302,7 +367,59 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
               createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4時間前
               likeCount: 8,
               viewCount: 15,
-              isLiked: false
+              isLiked: false,
+              parentCommentId: null
+            },
+            {
+              id: 'sample-3',
+              author: {
+                id: 'sample-user-3',
+                name: 'システム 花子',
+                role: 'contributor',
+                company: 'デジタル庁',
+                badges: [],
+                expertiseLevel: 'regular'
+              },
+              content: 'メティ様のご指摘について、特に成果連動枠の部分に賛同いたします。実証実験の成果を具体的な数値で評価する仕組みが重要だと思います。',
+              createdAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1時間前
+              likeCount: 3,
+              viewCount: 8,
+              isLiked: false,
+              parentCommentId: 'sample-1'
+            },
+            {
+              id: 'sample-4',
+              author: {
+                id: 'sample-user-4',
+                name: '田中 一郎',
+                role: 'viewer',
+                company: '民間企業',
+                badges: [],
+                expertiseLevel: 'regular'
+              },
+              content: '政策専門家Aさんのおっしゃる通りですね。地域格差の問題は深刻なので、このような取り組みは非常に価値があると思います。',
+              createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30分前
+              likeCount: 2,
+              viewCount: 5,
+              isLiked: false,
+              parentCommentId: 'sample-2'
+            },
+            {
+              id: 'sample-5',
+              author: {
+                id: 'sample-user-5',
+                name: '佐藤 次郎',
+                role: 'contributor',
+                company: '総務省',
+                badges: [],
+                expertiseLevel: 'expert'
+              },
+              content: 'システム花子さんのご意見に追加で、評価指標の透明性も重要ですね。どのような基準で成果を判断するのか、事前に明示していただけると良いと思います。',
+              createdAt: new Date(Date.now() - 20 * 60 * 1000).toISOString(), // 20分前
+              likeCount: 4,
+              viewCount: 6,
+              isLiked: false,
+              parentCommentId: 'sample-3'
             }
           ];
           
@@ -316,11 +433,15 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
     }
   }, [isOpen, article]);
 
-  // コメント並び替え処理
+  // コメント並び替え処理（階層構造を考慮）
   const sortedComments = useMemo(() => {
     if (!comments.length) return [];
     
-    return [...comments].sort((a, b) => {
+    // まず階層構造を構築
+    const commentTree = buildCommentTree(comments);
+    
+    // 親コメントのみを並び替え（子コメントは親コメント内で時系列順に表示）
+    const sortedRootComments = [...commentTree].sort((a, b) => {
       switch (commentSort) {
         case 'date':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -333,6 +454,20 @@ export const ArticleOverlay: React.FC<ArticleOverlayProps> = ({
           return 0;
       }
     });
+
+    // 各親コメントの子コメントを時系列順（古い順）にソート
+    const sortCommentsRecursively = (comment: ExpertComment): ExpertComment => {
+      if (comment.children && comment.children.length > 0) {
+        const sortedChildren = comment.children
+          .map(sortCommentsRecursively)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        
+        return { ...comment, children: sortedChildren };
+      }
+      return comment;
+    };
+
+    return sortedRootComments.map(sortCommentsRecursively);
   }, [comments, commentSort]);
 
   // オーバーレイを閉じる処理（アニメーション付き）

@@ -233,6 +233,8 @@ export interface ExpertComment {
   viewCount: number;
   isLiked: boolean;
   aiAnalysis?: CommentAnalysis;
+  parentCommentId?: string | null; // 親コメントのID（null: 親コメント、string: 子コメント）
+  children?: ExpertComment[]; // 子コメントの配列
 }
 
 // コメント並び替えオプション
